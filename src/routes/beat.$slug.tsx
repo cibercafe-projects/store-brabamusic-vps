@@ -22,7 +22,7 @@ export const Route = createFileRoute("/beat/$slug")({
 });
 
 function BeatDetail() {
-  const { beat } = Route.useLoaderData();
+  const { beat } = Route.useLoaderData() as { beat: Beat };
   const { current, playing, play } = usePlayer();
   const interests = useInterests();
   const isPlaying = current?.slug === beat.slug && playing;

@@ -21,7 +21,7 @@ export const Route = createFileRoute("/produtor/$slug")({
 });
 
 function ProducerPage() {
-  const { producer, beats } = Route.useLoaderData();
+  const { producer, beats } = Route.useLoaderData() as { producer: Producer; beats: Beat[] };
   const genres: string[] = Array.from(new Set(beats.map((b: Beat) => b.genre)));
 
   return (
