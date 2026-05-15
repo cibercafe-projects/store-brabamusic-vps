@@ -3,17 +3,21 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/como-funciona")({ component: Como });
 
 const steps = [
-  { n: "01", t: "Acessa o catálogo", d: "Loja.brabamusic.com.br ou pela aba Beats no app." },
-  { n: "02", t: "Escuta a prévia", d: "Toca o player no card ou na página do beat." },
-  { n: "03", t: "Marca interesse", d: "Clica em 'Tenho interesse' ou salva vários na lista." },
-  { n: "04", t: "Fala com a equipe", d: "Abre o WhatsApp ou envia o formulário." },
-  { n: "05", t: "Recebe o link de pagamento", d: "Pix ou gateway externo, conforme licença." },
-  { n: "06", t: "Recebe o beat", d: "Entrega manual dos arquivos (Fase 1 — em breve, automática)." },
+  { n: "01", t: "Acessa o catálogo", d: "loja.brabamusic.com.br ou pela aba Beats no app." },
+  { n: "02", t: "Escuta a prévia", d: "Toca o player no card ou na página do beat. Sem login pra ouvir." },
+  { n: "03", t: "Cadastro rápido (sem senha)", d: "Pra salvar nos favoritos ou pedir um beat, é só nome + e-mail. Esse e-mail vai receber o link de pagamento e o beat." },
+  { n: "04", t: "Marca interesse", d: "Clica em 'Tenho interesse' no beat ou monta uma lista em 'Meus interesses'." },
+  { n: "05", t: "Recebe o link de pagamento por e-mail", d: "Pix ou gateway externo, conforme a licença escolhida." },
+  { n: "06", t: "Envia o comprovante no WhatsApp", d: "Depois de pagar, te chamamos no WhatsApp pra você mandar o comprovante." },
+  { n: "07", t: "Recebe o beat", d: "Confirmado o pagamento, liberamos o link do beat por WhatsApp e e-mail. Pronto pra usar." },
 ];
 
 const faqs = [
+  { q: "Preciso criar conta com senha?", a: "Não. O cadastro é só nome e e-mail — usamos pra te mandar o link de pagamento e o link do beat. Sem senha, sem complicação." },
+  { q: "Por que preciso me identificar pra favoritar?", a: "Pra equipe BRABA conseguir te enviar o link de pagamento e o beat liberado depois. Sem e-mail, a gente não tem pra onde mandar." },
   { q: "Quais licenças vocês oferecem?", a: "Lease, Premium e Exclusiva. Cada uma libera diferentes usos comerciais — confira a comparação na página de cada beat." },
-  { q: "Como funciona o pagamento?", a: "Nesta fase, é manual: te enviamos um link de Pix ou gateway externo. Em breve, checkout direto pela loja." },
+  { q: "Como funciona o pagamento?", a: "Te enviamos um link de Pix ou gateway externo por e-mail. Depois de pagar, você manda o comprovante no WhatsApp e a gente libera o beat." },
+  { q: "Como recebo o beat?", a: "Por WhatsApp e e-mail, com link pra download dos arquivos (WAV + stems conforme a licença)." },
   { q: "Posso usar em clipe / Spotify?", a: "Depende da licença. Premium e Exclusiva liberam distribuição em DSPs e vídeo-clipe." },
   { q: "O beat fica fora do catálogo se eu comprar exclusiva?", a: "Sim. A licença exclusiva remove o beat do catálogo e te dá direitos exclusivos." },
 ];

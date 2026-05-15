@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { Header } from "@/components/Header";
 import { PlayerBar } from "@/components/PlayerBar";
+import { AuthModal } from "@/components/AuthModal";
 
 function NotFoundComponent() {
   return (
@@ -85,6 +86,7 @@ function RootComponent() {
         <Outlet />
       </main>
       <PlayerBar />
+      <AuthModal />
     </QueryClientProvider>
   );
 }
