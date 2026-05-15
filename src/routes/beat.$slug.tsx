@@ -1,13 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Play, Pause, MessageCircle, Mail, Check } from "lucide-react";
-import { BEATS, LICENSES, WHATSAPP_NUMBER } from "@/data/beats";
+import { BEATS, LICENSES, WHATSAPP_NUMBER, type Beat } from "@/data/beats";
 import { usePlayer, useInterests } from "@/components/PlayerStore";
 import { BeatCard } from "@/components/BeatCard";
 
 export const Route = createFileRoute("/beat/$slug")({
   component: BeatDetail,
-  loader: ({ params }) => {
+  loader: ({ params }): { beat: Beat } => {
     const beat = BEATS.find((b) => b.slug === params.slug);
     if (!beat) throw notFound();
     return { beat };

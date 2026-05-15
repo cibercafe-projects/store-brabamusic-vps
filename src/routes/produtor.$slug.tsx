@@ -1,11 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Instagram } from "lucide-react";
-import { PRODUCERS, BEATS } from "@/data/beats";
+import { PRODUCERS, BEATS, type Producer, type Beat } from "@/data/beats";
 import { BeatCard } from "@/components/BeatCard";
 
 export const Route = createFileRoute("/produtor/$slug")({
   component: ProducerPage,
-  loader: ({ params }) => {
+  loader: ({ params }): { producer: Producer; beats: Beat[] } => {
     const producer = PRODUCERS.find((p) => p.slug === params.slug);
     if (!producer) throw notFound();
     const beats = BEATS.filter((b) => b.producerSlug === producer.slug);
