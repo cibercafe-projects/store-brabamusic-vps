@@ -22,7 +22,7 @@ export const Route = createFileRoute("/produtor/$slug")({
 
 function ProducerPage() {
   const { producer, beats } = Route.useLoaderData();
-  const genres = [...new Set(beats.map((b) => b.genre))];
+  const genres: string[] = Array.from(new Set(beats.map((b: Beat) => b.genre)));
 
   return (
     <div>
