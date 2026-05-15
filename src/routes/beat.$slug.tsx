@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Play, Pause, MessageCircle, Mail, Check } from "lucide-react";
 import { BEATS, LICENSES, WHATSAPP_NUMBER, type Beat } from "@/data/beats";
 import { usePlayer, useInterests } from "@/components/PlayerStore";
+import { useAuth } from "@/components/AuthStore";
 import { BeatCard } from "@/components/BeatCard";
 
 export const Route = createFileRoute("/beat/$slug")({
@@ -25,6 +26,7 @@ function BeatDetail() {
   const { beat } = Route.useLoaderData() as { beat: Beat };
   const { current, playing, play } = usePlayer();
   const interests = useInterests();
+  const { requireAuth, user } = useAuth();
   const isPlaying = current?.slug === beat.slug && playing;
   const [license, setLicense] = useState(LICENSES[1].name);
   const [showForm, setShowForm] = useState(false);
