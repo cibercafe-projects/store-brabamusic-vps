@@ -11,7 +11,6 @@ import {
 import appCss from "../styles.css?url";
 import { Header } from "@/components/Header";
 import { PlayerBar } from "@/components/PlayerBar";
-import { AuthModal } from "@/components/AuthModal";
 
 function NotFoundComponent() {
   return (
@@ -51,9 +50,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "BRABA Beats — Loja de beats do selo BRABA Music" },
       { name: "description", content: "Catálogo de beats do selo BRABA Music. Trap, funk, drill, boom bap e mais. Escute, escolha sua licença e fale com o produtor." },
-      { property: "og:title", content: "BRABA Beats" },
-      { property: "og:description", content: "Catálogo de beats da BRABA Music." },
+      { property: "og:title", content: "BRABA Beats — Loja de beats do selo BRABA Music" },
+      { property: "og:description", content: "Catálogo de beats do selo BRABA Music. Trap, funk, drill, boom bap e mais. Escute, escolha sua licença e fale com o produtor." },
       { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "BRABA Beats — Loja de beats do selo BRABA Music" },
+      { name: "twitter:description", content: "Catálogo de beats do selo BRABA Music. Trap, funk, drill, boom bap e mais. Escute, escolha sua licença e fale com o produtor." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/07435e01-cc15-410a-bc90-917055cb21f3" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/07435e01-cc15-410a-bc90-917055cb21f3" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -86,7 +90,6 @@ function RootComponent() {
         <Outlet />
       </main>
       <PlayerBar />
-      <AuthModal />
     </QueryClientProvider>
   );
 }
