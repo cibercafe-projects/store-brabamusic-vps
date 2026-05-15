@@ -1,17 +1,35 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageCircle, Trash2 } from "lucide-react";
+import { MessageCircle, Trash2, Lock } from "lucide-react";
 import { BEATS, WHATSAPP_NUMBER } from "@/data/beats";
 import { useInterests } from "@/components/PlayerStore";
+import { useAuth } from "@/components/AuthStore";
 import { BeatCard } from "@/components/BeatCard";
 
 export const Route = createFileRoute("/meus-interesses")({ component: Interests });
 
 function Interests() {
   const { items, clear } = useInterests();
+  const { user, requireAuth } = useAuth();
   const beats = BEATS.filter((b) => items.includes(b.slug));
 
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-xl text-center px-4 py-24">
+        <Lock className="mx-auto h-10 w-10 text-accent" />
+        <h1 className="mt-6 font-display text-4xl text-gradient">Faz login pra ver seus interesses</h1>
+        <p className="mt-3 text-sm text-muted-foreground">É só nome e e-mail. Sem senha. A gente usa pra te enviar o link de pagamento e o beat depois.</p>
+        <button
+          onClick={() => requireAuth(() => {})}
+          className="mt-8 inline-flex rounded-full bg-accent text-accent-foreground px-6 py-3 font-semibold glow-magenta"
+        >
+          Entrar
+        </button>
+      </div>
+    );
+  }
+
   const wppMsg = encodeURIComponent(
-    `Olá BRABA! Tenho interesse nesses beats:\n\n${beats.map((b) => `• ${b.title} (prod. ${b.producer}) — R$ ${b.price}`).join("\n")}\n\nPodem me passar mais informações?`
+    `Olá BRABA! Aqui é ${user.name} (${user.email}). Tenho interesse nesses beats:\n\n${beats.map((b) => `• ${b.title} (prod. ${b.producer}) — R$ ${b.price}`).join("\n")}\n\nPodem me enviar os links de pagamento?`
   );
 
   return (
