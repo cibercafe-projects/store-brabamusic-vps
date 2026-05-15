@@ -9,38 +9,148 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProdutoresRouteImport } from './routes/produtores'
+import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
+import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
+import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
 
+const ProdutoresRoute = ProdutoresRouteImport.update({
+  id: '/produtores',
+  path: '/produtores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeusInteressesRoute = MeusInteressesRouteImport.update({
+  id: '/meus-interesses',
+  path: '/meus-interesses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProdutorSlugRoute = ProdutorSlugRouteImport.update({
+  id: '/produtor/$slug',
+  path: '/produtor/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BeatSlugRoute = BeatSlugRouteImport.update({
+  id: '/beat/$slug',
+  path: '/beat/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/meus-interesses': typeof MeusInteressesRoute
+  '/produtores': typeof ProdutoresRoute
+  '/beat/$slug': typeof BeatSlugRoute
+  '/produtor/$slug': typeof ProdutorSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/meus-interesses': typeof MeusInteressesRoute
+  '/produtores': typeof ProdutoresRoute
+  '/beat/$slug': typeof BeatSlugRoute
+  '/produtor/$slug': typeof ProdutorSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/meus-interesses': typeof MeusInteressesRoute
+  '/produtores': typeof ProdutoresRoute
+  '/beat/$slug': typeof BeatSlugRoute
+  '/produtor/$slug': typeof ProdutorSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/como-funciona'
+    | '/meus-interesses'
+    | '/produtores'
+    | '/beat/$slug'
+    | '/produtor/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/app'
+    | '/como-funciona'
+    | '/meus-interesses'
+    | '/produtores'
+    | '/beat/$slug'
+    | '/produtor/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/como-funciona'
+    | '/meus-interesses'
+    | '/produtores'
+    | '/beat/$slug'
+    | '/produtor/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRoute
+  ComoFuncionaRoute: typeof ComoFuncionaRoute
+  MeusInteressesRoute: typeof MeusInteressesRoute
+  ProdutoresRoute: typeof ProdutoresRoute
+  BeatSlugRoute: typeof BeatSlugRoute
+  ProdutorSlugRoute: typeof ProdutorSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/produtores': {
+      id: '/produtores'
+      path: '/produtores'
+      fullPath: '/produtores'
+      preLoaderRoute: typeof ProdutoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meus-interesses': {
+      id: '/meus-interesses'
+      path: '/meus-interesses'
+      fullPath: '/meus-interesses'
+      preLoaderRoute: typeof MeusInteressesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/como-funciona': {
+      id: '/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +158,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/produtor/$slug': {
+      id: '/produtor/$slug'
+      path: '/produtor/$slug'
+      fullPath: '/produtor/$slug'
+      preLoaderRoute: typeof ProdutorSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/beat/$slug': {
+      id: '/beat/$slug'
+      path: '/beat/$slug'
+      fullPath: '/beat/$slug'
+      preLoaderRoute: typeof BeatSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRoute,
+  ComoFuncionaRoute: ComoFuncionaRoute,
+  MeusInteressesRoute: MeusInteressesRoute,
+  ProdutoresRoute: ProdutoresRoute,
+  BeatSlugRoute: BeatSlugRoute,
+  ProdutorSlugRoute: ProdutorSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
