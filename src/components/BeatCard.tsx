@@ -2,10 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { Play, Pause, Heart } from "lucide-react";
 import type { Beat } from "@/data/beats";
 import { usePlayer, useInterests } from "./PlayerStore";
+import { useAuth } from "./AuthStore";
 
 export function BeatCard({ beat }: { beat: Beat }) {
   const { current, playing, play } = usePlayer();
   const interests = useInterests();
+  const { requireAuth } = useAuth();
   const isCurrent = current?.slug === beat.slug;
   const isPlaying = isCurrent && playing;
   const liked = interests.has(beat.slug);
@@ -24,7 +26,7 @@ export function BeatCard({ beat }: { beat: Beat }) {
           </span>
         </button>
         <button
-          onClick={() => interests.toggle(beat.slug)}
+          onClick={() => requireAuth(() => interests.toggle(beat.slug))}
           aria-label="Adicionar aos interesses"
           className="absolute top-3 right-3 grid place-items-center h-9 w-9 rounded-full bg-black/50 backdrop-blur hover:bg-primary"
         >
