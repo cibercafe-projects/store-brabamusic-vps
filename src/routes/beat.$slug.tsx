@@ -80,7 +80,7 @@ function BeatDetail() {
           </dl>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {beat.mood.map((m) => <span key={m} className="rounded-full border border-white/15 px-3 py-1 text-xs">#{m}</span>)}
+            {beat.mood.map((m: string) => <span key={m} className="rounded-full border border-white/15 px-3 py-1 text-xs">#{m}</span>)}
           </div>
 
           {/* Licenças */}
