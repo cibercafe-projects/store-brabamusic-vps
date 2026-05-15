@@ -141,37 +141,58 @@ function BeatDetail() {
         </section>
       )}
 
-      {showForm && <FormModal beatTitle={beat.title} license={license} onClose={() => setShowForm(false)} />}
+      {showForm && user && (
+        <ConfirmModal
+          beatTitle={beat.title}
+          license={license}
+          userName={user.name}
+          userEmail={user.email}
+          onClose={() => setShowForm(false)}
+        />
+      )}
     </div>
   );
 }
 
-function FormModal({ beatTitle, license, onClose }: { beatTitle: string; license: string; onClose: () => void }) {
+function ConfirmModal({
+  beatTitle, license, userName, userEmail, onClose,
+}: { beatTitle: string; license: string; userName: string; userEmail: string; onClose: () => void }) {
   const [sent, setSent] = useState(false);
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md glass rounded-2xl p-6 border-white/20">
+      <div className="w-full max-w-md glass rounded-2xl p-6 border border-white/20">
         {sent ? (
-          <div className="text-center py-6">
+          <div className="text-center py-4">
             <div className="mx-auto h-12 w-12 rounded-full bg-accent grid place-items-center"><Check className="h-6 w-6 text-accent-foreground" /></div>
-            <h3 className="mt-4 font-display text-2xl">Recebido!</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Nossa equipe vai te chamar em até 24h com o link de pagamento.</p>
+            <h3 className="mt-4 font-display text-2xl">Pedido enviado!</h3>
+            <ol className="mt-4 text-left text-sm text-muted-foreground space-y-2">
+              <li>1. Você vai receber o <strong>link de pagamento</strong> em <span className="text-accent">{userEmail}</span>.</li>
+              <li>2. Após pagar, te chamamos no <strong>WhatsApp</strong> pra você enviar o comprovante.</li>
+              <li>3. Confirmado o pagamento, liberamos o <strong>link do beat</strong> por WhatsApp e e-mail.</li>
+            </ol>
             <button onClick={onClose} className="mt-6 rounded-full bg-primary px-4 py-2 text-sm font-semibold">Fechar</button>
           </div>
         ) : (
           <>
-            <h3 className="font-display text-2xl">Pedido de interesse</h3>
-            <p className="text-xs text-muted-foreground mt-1">Beat: {beatTitle} · Licença: {license}</p>
-            <form onSubmit={(e) => { e.preventDefault(); setSent(true); }} className="mt-4 space-y-3">
-              <input required placeholder="Seu nome / nome artístico" className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent" />
-              <input required type="email" placeholder="Email" className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent" />
-              <input placeholder="@instagram (opcional)" className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent" />
-              <textarea rows={3} placeholder="Mensagem (opcional)" className="w-full rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-accent" />
-              <div className="flex gap-2 justify-end">
-                <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-sm hover:bg-white/10">Cancelar</button>
-                <button type="submit" className="rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-semibold">Enviar</button>
-              </div>
-            </form>
+            <p className="text-xs uppercase tracking-[0.3em] text-accent">Confirma o pedido</p>
+            <h3 className="mt-2 font-display text-2xl">{beatTitle}</h3>
+            <p className="text-xs text-muted-foreground mt-1">Licença: <span className="text-foreground">{license}</span></p>
+
+            <div className="mt-4 glass rounded-xl p-3 text-sm">
+              <p><span className="text-muted-foreground">Para:</span> {userName}</p>
+              <p><span className="text-muted-foreground">E-mail:</span> {userEmail}</p>
+            </div>
+
+            <p className="mt-4 text-xs text-muted-foreground">
+              Vamos te enviar o link de pagamento por e-mail. Depois do pagamento, o beat é liberado via WhatsApp + e-mail.
+            </p>
+
+            <div className="mt-5 flex gap-2 justify-end">
+              <button onClick={onClose} className="rounded-full px-4 py-2 text-sm hover:bg-white/10">Cancelar</button>
+              <button onClick={() => setSent(true)} className="rounded-full bg-accent text-accent-foreground px-5 py-2 text-sm font-semibold glow-magenta">
+                Enviar pedido
+              </button>
+            </div>
           </>
         )}
       </div>
