@@ -108,21 +108,21 @@ function BeatDetail() {
 
           {/* CTAs */}
           <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              onClick={() => requireAuth(() => setShowForm(true))}
+              className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-3 font-semibold glow-magenta hover:opacity-90"
+            >
+              <Mail className="h-5 w-5" /> Tenho interesse — receber link de pagamento
+            </button>
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}`}
               target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-3 font-semibold glow-magenta hover:opacity-90"
-            >
-              <MessageCircle className="h-5 w-5" /> Tenho interesse — WhatsApp
-            </a>
-            <button
-              onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-semibold hover:bg-primary/80"
             >
-              <Mail className="h-5 w-5" /> Pedir por formulário
-            </button>
+              <MessageCircle className="h-5 w-5" /> Falar no WhatsApp
+            </a>
             <button
-              onClick={() => interests.toggle(beat.slug)}
+              onClick={() => requireAuth(() => interests.toggle(beat.slug))}
               className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 font-semibold hover:border-accent"
             >
               {interests.has(beat.slug) ? "Remover dos interesses" : "Salvar nos interesses"}
