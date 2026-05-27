@@ -6,7 +6,7 @@ export function PlayerBar() {
   if (!current) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/10">
+    <div className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto max-w-7xl flex items-center gap-4 px-4 py-3">
         <img src={current.cover} alt="" className="h-12 w-12 rounded-md object-cover" />
         <div className="flex-1 min-w-0">
