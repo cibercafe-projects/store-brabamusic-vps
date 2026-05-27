@@ -86,7 +86,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Header />
-      <main className="pb-32">
+      <main className="pb-40 md:pb-32">
         <Outlet />
       </main>
       <PlayerBar />
