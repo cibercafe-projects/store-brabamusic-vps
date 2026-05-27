@@ -47,7 +47,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "BRABA Beats — Loja de beats do selo BRABA Music" },
       { name: "description", content: "Catálogo de beats do selo BRABA Music. Trap, funk, drill, boom bap e mais. Escute, escolha sua licença e fale com o produtor." },
       { property: "og:title", content: "BRABA Beats — Loja de beats do selo BRABA Music" },
