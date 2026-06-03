@@ -1,68 +1,90 @@
+# Documentação do Projeto — README + REQUIREMENTS
 
-# Loja de Beats BRABA — Mockup de Telas (loja.brabamusic.com.br)
+Vou criar dois arquivos na raiz do projeto consolidando tudo que já foi implementado, com base na análise do código atual (rotas, componentes, stores, dados mock e fluxos).
 
-Vou montar a **ideia visual das telas** (mockups navegáveis, sem backend real) como uma extensão do site brabamusic.com.br, mantendo a identidade urbana: fundo roxo profundo, tipografia graffiti/handwritten nos títulos, sans-serif nos textos, cards translúcidos com glow, acentos em magenta/verde-limão e tigre/spray como elementos gráficos.
+## Arquivos a criar
 
-## Escopo da Fase 1 (MVP, conforme PDF)
+### 1. `README.md`
+Visão geral do projeto, pensada para quem chega no repositório pela primeira vez.
 
-Catálogo de beats com prévia em áudio + fluxo "Tenho Interesse" via WhatsApp/formulário. **Sem checkout automatizado nesta fase** — venda manual por link de pagamento. Estrutura preparada para evoluir.
+Seções:
+- **Sobre** — Loja de beats do selo BRABA Music, extensão do site em `loja.brabamusic.com.br`, fase 1 (MVP de mockup navegável, sem backend).
+- **Stack** — TanStack Start v1 + Vite 7, React 19, Tailwind v4, Zustand (player/auth/interesses), shadcn/ui, lucide-react. Sem Lovable Cloud nesta fase.
+- **Estrutura de pastas** — `src/routes`, `src/components`, `src/data`, `src/assets`.
+- **Como rodar** — comandos padrão.
+- **Status atual** — MVP de telas, dados mock, persistência em localStorage.
+- **Próximos passos sugeridos** — backend real (Cloud), gateway de pagamento, integração WhatsApp, áudio real, painel do produtor.
 
-## Telas a criar
+### 2. `REQUIREMENTS.md`
+Inventário detalhado das funcionalidades + regras de negócio implementadas hoje.
 
-1. **Home / Catálogo (`/`)**
-   - Header com logo BRABA + nav (Beats, Produtores, Sobre, App) + botão "Voltar ao site"
-   - Hero curto: "BEATS BRABA — escolha seu próximo hit" + busca
-   - Filtros: Gênero (Trap, Funk, Drill, Boom Bap...), BPM (slider), Produtor, Preço, Mood
-   - Grid de cards de beat: capa, nome, produtor, BPM/tom, gênero, preço, play inline, botão "Tenho Interesse"
-   - Player fixo no rodapé (waveform + controles) quando um beat está tocando
+Seções:
 
-2. **Detalhe do Beat (`/beat/:slug`)**
-   - Capa grande + waveform interativo
-   - Metadados: produtor, BPM, tom, gênero, duração, data
-   - Tags / mood
-   - Tabela de licenças (indicativa): Lease, Premium, Exclusiva — preço e o que inclui
-   - CTAs: "Tenho Interesse (WhatsApp)" + "Pedir por formulário"
-   - Beats relacionados
+**A. Telas / Rotas implementadas**
+- `/` — Home/Catálogo: hero, busca textual, filtros por gênero, slider de BPM, grid de beats.
+- `/beat/:slug` — Detalhe do beat: capa grande, waveform fake animado, metadados (BPM, tom, duração, preço), tags de mood, seleção de licença (Lease/Premium/Exclusiva), CTAs (interesse com login, WhatsApp direto, salvar favorito), modal de confirmação de pedido, beats relacionados por gênero.
+- `/produtores` — Lista de produtores com avatar iniciais, cidade, contagem de beats, bio, Instagram.
+- `/produtor/:slug` — Página individual do produtor com beats dele.
+- `/meus-interesses` — Lista de favoritos do usuário, exige login, gera mensagem única de WhatsApp com todos os beats e total estimado.
+- `/como-funciona` — 7 passos do fluxo + FAQ (7 perguntas) sobre licenças, pagamento, entrega.
+- `/app` — Mockup mobile (phone frame) demonstrando como o catálogo aparece via WebView no app BRABA.
 
-3. **Página do Produtor (`/produtor/:slug`)**
-   - Banner + foto + bio curta + redes
-   - Estatísticas (nº de beats, gêneros)
-   - Grid dos beats dele
+**B. Componentes principais**
+- `Header` — sticky com glassmorphism, nav desktop + Sheet mobile (hamburger), badge de contagem de interesses, estado de login, link externo para o site.
+- `BeatCard` — capa com hover play, botão favorito (com gate de auth), badges gênero/BPM, preço, CTA "Tenho interesse".
+- `PlayerBar` — popup modal centralizado (mudou de bottom-fixed), com capa, waveform fake animado, play/pause, close.
+- `AuthModal` — cadastro rápido sem senha (nome + e-mail).
 
-4. **Modal "Tenho Interesse"**
-   - Resumo do beat + licença escolhida
-   - Dois caminhos: botão WhatsApp (mensagem pré-preenchida) ou formulário (nome, @, email, mensagem)
-   - Confirmação de envio
+**C. Regras de negócio implementadas**
 
-5. **Carrinho de Interesses (`/meus-interesses`)**
-   - Lista local (localStorage) de beats marcados
-   - Botão "Enviar todos via WhatsApp" gerando uma mensagem única
+*Autenticação (mock):*
+- Login passwordless: apenas nome + e-mail, salvo em `localStorage` (`braba-user`).
+- Pattern `requireAuth(action)`: executa a ação se logado; senão abre modal e executa após login.
+- Ações protegidas: salvar nos favoritos, abrir modal "Tenho interesse", visualizar `/meus-interesses`.
 
-6. **Sobre / Como Funciona (`/como-funciona`)**
-   - Os 6 passos do fluxo do PDF, ilustrados
-   - FAQ curto sobre licenças, entrega, pagamento (Pix / gateway)
+*Catálogo:*
+- 8 beats mock em `src/data/beats.ts` com slug, título, produtor, gênero, BPM, tom, duração, preço, mood, capa.
+- 4 produtores mock.
+- Filtros combináveis: gênero (lista fixa), BPM (slider de máximo), busca textual em título/produtor/gênero.
 
-7. **Tela do App — aba "Beats" (preview mobile)**
-   - Mockup mobile (frame) mostrando como o catálogo aparece via WebView no app
+*Licenças (em cada beat):*
+- Lease — R$ 199 — MP3+WAV, streams não-comerciais, 1 distribuição, crédito ao produtor.
+- Premium — R$ 499 — MP3+WAV+trackouts, streams comerciais ilimitados, DSPs, vídeo-clipe (marcada como POPULAR).
+- Exclusiva — R$ 2499 — todos os arquivos+stems, direitos exclusivos, beat sai do catálogo, contrato.
 
-## Conteúdo de exemplo
+*Interesses (favoritos):*
+- Persistidos em `localStorage` (`braba-interests`) como array de slugs.
+- Operações: toggle, has, clear.
+- Soma de preços calculada na tela `/meus-interesses`.
 
-8–12 beats fictícios com capas geradas, 3–4 produtores, tudo em dados mock (sem banco). Áudio de prévia: arquivos curtos placeholder (silêncio com waveform animado, ou loops royalty-free se disponíveis — confirmo abaixo).
+*Fluxo de compra (7 passos, simulado):*
+1. Usuário escuta prévia (sem login).
+2. Para favoritar ou pedir, faz cadastro nome+e-mail.
+3. Clica "Tenho interesse" → modal confirma beat + licença + dados.
+4. Pedido "enviado" gera link `wa.me` com mensagem pré-preenchida OU simula envio de link de pagamento por e-mail.
+5. (Manual/offline) Equipe BRABA envia link de pagamento por e-mail.
+6. Após pagar, cliente envia comprovante via WhatsApp.
+7. Equipe libera o beat por WhatsApp + e-mail.
 
-## Direção visual (herdada do site)
+*WhatsApp:*
+- Número placeholder `5500000000000` em `src/data/beats.ts` (`WHATSAPP_NUMBER`).
+- Mensagens pré-preenchidas com nome do beat, produtor e licença escolhida.
+- Em `/meus-interesses`, mensagem agregada com todos os beats e total.
 
-- Fundo: roxo escuro `#2a1458` → `#4a1f8c` com texturas/spray
-- Acentos: magenta `#e94db8`, verde-limão `#c8ff3b`
-- Tipografia: handwritten/graffiti (Permanent Marker / Rubik Mono) para títulos; Inter para corpo
-- Cards: glassmorphism leve com borda gradiente
-- Microanimações sutis (hover lift, play pulse)
+**D. Design system**
+- Tema escuro roxo BRABA, accent magenta + verde-limão, tipografia display (graffiti/handwritten) + Inter.
+- Tokens em `src/styles.css` (oklch), utilitários `.glass`, `.glow-magenta`, `.text-gradient`.
+- Responsivo mobile-first, header com Sheet drawer no mobile.
 
-## Stack técnico
+**E. O que NÃO está implementado (fora de escopo da fase 1)**
+- Backend / banco de dados (sem Lovable Cloud).
+- Áudio real (player é visual com waveform fake).
+- Pagamento automatizado (Pix/Stripe).
+- Envio real de e-mail / integração WhatsApp Business API.
+- Painel do produtor / upload de beats.
+- Sistema de licenças com contrato eletrônico.
+- Autenticação real (sem verificação de e-mail, sem sessão server-side).
 
-TanStack Start já configurado, rotas separadas por tela, dados mock em `src/data/beats.ts`, sem Lovable Cloud nesta fase (é só mockup de telas).
+## Sem alterações de código de produto
 
----
-
-**Antes de implementar, 2 dúvidas rápidas:**
-1. Os botões "Tenho Interesse" devem apontar para um número de WhatsApp real seu, ou deixo placeholder `+55 00 00000-0000`?
-2. Quer que eu gere capas ilustrativas (IA) para os beats de exemplo, ou prefere placeholders neutros?
+Apenas criação dos dois arquivos de documentação na raiz. Nenhuma rota, componente ou lógica é tocada.
