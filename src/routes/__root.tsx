@@ -90,6 +90,7 @@ function RootComponent() {
       <main>
         <Outlet />
       </main>
+      <Footer />
       <PlayerBar />
     </QueryClientProvider>
   );
