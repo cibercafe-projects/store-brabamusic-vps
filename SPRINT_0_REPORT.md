@@ -123,7 +123,7 @@ Adicionado rodapé profissional global da plataforma (`src/components/Footer.tsx
   1. **BRABA MUSIC** — título + texto institucional.
   2. **Navegação** — links para `/` (Beats), `/produtores`, `/como-funciona`.
   3. **Contato** — Instagram, WhatsApp e e-mail com ícones `lucide-react`.
-  4. **Plataforma** — Política de Privacidade, Termos de Uso, Suporte (rotas ainda não existem — links são placeholders).
+  4. **Plataforma** — Política de Privacidade, Termos de Uso, Suporte (Suporte reaproveita o WhatsApp comercial).
 - **Barra inferior** — `© 2026 Braba Music. Todos os direitos reservados.` + `Desenvolvido por Cibercafé Studio.`
 
 ### Configuração
@@ -141,6 +141,8 @@ Constantes `CONTACT` (Instagram / WhatsApp / e-mail) ficam no topo do `Footer.ts
 - `src/routes/politica-privacidade.tsx` — Política de Privacidade padrão (LGPD, cookies, direitos do titular).
 - `src/routes/termos-uso.tsx` — Termos de Uso padrão (licenciamento, uso adequado, propriedade intelectual).
 - Footer atualizado: "Política de Privacidade" e "Termos de Uso" usam `<Link>` interno; "Suporte" reaproveita `CONTACT.whatsapp` (mesmo contato comercial).
+
+### Impacto
 
 - Nenhuma flag nova; nenhuma feature desativada ou oculta.
 - Footer é renderizado em **todas as rotas** (inclusive `/meus-interesses` e `/app`).
