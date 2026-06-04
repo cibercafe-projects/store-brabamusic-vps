@@ -109,3 +109,34 @@ src/routes/admin/
 - Admin consegue cadastrar uma produtora, criar um beat com upload e ver no catálogo público.
 - Catálogo público lê do banco em vez de `src/data/beats.ts` (manter arquivo como seed/fallback).
 - Lead vindo do botão "Tenho interesse" (WhatsApp click) é registrado opcionalmente via webhook ou form alternativo para alimentar `leads.tsx`.
+
+---
+
+## Adicional — Footer global
+
+Adicionado rodapé profissional global da plataforma (`src/components/Footer.tsx`), montado em `src/routes/__root.tsx` entre `<main>` e `<PlayerBar />`. Mantém identidade visual (fundo gradiente roxo, borda neon magenta translúcida, glassmorphism, tipografia `font-display`, glow em hover).
+
+### Estrutura
+
+- **Seção CTA** (acima do rodapé): card `glass` com borda superior neon, título "🎵 Procurando o beat ideal?" em `text-gradient`, parágrafo institucional e botão **Explorar Beats** → `/`.
+- **Grid de 4 colunas** (responsivo: 1 col mobile / 2 cols tablet / 4 cols desktop):
+  1. **BRABA MUSIC** — título + texto institucional.
+  2. **Navegação** — links para `/` (Beats), `/produtores`, `/como-funciona`.
+  3. **Contato** — Instagram, WhatsApp e e-mail com ícones `lucide-react`.
+  4. **Plataforma** — Política de Privacidade, Termos de Uso, Suporte (rotas ainda não existem — links são placeholders).
+- **Barra inferior** — `© 2026 Braba Music. Todos os direitos reservados.` + `Desenvolvido por Cibercafé Studio.`
+
+### Configuração
+
+Constantes `CONTACT` (Instagram / WhatsApp / e-mail) ficam no topo do `Footer.tsx` como placeholders editáveis manualmente. Na Sprint 1, esses valores migram para a tabela `configuracoes` do backoffice.
+
+### Dívidas para Sprint 1
+
+- Criar as rotas `/politica-privacidade`, `/termos-uso`, `/suporte` (hoje retornam 404 customizado).
+- Mover `CONTACT` para configurações persistidas no banco.
+
+### Impacto
+
+- Nenhuma flag nova; nenhuma feature desativada ou oculta.
+- Footer é renderizado em **todas as rotas** (inclusive `/meus-interesses` e `/app`).
+- Mantido na seção **Funcionalidades MANTIDAS (ativas)**.
