@@ -34,6 +34,13 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 - Placeholders configuráveis de contato (Instagram, WhatsApp, e-mail) centralizados no topo do componente — serão movidos para o backoffice na Sprint 1.
 - Sem novas flags; nada desativado ou oculto por este adicional.
 
+### Added (adicional — Páginas institucionais)
+
+- `src/routes/politica-privacidade.tsx` — página padrão de Política de Privacidade (LGPD, cookies, direitos do titular, contato).
+- `src/routes/termos-uso.tsx` — página padrão de Termos de Uso (aceitação, licenciamento, uso adequado, propriedade intelectual).
+- `src/components/Footer.tsx` — links "Política de Privacidade" e "Termos de Uso" agora apontam para as novas rotas via `<Link>`; link "Suporte" reaproveita o WhatsApp comercial (`CONTACT.whatsapp`).
+- Conteúdo textual é genérico/padrão — deve ser revisado pelo jurídico antes do go-live.
+
 ### Changed
 
 - `src/components/AuthStore.tsx` — `requireAuth()` virou *no-op* quando `FEATURES.auth = false` (executa a ação direto, sem abrir `AuthModal`).

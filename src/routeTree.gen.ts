@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosUsoRouteImport } from './routes/termos-uso'
 import { Route as ProdutoresRouteImport } from './routes/produtores'
+import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
 import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AppRouteImport } from './routes/app'
@@ -17,9 +19,19 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
 
+const TermosUsoRoute = TermosUsoRouteImport.update({
+  id: '/termos-uso',
+  path: '/termos-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProdutoresRoute = ProdutoresRouteImport.update({
   id: '/produtores',
   path: '/produtores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaPrivacidadeRoute = PoliticaPrivacidadeRouteImport.update({
+  id: '/politica-privacidade',
+  path: '/politica-privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeusInteressesRoute = MeusInteressesRouteImport.update({
@@ -58,7 +70,9 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/meus-interesses': typeof MeusInteressesRoute
+  '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
+  '/termos-uso': typeof TermosUsoRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
 }
@@ -67,7 +81,9 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/meus-interesses': typeof MeusInteressesRoute
+  '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
+  '/termos-uso': typeof TermosUsoRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
 }
@@ -77,7 +93,9 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/meus-interesses': typeof MeusInteressesRoute
+  '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
+  '/termos-uso': typeof TermosUsoRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
 }
@@ -88,7 +106,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/meus-interesses'
+    | '/politica-privacidade'
     | '/produtores'
+    | '/termos-uso'
     | '/beat/$slug'
     | '/produtor/$slug'
   fileRoutesByTo: FileRoutesByTo
@@ -97,7 +117,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/meus-interesses'
+    | '/politica-privacidade'
     | '/produtores'
+    | '/termos-uso'
     | '/beat/$slug'
     | '/produtor/$slug'
   id:
@@ -106,7 +128,9 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/meus-interesses'
+    | '/politica-privacidade'
     | '/produtores'
+    | '/termos-uso'
     | '/beat/$slug'
     | '/produtor/$slug'
   fileRoutesById: FileRoutesById
@@ -116,18 +140,34 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   MeusInteressesRoute: typeof MeusInteressesRoute
+  PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
   ProdutoresRoute: typeof ProdutoresRoute
+  TermosUsoRoute: typeof TermosUsoRoute
   BeatSlugRoute: typeof BeatSlugRoute
   ProdutorSlugRoute: typeof ProdutorSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos-uso': {
+      id: '/termos-uso'
+      path: '/termos-uso'
+      fullPath: '/termos-uso'
+      preLoaderRoute: typeof TermosUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/produtores': {
       id: '/produtores'
       path: '/produtores'
       fullPath: '/produtores'
       preLoaderRoute: typeof ProdutoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-privacidade': {
+      id: '/politica-privacidade'
+      path: '/politica-privacidade'
+      fullPath: '/politica-privacidade'
+      preLoaderRoute: typeof PoliticaPrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meus-interesses': {
@@ -180,7 +220,9 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   MeusInteressesRoute: MeusInteressesRoute,
+  PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
   ProdutoresRoute: ProdutoresRoute,
+  TermosUsoRoute: TermosUsoRoute,
   BeatSlugRoute: BeatSlugRoute,
   ProdutorSlugRoute: ProdutorSlugRoute,
 }

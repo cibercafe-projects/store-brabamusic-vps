@@ -94,9 +94,18 @@ export function Footer() {
             <div>
               <h4 className="font-display text-lg text-foreground">Plataforma</h4>
               <ul className="mt-4 space-y-2">
-                <li><a href="/politica-privacidade" className={linkClass}>Política de Privacidade</a></li>
-                <li><a href="/termos-uso" className={linkClass}>Termos de Uso</a></li>
-                <li><a href="/suporte" className={linkClass}>Suporte</a></li>
+                <li><Link to="/politica-privacidade" className={linkClass}>Política de Privacidade</Link></li>
+                <li><Link to="/termos-uso" className={linkClass}>Termos de Uso</Link></li>
+                <li>
+                  <a
+                    href={CONTACT.whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={linkClass}
+                  >
+                    Suporte
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
