@@ -132,10 +132,15 @@ Constantes `CONTACT` (Instagram / WhatsApp / e-mail) ficam no topo do `Footer.ts
 
 ### Dívidas para Sprint 1
 
-- Criar as rotas `/politica-privacidade`, `/termos-uso`, `/suporte` (hoje retornam 404 customizado).
-- Mover `CONTACT` para configurações persistidas no banco.
+- Mover `CONTACT` (Instagram/WhatsApp/e-mail) para configurações persistidas no banco.
+- Revisar conteúdo jurídico das páginas `politica-privacidade` e `termos-uso` (texto padrão genérico).
+- Criar página dedicada de Suporte (atualmente o link aponta para o WhatsApp comercial).
 
-### Impacto
+### Páginas institucionais (adicional)
+
+- `src/routes/politica-privacidade.tsx` — Política de Privacidade padrão (LGPD, cookies, direitos do titular).
+- `src/routes/termos-uso.tsx` — Termos de Uso padrão (licenciamento, uso adequado, propriedade intelectual).
+- Footer atualizado: "Política de Privacidade" e "Termos de Uso" usam `<Link>` interno; "Suporte" reaproveita `CONTACT.whatsapp` (mesmo contato comercial).
 
 - Nenhuma flag nova; nenhuma feature desativada ou oculta.
 - Footer é renderizado em **todas as rotas** (inclusive `/meus-interesses` e `/app`).
