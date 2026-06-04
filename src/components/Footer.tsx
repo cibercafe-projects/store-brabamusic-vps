@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 
 // Placeholders configuráveis — virão do backoffice na Sprint 1
 const CONTACT = {
-  instagram: "https://instagram.com/brabamusic",
-  whatsapp: "https://wa.me/5500000000000",
+  instagram: "https://www.instagram.com/braba.music/",
+  whatsapp: "https://wa.me/5511913401000",
   email: "contato@brabamusic.com.br",
 };
 
