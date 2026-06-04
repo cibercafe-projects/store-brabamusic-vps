@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { PlayerBar } from "@/components/PlayerBar";
 
 function NotFoundComponent() {
@@ -89,6 +90,7 @@ function RootComponent() {
       <main>
         <Outlet />
       </main>
+      <Footer />
       <PlayerBar />
     </QueryClientProvider>
   );

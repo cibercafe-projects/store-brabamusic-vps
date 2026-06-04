@@ -27,6 +27,13 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 - `README.md` — visão geral do projeto, stack e como rodar.
 - `REQUIREMENTS.md` — inventário detalhado das funcionalidades da Fase 1.
 
+### Added (adicional — Footer)
+
+- `src/components/Footer.tsx` — rodapé global com seção CTA ("🎵 Procurando o beat ideal?"), grid de 4 colunas (Braba Music / Navegação / Contato / Plataforma) e barra inferior de copyright.
+- `src/routes/__root.tsx` — montagem do `<Footer />` entre `<main>` e `<PlayerBar />`.
+- Placeholders configuráveis de contato (Instagram, WhatsApp, e-mail) centralizados no topo do componente — serão movidos para o backoffice na Sprint 1.
+- Sem novas flags; nada desativado ou oculto por este adicional.
+
 ### Changed
 
 - `src/components/AuthStore.tsx` — `requireAuth()` virou *no-op* quando `FEATURES.auth = false` (executa a ação direto, sem abrir `AuthModal`).
