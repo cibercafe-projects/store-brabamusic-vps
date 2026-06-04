@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { FEATURES } from "@/config/features";
 
 export type AuthUser = { name: string; email: string };
 
@@ -34,6 +35,8 @@ export const useAuth = create<AuthState>((set, get) => ({
     set({ user: null });
   },
   requireAuth: (action) => {
+    // Sprint 0: auth desligado por flag — executa direto, sem modal.
+    if (!FEATURES.auth) { action(); return; }
     if (get().user) action();
     else set({ modalOpen: true, pendingAction: action });
   },

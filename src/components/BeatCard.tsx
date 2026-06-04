@@ -3,6 +3,7 @@ import { Play, Pause, Heart } from "lucide-react";
 import type { Beat } from "@/data/beats";
 import { usePlayer, useInterests } from "./PlayerStore";
 import { useAuth } from "./AuthStore";
+import { FEATURES } from "@/config/features";
 
 export function BeatCard({ beat }: { beat: Beat }) {
   const { current, playing, play } = usePlayer();
@@ -25,13 +26,15 @@ export function BeatCard({ beat }: { beat: Beat }) {
             {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
           </span>
         </button>
-        <button
-          onClick={() => requireAuth(() => interests.toggle(beat.slug))}
-          aria-label="Adicionar aos interesses"
-          className="absolute top-3 right-3 grid place-items-center h-9 w-9 rounded-full bg-black/50 backdrop-blur hover:bg-primary"
-        >
-          <Heart className={`h-4 w-4 ${liked ? "fill-accent text-accent" : "text-white"}`} />
-        </button>
+        {FEATURES.interests && (
+          <button
+            onClick={() => requireAuth(() => interests.toggle(beat.slug))}
+            aria-label="Adicionar aos interesses"
+            className="absolute top-3 right-3 grid place-items-center h-9 w-9 rounded-full bg-black/50 backdrop-blur hover:bg-primary"
+          >
+            <Heart className={`h-4 w-4 ${liked ? "fill-accent text-accent" : "text-white"}`} />
+          </button>
+        )}
         <div className="absolute bottom-3 left-3 flex gap-2">
           <span className="rounded-full bg-black/60 backdrop-blur px-2 py-0.5 text-[10px] uppercase tracking-wider">{beat.genre}</span>
           <span className="rounded-full bg-black/60 backdrop-blur px-2 py-0.5 text-[10px]">{beat.bpm} BPM</span>

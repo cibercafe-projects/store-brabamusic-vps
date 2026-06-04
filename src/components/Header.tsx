@@ -3,6 +3,7 @@ import { ShoppingBag, ExternalLink, LogOut, User, Menu } from "lucide-react";
 import { useState } from "react";
 import { useInterests } from "./PlayerStore";
 import { useAuth } from "./AuthStore";
+import { FEATURES } from "@/config/features";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
 export function Header() {
@@ -40,29 +41,33 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link to="/meus-interesses" className="relative inline-flex items-center gap-2 rounded-full bg-primary/20 hover:bg-primary/30 px-3 py-2 text-sm border border-primary/40">
-            <ShoppingBag className="h-4 w-4" />
-            <span className="hidden sm:inline">Interesses</span>
-            {count > 0 && (
-              <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs font-bold grid place-items-center">{count}</span>
-            )}
-          </Link>
+          {FEATURES.interests && (
+            <Link to="/meus-interesses" className="relative inline-flex items-center gap-2 rounded-full bg-primary/20 hover:bg-primary/30 px-3 py-2 text-sm border border-primary/40">
+              <ShoppingBag className="h-4 w-4" />
+              <span className="hidden sm:inline">Interesses</span>
+              {count > 0 && (
+                <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs font-bold grid place-items-center">{count}</span>
+              )}
+            </Link>
+          )}
 
-          {user ? (
-            <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/15 px-3 py-1.5 text-xs">
-              <User className="h-3 w-3 text-accent" />
-              <span className="max-w-[120px] truncate">{user.name}</span>
-              <button onClick={logout} aria-label="Sair" className="text-muted-foreground hover:text-destructive">
-                <LogOut className="h-3 w-3" />
+          {FEATURES.auth && (
+            user ? (
+              <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/15 px-3 py-1.5 text-xs">
+                <User className="h-3 w-3 text-accent" />
+                <span className="max-w-[120px] truncate">{user.name}</span>
+                <button onClick={logout} aria-label="Sair" className="text-muted-foreground hover:text-destructive">
+                  <LogOut className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => requireAuth(() => {})}
+                className="hidden sm:inline-flex items-center gap-1 rounded-full border border-white/15 px-3 py-1.5 text-xs hover:border-accent"
+              >
+                <User className="h-3 w-3" /> Entrar
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => requireAuth(() => {})}
-              className="hidden sm:inline-flex items-center gap-1 rounded-full border border-white/15 px-3 py-1.5 text-xs hover:border-accent"
-            >
-              <User className="h-3 w-3" /> Entrar
-            </button>
+            )
           )}
 
           <a href="https://brabamusic.com.br" target="_blank" rel="noreferrer" className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
@@ -92,21 +97,23 @@ export function Header() {
                   </SheetClose>
                 ))}
                 <hr className="border-white/10 my-2" />
-                {user ? (
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4 text-accent" />
-                    <span>{user.name}</span>
-                    <button onClick={() => { logout(); setOpen(false); }} className="ml-auto text-muted-foreground hover:text-destructive text-xs">
-                      Sair
+                {FEATURES.auth && (
+                  user ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="h-4 w-4 text-accent" />
+                      <span>{user.name}</span>
+                      <button onClick={() => { logout(); setOpen(false); }} className="ml-auto text-muted-foreground hover:text-destructive text-xs">
+                        Sair
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { requireAuth(() => {}); setOpen(false); }}
+                      className="inline-flex items-center gap-2 text-sm hover:text-accent"
+                    >
+                      <User className="h-4 w-4" /> Entrar
                     </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => { requireAuth(() => {}); setOpen(false); }}
-                    className="inline-flex items-center gap-2 text-sm hover:text-accent"
-                  >
-                    <User className="h-4 w-4" /> Entrar
-                  </button>
+                  )
                 )}
                 <a href="https://brabamusic.com.br" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-2">
                   site <ExternalLink className="h-3 w-3" />

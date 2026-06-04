@@ -1,90 +1,91 @@
-# Documentação do Projeto — README + REQUIREMENTS
 
-Vou criar dois arquivos na raiz do projeto consolidando tudo que já foi implementado, com base na análise do código atual (rotas, componentes, stores, dados mock e fluxos).
+# Sprint 0 — Limpeza de escopo do MVP
 
-## Arquivos a criar
+Princípio: **nada é deletado**. Tudo que sai do MVP é desativado por uma única flag central, ou comentado/ocultado na UI, mantendo arquivos, stores e rotas no projeto para reaproveitamento futuro.
 
-### 1. `README.md`
-Visão geral do projeto, pensada para quem chega no repositório pela primeira vez.
+## 1. Flag central de features
 
-Seções:
-- **Sobre** — Loja de beats do selo BRABA Music, extensão do site em `loja.brabamusic.com.br`, fase 1 (MVP de mockup navegável, sem backend).
-- **Stack** — TanStack Start v1 + Vite 7, React 19, Tailwind v4, Zustand (player/auth/interesses), shadcn/ui, lucide-react. Sem Lovable Cloud nesta fase.
-- **Estrutura de pastas** — `src/routes`, `src/components`, `src/data`, `src/assets`.
-- **Como rodar** — comandos padrão.
-- **Status atual** — MVP de telas, dados mock, persistência em localStorage.
-- **Próximos passos sugeridos** — backend real (Cloud), gateway de pagamento, integração WhatsApp, áudio real, painel do produtor.
+Criar `src/config/features.ts`:
 
-### 2. `REQUIREMENTS.md`
-Inventário detalhado das funcionalidades + regras de negócio implementadas hoje.
+```ts
+export const FEATURES = {
+  auth: false,          // AuthModal, login passwordless, requireAuth
+  interests: false,     // favoritos, contador, página "Meus Interesses"
+  appPromo: false,      // links/menu/rota do app
+};
+```
 
-Seções:
+Toda desativação abaixo lê desta flag — reativar no futuro = trocar `false` por `true`.
 
-**A. Telas / Rotas implementadas**
-- `/` — Home/Catálogo: hero, busca textual, filtros por gênero, slider de BPM, grid de beats.
-- `/beat/:slug` — Detalhe do beat: capa grande, waveform fake animado, metadados (BPM, tom, duração, preço), tags de mood, seleção de licença (Lease/Premium/Exclusiva), CTAs (interesse com login, WhatsApp direto, salvar favorito), modal de confirmação de pedido, beats relacionados por gênero.
-- `/produtores` — Lista de produtores com avatar iniciais, cidade, contagem de beats, bio, Instagram.
-- `/produtor/:slug` — Página individual do produtor com beats dele.
-- `/meus-interesses` — Lista de favoritos do usuário, exige login, gera mensagem única de WhatsApp com todos os beats e total estimado.
-- `/como-funciona` — 7 passos do fluxo + FAQ (7 perguntas) sobre licenças, pagamento, entrega.
-- `/app` — Mockup mobile (phone frame) demonstrando como o catálogo aparece via WebView no app BRABA.
+## 2. Autenticação de cliente (desativar do fluxo)
 
-**B. Componentes principais**
-- `Header` — sticky com glassmorphism, nav desktop + Sheet mobile (hamburger), badge de contagem de interesses, estado de login, link externo para o site.
-- `BeatCard` — capa com hover play, botão favorito (com gate de auth), badges gênero/BPM, preço, CTA "Tenho interesse".
-- `PlayerBar` — popup modal centralizado (mudou de bottom-fixed), com capa, waveform fake animado, play/pause, close.
-- `AuthModal` — cadastro rápido sem senha (nome + e-mail).
+- `src/components/AuthStore.tsx`: manter intacto.
+- `src/components/AuthModal.tsx`: manter, mas no `__root.tsx` **não renderizar** quando `!FEATURES.auth` (hoje nem está montado — apenas garantir que continue assim).
+- `src/components/AuthStore.tsx` → ajustar `requireAuth` para, quando `!FEATURES.auth`, executar a ação direto sem abrir modal. Assim qualquer chamada existente continua funcionando para visitante.
+- `Header.tsx`: ocultar bloco "Entrar" / avatar do usuário / botão logout quando `!FEATURES.auth` (tanto desktop quanto Sheet mobile). Código permanece, envolto em condicional.
 
-**C. Regras de negócio implementadas**
+## 3. Favoritos / Interesses (ocultar da UI)
 
-*Autenticação (mock):*
-- Login passwordless: apenas nome + e-mail, salvo em `localStorage` (`braba-user`).
-- Pattern `requireAuth(action)`: executa a ação se logado; senão abre modal e executa após login.
-- Ações protegidas: salvar nos favoritos, abrir modal "Tenho interesse", visualizar `/meus-interesses`.
+- `BeatCard.tsx`: esconder o botão de coração (`Heart`) quando `!FEATURES.interests`. Lógica do `useInterests` permanece.
+- `Header.tsx`: esconder o link "Interesses" + badge de contador quando `!FEATURES.interests`. Remover apenas a entrada visual; rota continua existindo.
+- `meus-interesses.tsx`: manter o arquivo. No componente, quando `!FEATURES.interests`, renderizar um placeholder simples ("Em breve") ou redirecionar para `/`. Sem deletar a rota.
+- `PlayerStore.tsx` (`useInterests`): mantido.
 
-*Catálogo:*
-- 8 beats mock em `src/data/beats.ts` com slug, título, produtor, gênero, BPM, tom, duração, preço, mood, capa.
-- 4 produtores mock.
-- Filtros combináveis: gênero (lista fixa), BPM (slider de máximo), busca textual em título/produtor/gênero.
+## 4. Fluxos dependentes de login
 
-*Licenças (em cada beat):*
-- Lease — R$ 199 — MP3+WAV, streams não-comerciais, 1 distribuição, crédito ao produtor.
-- Premium — R$ 499 — MP3+WAV+trackouts, streams comerciais ilimitados, DSPs, vídeo-clipe (marcada como POPULAR).
-- Exclusiva — R$ 2499 — todos os arquivos+stems, direitos exclusivos, beat sai do catálogo, contrato.
+- Como `requireAuth` agora é no-op quando auth está desligado, qualquer CTA que dependia dele (ex. favoritar, "Tenho interesse") passa a funcionar para visitante.
+- Garantir que `/meus-interesses` não exibe o bloqueio "Faz login pra ver" (já tratado pelo passo 3).
+- `beat.$slug.tsx`: revisar CTAs e remover qualquer gate de login visual (mantendo código condicional via flag).
 
-*Interesses (favoritos):*
-- Persistidos em `localStorage` (`braba-interests`) como array de slugs.
-- Operações: toggle, has, clear.
-- Soma de preços calculada na tela `/meus-interesses`.
+## 5. Integração com app
 
-*Fluxo de compra (7 passos, simulado):*
-1. Usuário escuta prévia (sem login).
-2. Para favoritar ou pedir, faz cadastro nome+e-mail.
-3. Clica "Tenho interesse" → modal confirma beat + licença + dados.
-4. Pedido "enviado" gera link `wa.me` com mensagem pré-preenchida OU simula envio de link de pagamento por e-mail.
-5. (Manual/offline) Equipe BRABA envia link de pagamento por e-mail.
-6. Após pagar, cliente envia comprovante via WhatsApp.
-7. Equipe libera o beat por WhatsApp + e-mail.
+- Rota `src/routes/app.tsx`: mantida.
+- `Header.tsx` / `index.tsx` / `como-funciona.tsx`: ocultar links e menções ao app quando `!FEATURES.appPromo`. Conteúdo permanece nos arquivos.
 
-*WhatsApp:*
-- Número placeholder `5500000000000` em `src/data/beats.ts` (`WHATSAPP_NUMBER`).
-- Mensagens pré-preenchidas com nome do beat, produtor e licença escolhida.
-- Em `/meus-interesses`, mensagem agregada com todos os beats e total.
+## 6. Página "Como funciona"
 
-**D. Design system**
-- Tema escuro roxo BRABA, accent magenta + verde-limão, tipografia display (graffiti/handwritten) + Inter.
-- Tokens em `src/styles.css` (oklch), utilitários `.glass`, `.glow-magenta`, `.text-gradient`.
-- Responsivo mobile-first, header com Sheet drawer no mobile.
+Reescrever apenas o conteúdo de `src/routes/como-funciona.tsx` para refletir o fluxo MVP:
 
-**E. O que NÃO está implementado (fora de escopo da fase 1)**
-- Backend / banco de dados (sem Lovable Cloud).
-- Áudio real (player é visual com waveform fake).
-- Pagamento automatizado (Pix/Stripe).
-- Envio real de e-mail / integração WhatsApp Business API.
-- Painel do produtor / upload de beats.
-- Sistema de licenças com contrato eletrônico.
-- Autenticação real (sem verificação de e-mail, sem sessão server-side).
+```
+01 Catálogo  →  02 Interesse (WhatsApp)  →  03 Pagamento manual  →  04 Entrega manual
+```
 
-## Sem alterações de código de produto
+- Passos: Acessa catálogo → Escolhe beat → Clica em "Tenho interesse" e fala no WhatsApp → Recebe link/Pix manual → Recebe beat por WhatsApp/e-mail.
+- FAQ: remover perguntas sobre cadastro/senha; manter licenças, pagamento, entrega, exclusividade.
 
-Apenas criação dos dois arquivos de documentação na raiz. Nenhuma rota, componente ou lógica é tocada.
+## 7. O que permanece ativo
+
+Home, catálogo, busca, filtros, página de beat, página de produtora, player (modal), design system, navegação principal, link externo para `brabamusic.com.br`.
+
+## 8. Entregável: relatório `SPRINT_0_REPORT.md`
+
+Arquivo novo na raiz com:
+- **Desativadas (flag off):** auth, interests, appPromo.
+- **Ocultadas na UI:** botão favoritar, contador interesses, link Interesses, link/menu App, bloco login no header, gate de login em `/meus-interesses`.
+- **Mantidas:** catálogo, busca, filtros, beat, produtora, player, design system.
+- **Dependências identificadas:** `requireAuth` usado em `BeatCard`; `useInterests` usado em `Header`, `BeatCard`, `meus-interesses`; rota `/app` referenciada em Header/menu.
+- **Impactos futuros:** reativar = flipar flag + revalidar copy de "Como funciona"; revisar telemetria; conferir SEO de rotas ocultas (não linkadas, mas indexáveis — considerar `noindex` nas ocultas se necessário).
+
+## 9. Estrutura sugerida para Sprint 1 — Backoffice
+
+```
+src/routes/admin/
+  _layout.tsx           guard de admin + shell (sidebar)
+  login.tsx             login admin (e-mail+senha, Lovable Cloud)
+  index.tsx             dashboard (KPIs: leads, beats ativos, conversões)
+  produtoras.tsx        CRUD produtoras
+  produtoras.$id.tsx
+  beats.tsx             CRUD beats (upload preview/master, licenças, preço)
+  beats.$id.tsx
+  leads.tsx             lista de interesses recebidos via WhatsApp/forms
+  leads.$id.tsx         detalhe + status (novo, em negociação, pago, entregue)
+  configuracoes.tsx     WhatsApp number, e-mails, licenças padrão, copy
+```
+
+Backend: ativar Lovable Cloud (auth + tabelas `producers`, `beats`, `licenses`, `leads`, `admin_users` com `user_roles` separado). Storage para áudio/cover. Server functions para CRUD com `requireSupabaseAuth` + check de role `admin`.
+
+## Resumo técnico das mudanças desta sprint
+
+- **Criar:** `src/config/features.ts`, `SPRINT_0_REPORT.md`.
+- **Editar:** `AuthStore.tsx` (requireAuth no-op via flag), `Header.tsx` (ocultar Entrar / Interesses / App), `BeatCard.tsx` (ocultar coração), `meus-interesses.tsx` (placeholder quando desativado), `beat.$slug.tsx` (remover gates visuais), `como-funciona.tsx` (novo copy do fluxo MVP), `index.tsx` (remover menções ao app, se houver).
+- **Não tocar:** `AuthModal.tsx`, `PlayerStore.tsx`, `app.tsx`, rotas existentes, design tokens.
