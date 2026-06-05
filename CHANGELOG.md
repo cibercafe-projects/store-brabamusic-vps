@@ -13,6 +13,40 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 1 — Fundação do Backoffice Administrativo
+
+### Added
+
+- **Lovable Cloud** habilitado (backend gerenciado: Auth + Postgres).
+- Migração SQL:
+  - Enum `public.app_role` (apenas `admin` por enquanto).
+  - Tabela `public.user_roles` (com RLS — usuário só lê seus próprios papéis).
+  - Função `public.has_role(uuid, app_role)` `SECURITY DEFINER` restrita a `service_role`.
+- `src/lib/admin.functions.ts` — server fns: `checkAdminRole`, `adminBootstrapNeeded`, `bootstrapFirstAdmin` (cria o primeiro admin se ainda não existir nenhum).
+- `src/components/admin/AppSidebar.tsx` — sidebar do backoffice (shadcn).
+- `src/components/admin/Placeholder.tsx` — componente "Tela em desenvolvimento".
+- Rotas administrativas:
+  - `src/routes/admin/route.tsx` — shell vazio (apenas `<Outlet />`).
+  - `src/routes/admin/index.tsx` — redireciona `/admin` → `/admin/dashboard`.
+  - `src/routes/admin/login.tsx` — login Admin (e-mail+senha) com bootstrap do primeiro admin.
+  - `src/routes/admin/_protected/route.tsx` — layout protegido (gate de sessão + role `admin`) com sidebar e topbar.
+  - `src/routes/admin/_protected/{dashboard,produtoras,beats,leads,configuracoes}.tsx` — placeholders.
+- Auth configurada: e-mail confirmado automaticamente, HIBP password check ativo.
+- `Toaster` (sonner) montado globalmente em `__root.tsx`.
+
+### Changed
+
+- `src/routes/__root.tsx` — `Header`, `Footer` e `PlayerBar` agora só renderizam **fora** de `/admin`. Backoffice tem layout totalmente isolado.
+
+### Docs
+
+- `SPRINT_1_REPORT.md` — arquitetura, decisões, dívidas e roadmap da Sprint 2.
+- `.lovable/plan.md` — escopo da Sprint 1.
+
+---
+
+
+
 ## Sprint 0 — Limpeza de escopo e preparação do MVP
 
 > Princípio da sprint: **nada foi deletado**. Tudo que sai do MVP foi desativado por flag central ou ocultado condicionalmente na UI.
