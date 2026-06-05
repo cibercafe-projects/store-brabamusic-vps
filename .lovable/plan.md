@@ -1,73 +1,102 @@
-# Footer Profissional — Adicional Sprint 0
 
-## Escopo
+# Sprint 1 — Fundação do Backoffice Administrativo
 
-Criar um rodapé global da plataforma com seção CTA logo acima, mantendo a identidade visual atual (fundo roxo profundo, neon magenta, detalhes lime, glassmorphism, tipografia `font-display`). Atualizar documentação da Sprint 0.
+## Objetivo
 
-## Arquivos a criar
+Entregar a base do `/admin`: rotas, login real, layout próprio com sidebar, proteção por role `admin` e placeholders. **Sem CRUDs.**
 
-### `src/components/Footer.tsx`
-Componente único exportando `<Footer />`, contendo:
+---
 
-1. **Seção CTA** (acima do rodapé, full-width)
-   - Título: `🎵 Procurando o beat ideal?` (`font-display`, `text-gradient`)
-   - Texto: `Explore o catálogo da Braba Music e conecte-se com produtoras independentes.`
-   - Botão `Explorar Beats` → `<Link to="/">` (rola para o catálogo na home). Usa `Button` variant default com glow magenta.
-   - Card `glass` com borda superior neon translúcida (`border-t border-primary/30`) e padding vertical generoso (`py-16`).
+## Fase 1 — Análise da estrutura atual
 
-2. **Grid principal** — 4 colunas (`grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10`)
-   - **Coluna 1 — BRABA MUSIC**: logo/título em `font-display text-gradient` + parágrafo institucional.
-   - **Coluna 2 — Navegação**: links `<Link>` para `/` (Beats), `/produtores`, `/como-funciona`.
-   - **Coluna 3 — Contato**: Instagram (`https://instagram.com/brabamusic` placeholder), WhatsApp (placeholder `https://wa.me/55...`), E-mail (`mailto:contato@brabamusic.com.br` placeholder). Ícones do `lucide-react` (Instagram, MessageCircle, Mail).
-   - **Coluna 4 — Plataforma**: links para `/politica-privacidade`, `/termos-uso`, `/suporte` (placeholders — rotas não serão criadas agora; links ficam apontando, abrirão 404 customizado existente).
+- **Rotas**: arquivo-base TanStack Start em `src/routes/` (catálogo público + `politica-privacidade`, `termos-uso`). Nenhum grupo `_authenticated`.
+- **Layout**: `__root.tsx` renderiza `Header + main + Footer + PlayerBar` globalmente — precisa ser ajustado para **não** envolver `/admin`.
+- **Auth atual**: `AuthStore` (Zustand + localStorage, cliente passwordless) está **desligado por flag** (`FEATURES.auth=false`). É de uso futuro do cliente final, **não serve para admin** e fica intocado.
+- **Stores**: Zustand já em uso (`AuthStore`, `PlayerStore`).
+- **UI**: shadcn completo, incluindo `sidebar.tsx`. Reutilizável.
+- **Conflitos com público**: nenhum, desde que o admin tenha seu próprio layout isolado e o `__root` deixe de aplicar Header/Footer no subtree `/admin`.
 
-3. **Barra inferior** (`border-t border-white/10 mt-12 pt-6`)
-   - Esquerda: `© 2026 Braba Music. Todos os direitos reservados.`
-   - Direita: `Desenvolvido por Cibercafé Studio.`
-   - Empilha em mobile.
+## Arquitetura proposta
 
-4. **Estilo**
-   - Container externo: `bg-gradient-to-b from-transparent to-background/80 border-t border-primary/20`
-   - Links com `hover:text-primary transition-colors` e `hover:[text-shadow:0_0_8px_var(--magenta)]` (glow suave) — usar utility inline.
-   - Padding: `pt-20 pb-8 px-4`.
-   - Largura máx: `max-w-7xl mx-auto`.
-
-### Configuração de contato
-Constantes no topo do `Footer.tsx` (placeholders documentados como configuráveis):
-```ts
-const CONTACT = {
-  instagram: "https://instagram.com/brabamusic",
-  whatsapp: "https://wa.me/5500000000000",
-  email: "contato@brabamusic.com.br",
-};
+```text
+Lovable Cloud (Supabase) → Auth (e-mail+senha) + tabela user_roles
+                          ↓
+src/routes/
+  __root.tsx              (Header/Footer só fora de /admin)
+  _authenticated/
+    route.tsx             (gate gerenciado pela integração — ssr:false, redirect → /admin/login)
+    admin/
+      route.tsx           (layout admin: SidebarProvider + AppSidebar + topbar + Outlet — gate de role admin)
+      index.tsx           (redirect → /admin/dashboard)
+      dashboard.tsx       ("Tela em desenvolvimento")
+      produtoras.tsx      ("Tela em desenvolvimento")
+      beats.tsx           ("Tela em desenvolvimento")
+      leads.tsx           ("Tela em desenvolvimento")
+      configuracoes.tsx   ("Tela em desenvolvimento")
+  admin.login.tsx         (público — formulário e-mail+senha, redireciona pra /admin/dashboard)
 ```
 
-## Arquivos a editar
+Chave: `_authenticated/` é o gate de sessão (gerenciado pela integração Supabase do Lovable). **O subtree `admin/` adiciona um gate adicional de role `admin`** via server fn `requireAdmin`.
 
-### `src/routes/__root.tsx`
-- Importar `Footer` e renderizar **após** `<main><Outlet /></main>` e **antes** do `<PlayerBar />`.
+---
 
-### `CHANGELOG.md`
-- Adicionar sub-seção em **Sprint 0** chamada `### Added (adicional — Footer)` listando:
-  - `src/components/Footer.tsx` — rodapé global com 4 colunas + CTA + barra inferior.
-  - Edição de `__root.tsx` para montar o `Footer`.
-- Nota: nenhuma flag nova; nada desativado.
+## Fase 2 — Backend (Lovable Cloud)
 
-### `SPRINT_0_REPORT.md`
-- Adicionar nova seção `## Adicional — Footer global` descrevendo:
-  - Estrutura (CTA + 4 colunas + barra inferior).
-  - Placeholders configuráveis de contato (Instagram/WhatsApp/E-mail).
-  - Links de Plataforma apontam para rotas ainda inexistentes (Privacidade/Termos/Suporte) — listados como dívida da Sprint 1.
-  - Mantido em **Funcionalidades MANTIDAS** sem afetar flags.
+Habilitar **Lovable Cloud**. Migração:
+
+- Enum `app_role` (`admin`).
+- Tabela `user_roles (id, user_id, role)` com GRANTs e RLS (usuário lê só as próprias linhas; service_role faz tudo).
+- Função `has_role(_user_id uuid, _role app_role) returns boolean` security definer.
+- Seed: criar 1 usuário admin (e-mail/senha definidos pelo usuário via tela de signup interna ou inserido manualmente). **Vou pedir o e-mail do admin na hora de aplicar.**
+
+## Fase 3 — Auth admin
+
+- **Login**: `src/routes/admin.login.tsx` (público) → `supabase.auth.signInWithPassword`. Se já autenticado e admin, redireciona pra `/admin/dashboard`.
+- **Logout**: botão na sidebar → `supabase.auth.signOut()` + `queryClient.clear()` + `navigate('/admin/login')`.
+- **Sessão**: persistida pelo cliente Supabase (localStorage).
+- **Sem signup, sem reset, sem múltiplos roles** — só `admin`.
+
+## Fase 4 — Layout admin (`_authenticated/admin/route.tsx`)
+
+- `SidebarProvider` + `AppSidebar` (shadcn) + topbar com `SidebarTrigger` + `<Outlet />`.
+- Sidebar: Dashboard, Produtoras, Beats, Leads, Configurações, Sair.
+- Identidade visual atual (tokens em `styles.css`, neon/cyberpunk) — mas **isolado**: sem `Header` público, sem `Footer`, sem `PlayerBar`.
+
+## Fase 5 — Proteção de rotas
+
+- `_authenticated/route.tsx` (gerenciado): redireciona pra `/admin/login` se sem sessão.
+- `_authenticated/admin/route.tsx`: chama server fn `checkAdminRole` (com `requireSupabaseAuth` + `has_role(userId,'admin')`). Se não for admin → `redirect('/admin/login')` com toast.
+- Ajustar `__root.tsx`: detectar se a rota atual começa com `/admin` e omitir `Header`/`Footer`/`PlayerBar` (condicional via `useRouterState`).
+
+## Fase 6 — Placeholders
+
+Cada página admin renderiza um `Card` simples com título e texto "Tela em desenvolvimento — Sprint 2+".
+
+---
+
+## Detalhes técnicos
+
+- Server fn `checkAdminRole` em `src/lib/admin.functions.ts` (usa `requireSupabaseAuth`, retorna `{ isAdmin: boolean }`).
+- `AppSidebar` em `src/components/admin/AppSidebar.tsx` com `useRouterState` para active state.
+- `__root.tsx`: `const isAdmin = pathname.startsWith('/admin')` → renderiza `<Outlet />` puro quando true.
+- `attachSupabaseAuth` já é registrado automaticamente pela integração; verificar `src/start.ts`.
+- **Não tocar** em `FEATURES`, `AuthStore`, catálogo público.
+
+## Documentação
+
+- `CHANGELOG.md`: nova seção `## Sprint 1 — Fundação Admin`.
+- `SPRINT_1_REPORT.md`: arquitetura, decisões, dívidas e roadmap Sprint 2 (CRUD Produtoras: schema `producers`, upload de avatar no Storage, formulário, listagem, RLS).
+- `.lovable/plan.md`: substituir pelo escopo desta sprint.
 
 ## Fora de escopo
 
-- Criação das páginas `/politica-privacidade`, `/termos-uso`, `/suporte` (apenas links placeholder).
-- Tornar contatos editáveis via backoffice (vem na Sprint 1).
-- Newsletter, redes sociais adicionais, mudança de paleta.
+CRUDs, upload, dashboard real, gestão de usuários admin, reset de senha, signup público, qualquer feature de cliente final.
 
-## Responsividade
+## Entregáveis verificáveis
 
-- `grid-cols-1` mobile → `md:grid-cols-2` tablet → `lg:grid-cols-4` desktop.
-- Barra inferior: `flex-col md:flex-row justify-between gap-2`.
-- CTA: título reduz para `text-3xl` em mobile, `text-5xl` em desktop.
+1. Acessar `/admin` → redireciona pra `/admin/login`.
+2. Login com credencial admin → cai em `/admin/dashboard`.
+3. Sidebar navega entre as 5 telas (todas mostram placeholder).
+4. Botão "Sair" desloga e volta pra login.
+5. Usuário sem role `admin` é bloqueado mesmo logado.
+6. Rotas públicas (`/`, `/beat/...`, etc.) continuam funcionando idênticas, com Header/Footer.
