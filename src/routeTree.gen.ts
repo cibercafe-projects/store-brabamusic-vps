@@ -17,8 +17,16 @@ import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
+import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
+import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
+import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
+import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/_protected/configuracoes'
+import { Route as AdminProtectedBeatsRouteImport } from './routes/admin/_protected/beats'
 
 const TermosUsoRoute = TermosUsoRouteImport.update({
   id: '/termos-uso',
@@ -60,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const ProdutorSlugRoute = ProdutorSlugRouteImport.update({
   id: '/produtor/$slug',
   path: '/produtor/$slug',
@@ -70,43 +83,100 @@ const BeatSlugRoute = BeatSlugRouteImport.update({
   path: '/beat/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProtectedRouteRoute = AdminProtectedRouteRouteImport.update({
+  id: '/_protected',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProtectedProdutorasRoute =
+  AdminProtectedProdutorasRouteImport.update({
+    id: '/produtoras',
+    path: '/produtoras',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
+const AdminProtectedLeadsRoute = AdminProtectedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
+const AdminProtectedDashboardRoute = AdminProtectedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
+const AdminProtectedConfiguracoesRoute =
+  AdminProtectedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
+const AdminProtectedBeatsRoute = AdminProtectedBeatsRouteImport.update({
+  id: '/beats',
+  path: '/beats',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRoute
+  '/admin': typeof AdminProtectedRouteRouteWithChildren
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/beats': typeof AdminProtectedBeatsRoute
+  '/admin/configuracoes': typeof AdminProtectedConfiguracoesRoute
+  '/admin/dashboard': typeof AdminProtectedDashboardRoute
+  '/admin/leads': typeof AdminProtectedLeadsRoute
+  '/admin/produtoras': typeof AdminProtectedProdutorasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRoute
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
+  '/admin/beats': typeof AdminProtectedBeatsRoute
+  '/admin/configuracoes': typeof AdminProtectedConfiguracoesRoute
+  '/admin/dashboard': typeof AdminProtectedDashboardRoute
+  '/admin/leads': typeof AdminProtectedLeadsRoute
+  '/admin/produtoras': typeof AdminProtectedProdutorasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/admin/_protected': typeof AdminProtectedRouteRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/_protected/beats': typeof AdminProtectedBeatsRoute
+  '/admin/_protected/configuracoes': typeof AdminProtectedConfiguracoesRoute
+  '/admin/_protected/dashboard': typeof AdminProtectedDashboardRoute
+  '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
+  '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,20 +189,33 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/admin/login'
     | '/beat/$slug'
     | '/produtor/$slug'
+    | '/admin/'
+    | '/admin/beats'
+    | '/admin/configuracoes'
+    | '/admin/dashboard'
+    | '/admin/leads'
+    | '/admin/produtoras'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/app'
     | '/como-funciona'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/admin'
+    | '/admin/login'
     | '/beat/$slug'
     | '/produtor/$slug'
+    | '/admin/beats'
+    | '/admin/configuracoes'
+    | '/admin/dashboard'
+    | '/admin/leads'
+    | '/admin/produtoras'
   id:
     | '__root__'
     | '/'
@@ -143,13 +226,21 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/admin/_protected'
+    | '/admin/login'
     | '/beat/$slug'
     | '/produtor/$slug'
+    | '/admin/'
+    | '/admin/_protected/beats'
+    | '/admin/_protected/configuracoes'
+    | '/admin/_protected/dashboard'
+    | '/admin/_protected/leads'
+    | '/admin/_protected/produtoras'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRouteRoute: typeof AdminRouteRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AppRoute: typeof AppRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   MeusInteressesRoute: typeof MeusInteressesRoute
@@ -218,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/produtor/$slug': {
       id: '/produtor/$slug'
       path: '/produtor/$slug'
@@ -232,12 +330,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BeatSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/_protected': {
+      id: '/admin/_protected'
+      path: ''
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminProtectedRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/_protected/produtoras': {
+      id: '/admin/_protected/produtoras'
+      path: '/produtoras'
+      fullPath: '/admin/produtoras'
+      preLoaderRoute: typeof AdminProtectedProdutorasRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/leads': {
+      id: '/admin/_protected/leads'
+      path: '/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AdminProtectedLeadsRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/dashboard': {
+      id: '/admin/_protected/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminProtectedDashboardRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/configuracoes': {
+      id: '/admin/_protected/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AdminProtectedConfiguracoesRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/beats': {
+      id: '/admin/_protected/beats'
+      path: '/beats'
+      fullPath: '/admin/beats'
+      preLoaderRoute: typeof AdminProtectedBeatsRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
   }
 }
 
+interface AdminProtectedRouteRouteChildren {
+  AdminProtectedBeatsRoute: typeof AdminProtectedBeatsRoute
+  AdminProtectedConfiguracoesRoute: typeof AdminProtectedConfiguracoesRoute
+  AdminProtectedDashboardRoute: typeof AdminProtectedDashboardRoute
+  AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
+  AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
+}
+
+const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
+  AdminProtectedBeatsRoute: AdminProtectedBeatsRoute,
+  AdminProtectedConfiguracoesRoute: AdminProtectedConfiguracoesRoute,
+  AdminProtectedDashboardRoute: AdminProtectedDashboardRoute,
+  AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
+  AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
+}
+
+const AdminProtectedRouteRouteWithChildren =
+  AdminProtectedRouteRoute._addFileChildren(AdminProtectedRouteRouteChildren)
+
+interface AdminRouteRouteChildren {
+  AdminProtectedRouteRoute: typeof AdminProtectedRouteRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminProtectedRouteRoute: AdminProtectedRouteRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRouteRoute: AdminRouteRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   AppRoute: AppRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   MeusInteressesRoute: MeusInteressesRoute,
@@ -250,13 +432,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
