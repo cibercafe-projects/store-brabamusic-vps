@@ -112,7 +112,17 @@ export function Footer() {
 
           {/* Barra inferior */}
           <div className="mt-12 flex flex-col items-center justify-between gap-2 border-t border-white/10 pt-6 text-xs text-muted-foreground md:flex-row">
-            <p>© 2026 Braba Music. Todos os direitos reservados.</p>
+            <p>
+              <Link
+                to="/admin/login"
+                aria-label="Acesso administrativo"
+                title="Acesso administrativo"
+                className="cursor-default select-none opacity-60 hover:opacity-100"
+              >
+                ©
+              </Link>{" "}
+              2026 Braba Music. Todos os direitos reservados.
+            </p>
             <p>Desenvolvido por Cibercafé Studio.</p>
           </div>
         </div>
