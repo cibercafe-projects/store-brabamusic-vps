@@ -17,12 +17,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 import {
   Select,
   SelectContent,
@@ -377,17 +378,18 @@ function BeatsPage() {
         </div>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? "Editar beat" : "Novo beat"}</SheetTitle>
-            <SheetDescription>Campos com * são obrigatórios.</SheetDescription>
-          </SheetHeader>
+      <Dialog open={sheetOpen} onOpenChange={setSheetOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? "Editar beat" : "Novo beat"}</DialogTitle>
+            <DialogDescription>Campos com * são obrigatórios.</DialogDescription>
+          </DialogHeader>
           <div className="mt-4">
             <BeatForm initial={editing} onDone={() => setSheetOpen(false)} />
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
+
 
       <AlertDialog open={!!sellConfirm} onOpenChange={(o) => !o && setSellConfirm(null)}>
         <AlertDialogContent>
