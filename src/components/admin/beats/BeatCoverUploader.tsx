@@ -9,13 +9,14 @@ import { BeatCoverFallback } from "./BeatCoverFallback";
 type Props = {
   previewUrl: string | null;
   beatId?: string;
+  beatName?: string;
   onUploaded: (path: string, previewUrl: string) => void;
   onClear?: () => void;
 };
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"] as const;
 
-export function BeatCoverUploader({ previewUrl, beatId, onUploaded, onClear }: Props) {
+export function BeatCoverUploader({ previewUrl, beatId, beatName, onUploaded, onClear }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
