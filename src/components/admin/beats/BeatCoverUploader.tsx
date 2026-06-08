@@ -63,6 +63,8 @@ export function BeatCoverUploader({ previewUrl, beatId, beatName, onUploaded, on
       <div className="h-24 w-24 rounded-md bg-muted overflow-hidden flex items-center justify-center border">
         {previewUrl ? (
           <img src={previewUrl} alt="Capa" className="h-full w-full object-cover" />
+        ) : beatName && beatName.trim() ? (
+          <BeatCoverFallback name={beatName} />
         ) : (
           <ImageIcon className="h-6 w-6 text-muted-foreground" />
         )}
