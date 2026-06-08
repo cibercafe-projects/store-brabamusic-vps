@@ -258,10 +258,9 @@ function BeatsPage() {
                 <TableRow key={b.id}>
                   <TableCell>
                     <div className="h-10 w-10 rounded-md bg-muted overflow-hidden flex items-center justify-center">
-                      {b.capa_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                      {b.capa_signed_url || b.capa_url ? (
                         <img
-                          src={b.capa_url}
+                          src={(b.capa_signed_url ?? b.capa_url) as string}
                           alt={b.nome}
                           className="h-full w-full object-cover"
                         />
