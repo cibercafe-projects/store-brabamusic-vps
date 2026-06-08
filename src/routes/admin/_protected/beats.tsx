@@ -298,7 +298,11 @@ function BeatsPage() {
                           descricao: b.descricao,
                           status: b.status as BeatStatus,
                           capa_url: b.capa_url,
+                          capa_path: b.capa_path,
+                          capa_signed_url: b.capa_signed_url,
                           preview_url: b.preview_url,
+                          preview_path: b.preview_path,
+                          preview_signed_url: b.preview_signed_url,
                           wav_url: b.wav_url,
                           stems_url: b.stems_url,
                         });
