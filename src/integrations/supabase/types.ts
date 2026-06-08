@@ -17,6 +17,7 @@ export type Database = {
       beats: {
         Row: {
           bpm: number | null
+          capa_path: string | null
           capa_url: string | null
           created_at: string
           descricao: string | null
@@ -25,6 +26,7 @@ export type Database = {
           mood: string | null
           nome: string
           preco: number | null
+          preview_path: string | null
           preview_url: string | null
           produtora_id: string
           slug: string
@@ -36,6 +38,7 @@ export type Database = {
         }
         Insert: {
           bpm?: number | null
+          capa_path?: string | null
           capa_url?: string | null
           created_at?: string
           descricao?: string | null
@@ -44,6 +47,7 @@ export type Database = {
           mood?: string | null
           nome: string
           preco?: number | null
+          preview_path?: string | null
           preview_url?: string | null
           produtora_id: string
           slug: string
@@ -55,6 +59,7 @@ export type Database = {
         }
         Update: {
           bpm?: number | null
+          capa_path?: string | null
           capa_url?: string | null
           created_at?: string
           descricao?: string | null
@@ -63,6 +68,7 @@ export type Database = {
           mood?: string | null
           nome?: string
           preco?: number | null
+          preview_path?: string | null
           preview_url?: string | null
           produtora_id?: string
           slug?: string
