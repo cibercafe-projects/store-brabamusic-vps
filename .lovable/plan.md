@@ -1,108 +1,131 @@
-## Sprint 2 — Gestão de Produtoras
+## Sprint 3 — Gestão de Beats
 
-Módulo administrativo completo para cadastrar, editar, listar e ativar/desativar Produtoras Parceiras. Sem catálogo público, sem beats — apenas fundação.
+Módulo administrativo de Beats. Toda Beat pertence obrigatoriamente a uma Produtora ativa cadastrada na Sprint 2. Sem catálogo público, sem uploads, sem pagamentos — apenas fundação sólida.
 
-### 1. Modelagem (tabela `public.producers`)
+### 1. Modelagem — tabela `public.beats`
 
 | Campo | Tipo | Notas |
 |---|---|---|
 | `id` | uuid PK | `gen_random_uuid()` |
-| `slug` | text UNIQUE NOT NULL | gerado do nome, editável |
-| `nome_artistico` | text NOT NULL | único obrigatório |
-| `instagram` | text NULL | handle (`@fulano`), sem URL |
-| `spotify` | text NULL | handle/artist id |
-| `cidade` | text NULL |  |
-| `bio` | text NULL |  |
-| `foto_perfil_url` | text NULL | URL pública do bucket |
-| `foto_perfil_path` | text NULL | path no bucket (para delete/replace) |
-| `status` | `producer_status` enum NOT NULL DEFAULT `'ativa'` | `'ativa' \| 'inativa'` (desativação lógica, sem delete físico) |
-| `created_at` / `updated_at` | timestamptz | trigger `updated_at` |
+| `produtora_id` | uuid NOT NULL | FK → `producers(id)` ON DELETE RESTRICT |
+| `nome` | text NOT NULL | 1–160 |
+| `slug` | text UNIQUE NOT NULL | auto-gerado, editável |
+| `genero` | text NULL | ex.: trap, drill, funk |
+| `bpm` | int NULL | 40–300 (CHECK imutável, ok) |
+| `tom` | text NULL | ex.: `C minor`, `F#` |
+| `mood` | text NULL | ex.: dark, melódico |
+| `preco` | numeric(10,2) NULL | ≥ 0 |
+| `descricao` | text NULL | ≤ 2000 |
+| `status` | `beat_status` enum NOT NULL DEFAULT `'rascunho'` | `ativo` \| `vendido` \| `rascunho` |
+| `capa_url` | text NULL | URL simples (placeholder p/ uploads Sprint 4) |
+| `preview_url` | text NULL | idem |
+| `wav_url` | text NULL | idem |
+| `stems_url` | text NULL | idem |
+| `created_at` / `updated_at` | timestamptz | trigger `set_updated_at` |
 
-Índices: `slug` único, `status`, `nome_artistico` (busca).
+Enum novo: `beat_status` (`ativo`, `vendido`, `rascunho`).
 
-Preparação Sprint 3: tabela pronta para FK `beats.producer_id → producers.id` (não criada agora). Documentado no relatório.
+Índices: `slug` único, `produtora_id`, `status`, `created_at desc`, `nome` (busca).
 
-### 2. Storage
+Regras de status (documentadas; aplicação na UI):
+- `rascunho`: padrão ao criar; fora de catálogo futuro.
+- `ativo`: visível no catálogo público (Sprint futura).
+- `vendido`: marcado quando concluída venda; será ocultado do catálogo.
 
-Bucket público `producer-avatars` (via `storage_create_bucket`). Policies em `storage.objects`:
-- SELECT público (bucket público).
-- INSERT/UPDATE/DELETE só para `has_role(auth.uid(), 'admin')` no bucket `producer-avatars`.
+Sem delete físico. Validação `produtora_id` deve referenciar produtora `ativa` (server fn checa antes de insert/update).
 
-### 3. RLS
+### 2. RLS e grants
 
-Tabela `producers`:
-- `GRANT SELECT, INSERT, UPDATE ON public.producers TO authenticated` (sem DELETE — desativação lógica). `GRANT ALL ... TO service_role`.
-- Policies: somente admins (via `has_role`) podem SELECT/INSERT/UPDATE. Leitura pública entra na Sprint do catálogo.
+```sql
+GRANT SELECT, INSERT, UPDATE ON public.beats TO authenticated;
+GRANT ALL ON public.beats TO service_role;
+-- sem GRANT anon (catálogo público vem depois com server fn admin-elevada)
+```
 
-### 4. Server functions (`src/lib/producers.functions.ts`)
+Policies idênticas ao padrão Sprint 2: somente `has_role(auth.uid(),'admin')` para SELECT/INSERT/UPDATE. Sem DELETE.
 
-Todas com `requireSupabaseAuth` + verificação `has_role(admin)` no handler (via `supabaseAdmin` importado dinamicamente):
-- `listProducers({ search?, status?, page?, pageSize? })` → `{ rows, total }`.
-- `getProducer({ id })`.
-- `createProducer(input)` — valida Zod, gera slug único.
-- `updateProducer({ id, ...input })`.
-- `setProducerStatus({ id, status })`.
-- `getAvatarUploadUrl({ producerSlug, contentType })` → URL assinada de upload no bucket (`createSignedUploadUrl`) + path final.
-- Após upload, `updateProducer` grava `foto_perfil_url` (publicUrl) + `foto_perfil_path`.
+### 3. Server functions — `src/lib/beats.functions.ts`
 
-Validação Zod: `nome_artistico` 1–120, `instagram`/`spotify` opcionais regex `^@?[A-Za-z0-9._-]{1,40}$` (armazenado normalizado com `@`), `cidade` ≤ 80, `bio` ≤ 2000, `slug` `^[a-z0-9-]{2,60}$`.
+Todas com `requireSupabaseAuth` + checagem `has_role(admin)` via `supabaseAdmin` importado dinamicamente (mesmo padrão de `producers.functions.ts`).
 
-### 5. UI — `/admin/_protected/produtoras`
+- `listBeats({ search?, status?, produtoraId?, sort?, page?, pageSize? })` → `{ rows, total }`. Join leve com produtoras (nome_artistico, foto_perfil_url) — feito via segunda query por ids ou via select com `producers(nome_artistico, foto_perfil_url)` se RLS permitir; preferir buscar produtoras separadamente e mapear em memória para evitar dependências de join.
+- `getBeat({ id })`.
+- `createBeat(input)` — valida Zod, exige `produtora_id` de produtora `ativa`, gera slug único (`-2`, `-3`... em colisão).
+- `updateBeat({ id, ...input })` — mesma validação.
+- `setBeatStatus({ id, status })` — `ativo` \| `vendido` \| `rascunho`.
+- `listProducersForSelect()` — lista produtoras `ativa` (id, nome_artistico) para o select do formulário.
+
+Zod:
+- `nome`: 1–160
+- `slug`: `^[a-z0-9-]{2,80}$`
+- `genero`/`tom`/`mood`: ≤ 60
+- `bpm`: int 40–300 opcional
+- `preco`: number ≥ 0, ≤ 99999.99, opcional
+- `descricao`: ≤ 2000
+- `*_url`: `z.string().url().max(500)` opcional (aceita vazio → null)
+
+### 4. UI — `/admin/_protected/beats`
 
 Substitui o placeholder. Componentes:
 
-- **`ProducersTable`**: Tabela shadcn com colunas Foto (Avatar), Nome Artístico, Instagram (link externo), Cidade, Status (Badge `ativa`/`inativa`), Ações (Editar, Ativar/Desativar).
-  - Busca por nome (debounce 300ms, sincronizado em search param `q`).
-  - Filtro status (`todas` | `ativa` | `inativa`).
-  - Ordenação por `nome_artistico` ou `created_at`.
-  - Paginação (20/página) se `total > 20`.
-  - Estado vazio com CTA "Nova produtora".
-- **Botão "Nova produtora"** no header → abre `Sheet` (slide-over) com `ProducerForm` em modo create.
-- **`ProducerForm`** (react-hook-form + zod):
-  - Avatar uploader: preview circular, botão "Trocar foto", drag-drop, validação tipo (jpg/png/webp) e tamanho (≤ 2MB). Faz upload imediato após selecionar via `getAvatarUploadUrl` e mostra preview.
-  - Campos: Nome Artístico*, Slug (auto-gerado, editável, validação unique on blur), Instagram, Spotify, Cidade, Bio (Textarea), Status (Switch ativa/inativa).
-  - Botões: Cancelar / Salvar.
-- **Edição**: clique na linha (ou ação Editar) abre o mesmo `Sheet` em modo edit, pré-carregado.
-- **Ativar/Desativar**: AlertDialog de confirmação → `setProducerStatus`.
-- Toasts (sonner) para sucesso/erro. Invalidação do query key `['admin','producers',...]` após mutations.
+- **`BeatsTable`** (shadcn Table):
+  - Colunas: Capa (Avatar 40px, fallback ícone), Nome, Produtora (nome_artistico), Gênero, Preço (formatado BRL), Status (Badge variantes por status), Ações (Editar, Status menu).
+  - Busca por nome (debounce 300ms, query param `q`).
+  - Filtro `status` (`todas` | `ativo` | `vendido` | `rascunho`).
+  - Filtro `produtoraId` (Select alimentado por `listProducersForSelect`).
+  - Ordenação por `created_at` ou `nome`.
+  - Paginação 20/página.
+  - Estado vazio com CTA "Novo beat" (desabilitado com aviso se não houver produtora ativa).
 
-Padrão visual: usa tokens existentes do admin (mesmas cores/spacing do `AppSidebar`/dashboard).
+- **Header**: botão "Novo beat" → abre `Sheet` com `BeatForm` em modo create. Se zero produtoras ativas, exibir Alert com link para `/admin/produtoras`.
 
-### 6. Sidebar
+- **`BeatForm`** (react-hook-form + zod):
+  - Produtora* (Select com produtoras ativas)
+  - Nome do Beat* (Input)
+  - Slug (auto-gerado de `nome`, editável)
+  - Gênero, Tom, Mood (Input)
+  - BPM (Input number)
+  - Preço (Input number, step 0.01)
+  - Descrição (Textarea)
+  - Status (Select: rascunho/ativo/vendido — default rascunho no create)
+  - URLs: Capa, Preview, WAV, Stems (Inputs simples, placeholder "https://..." — mensagem informativa "Uploads reais virão na Sprint 4")
+  - Botões: Cancelar / Salvar
 
-`AppSidebar` já tem item "Produtoras" — apenas garantir `isActive` em `/admin/produtoras`.
+- **Alterar status**: menu de Ações com Dropdown ("Marcar como ativo / vendido / rascunho") + `AlertDialog` de confirmação quando indo para `vendido`.
 
-### 7. Relatório `SPRINT_2_REPORT.md`
+- **Toasts** (sonner) + invalidação `['admin','beats',...]` após mutations.
 
-- Estrutura criada (tabela, enum, storage, policies, server fns, rotas).
-- Relacionamentos previstos: `beats.producer_id → producers.id` (NOT NULL, ON DELETE RESTRICT) na Sprint 3.
-- Recomendações Sprint 3 (CRUD Beats): tabela `beats`, bucket `beat-audio` privado com signed URLs, player admin de pré-escuta, vínculo obrigatório a produtora ativa, tags/gênero/BPM/key, status (rascunho/publicado).
+### 5. Sidebar
+
+`AppSidebar` já possui item "Beats" — apenas garantir destaque ativo em `/admin/beats`.
+
+### 6. Relatório `SPRINT_3_REPORT.md`
+
+- Modelagem criada (tabela, enum, índices, FK).
+- Relacionamento `beats.produtora_id → producers.id` (RESTRICT).
+- Server fns, rotas, UI.
+- Recomendações Sprint 4:
+  - Storage privado `beat-audio` (preview público com signed URL curto, WAV/stems privados liberados após venda).
+  - Storage público `beat-covers`.
+  - Player admin de pré-escuta.
+  - Catálogo público (server fn admin-elevada com projeção segura, filtros status='ativo').
+  - Dashboard com métricas (totais por status, por produtora, novos por período).
 - Atualizar `CHANGELOG.md`.
 
-### Detalhes técnicos
-
-- Storage: `producer-avatars` público. Path por produtora: `producers/{producer_id}/avatar-{timestamp}.{ext}`. Ao trocar, deletar path antigo via `supabaseAdmin.storage.from().remove([oldPath])`.
-- Slug: gerador no client (`slugify` simples — minúsculo, remove acentos, troca não-alfanum por `-`). Servidor revalida e, em caso de colisão no `create`, sufixa `-2`, `-3`...
-- Instagram/Spotify normalização: trim, remove `https://`, força prefixo `@` quando ausente; aceita vazio.
-- Migration única com: enum, tabela, índices, grants, RLS, policies, trigger updated_at. Storage bucket via tool dedicada, policies em migration separada.
-- Queries (TanStack Query): `queryKey: ['admin','producers', { q, status, sort, page }]`. Mutations invalidam o prefixo `['admin','producers']`.
-
-### Arquivos a criar/editar
+### Arquivos
 
 Criar:
-- `supabase/migrations/<ts>_producers.sql`
-- `supabase/migrations/<ts>_producer_avatars_policies.sql`
-- `src/lib/producers.functions.ts`
-- `src/components/admin/producers/ProducersTable.tsx`
-- `src/components/admin/producers/ProducerForm.tsx`
-- `src/components/admin/producers/ProducerAvatarUploader.tsx`
-- `src/lib/slug.ts`
-- `SPRINT_2_REPORT.md`
+- `supabase/migrations/<ts>_beats.sql` (enum, tabela, FK, índices, grants, RLS, policies, trigger updated_at)
+- `src/lib/beats.functions.ts`
+- `src/components/admin/beats/BeatsTable.tsx`
+- `src/components/admin/beats/BeatForm.tsx`
+- `SPRINT_3_REPORT.md`
 
 Editar:
-- `src/routes/admin/_protected/produtoras.tsx` (remove placeholder, monta página)
+- `src/routes/admin/_protected/beats.tsx` (remove placeholder, monta página)
 - `CHANGELOG.md`
+- `.lovable/plan.md`
 
-### Fora de escopo (Sprint 2)
+### Fora de escopo (Sprint 3)
 
-Catálogo público, beats, leads, dashboard real, gestão de outros admins, reset de senha, integrações externas.
+Catálogo público, uploads reais (capa/preview/WAV/stems ficam como URL texto), player de áudio, pagamentos, entrega de arquivos, favoritos, automações, dashboard real, integração com app cliente.

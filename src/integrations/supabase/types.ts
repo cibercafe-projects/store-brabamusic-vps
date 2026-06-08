@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      beats: {
+        Row: {
+          bpm: number | null
+          capa_url: string | null
+          created_at: string
+          descricao: string | null
+          genero: string | null
+          id: string
+          mood: string | null
+          nome: string
+          preco: number | null
+          preview_url: string | null
+          produtora_id: string
+          slug: string
+          status: Database["public"]["Enums"]["beat_status"]
+          stems_url: string | null
+          tom: string | null
+          updated_at: string
+          wav_url: string | null
+        }
+        Insert: {
+          bpm?: number | null
+          capa_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          genero?: string | null
+          id?: string
+          mood?: string | null
+          nome: string
+          preco?: number | null
+          preview_url?: string | null
+          produtora_id: string
+          slug: string
+          status?: Database["public"]["Enums"]["beat_status"]
+          stems_url?: string | null
+          tom?: string | null
+          updated_at?: string
+          wav_url?: string | null
+        }
+        Update: {
+          bpm?: number | null
+          capa_url?: string | null
+          created_at?: string
+          descricao?: string | null
+          genero?: string | null
+          id?: string
+          mood?: string | null
+          nome?: string
+          preco?: number | null
+          preview_url?: string | null
+          produtora_id?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["beat_status"]
+          stems_url?: string | null
+          tom?: string | null
+          updated_at?: string
+          wav_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beats_produtora_id_fkey"
+            columns: ["produtora_id"]
+            isOneToOne: false
+            referencedRelation: "producers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       producers: {
         Row: {
           bio: string | null
@@ -95,6 +163,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin"
+      beat_status: "rascunho" | "ativo" | "vendido"
       producer_status: "ativa" | "inativa"
     }
     CompositeTypes: {
@@ -224,6 +293,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin"],
+      beat_status: ["rascunho", "ativo", "vendido"],
       producer_status: ["ativa", "inativa"],
     },
   },
