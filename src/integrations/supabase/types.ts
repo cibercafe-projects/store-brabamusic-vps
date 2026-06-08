@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      producers: {
+        Row: {
+          bio: string | null
+          cidade: string | null
+          created_at: string
+          foto_perfil_path: string | null
+          foto_perfil_url: string | null
+          id: string
+          instagram: string | null
+          nome_artistico: string
+          slug: string
+          spotify: string | null
+          status: Database["public"]["Enums"]["producer_status"]
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          cidade?: string | null
+          created_at?: string
+          foto_perfil_path?: string | null
+          foto_perfil_url?: string | null
+          id?: string
+          instagram?: string | null
+          nome_artistico: string
+          slug: string
+          spotify?: string | null
+          status?: Database["public"]["Enums"]["producer_status"]
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          cidade?: string | null
+          created_at?: string
+          foto_perfil_path?: string | null
+          foto_perfil_url?: string | null
+          id?: string
+          instagram?: string | null
+          nome_artistico?: string
+          slug?: string
+          spotify?: string | null
+          status?: Database["public"]["Enums"]["producer_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -50,6 +95,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin"
+      producer_status: "ativa" | "inativa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -178,6 +224,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin"],
+      producer_status: ["ativa", "inativa"],
     },
   },
 } as const
