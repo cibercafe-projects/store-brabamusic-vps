@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getBeatCoverUploadUrl } from "@/lib/beats.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { BeatCoverFallback } from "./BeatCoverFallback";
 
 type Props = {
   previewUrl: string | null;
