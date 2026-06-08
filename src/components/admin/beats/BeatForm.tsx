@@ -354,6 +354,7 @@ export function BeatForm({ initial, onDone }: Props) {
             <BeatCoverUploader
               previewUrl={coverPreview}
               beatId={initial?.id}
+              beatName={nome}
               onUploaded={(path, url) => {
                 form.setValue("capa_path", path, { shouldDirty: true });
                 setCoverPreview(url);

@@ -4,17 +4,19 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getBeatCoverUploadUrl } from "@/lib/beats.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { BeatCoverFallback } from "./BeatCoverFallback";
 
 type Props = {
   previewUrl: string | null;
   beatId?: string;
+  beatName?: string;
   onUploaded: (path: string, previewUrl: string) => void;
   onClear?: () => void;
 };
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"] as const;
 
-export function BeatCoverUploader({ previewUrl, beatId, onUploaded, onClear }: Props) {
+export function BeatCoverUploader({ previewUrl, beatId, beatName, onUploaded, onClear }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -61,6 +63,8 @@ export function BeatCoverUploader({ previewUrl, beatId, onUploaded, onClear }: P
       <div className="h-24 w-24 rounded-md bg-muted overflow-hidden flex items-center justify-center border">
         {previewUrl ? (
           <img src={previewUrl} alt="Capa" className="h-full w-full object-cover" />
+        ) : beatName && beatName.trim() ? (
+          <BeatCoverFallback name={beatName} />
         ) : (
           <ImageIcon className="h-6 w-6 text-muted-foreground" />
         )}

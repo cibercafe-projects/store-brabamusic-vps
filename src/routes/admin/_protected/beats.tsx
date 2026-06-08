@@ -63,6 +63,7 @@ import {
   setBeatStatus,
 } from "@/lib/beats.functions";
 import { BeatForm, type BeatFormInitial } from "@/components/admin/beats/BeatForm";
+import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
 
 export const Route = createFileRoute("/admin/_protected/beats")({
   component: BeatsPage,
@@ -265,7 +266,7 @@ function BeatsPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        <BeatCoverFallback name={b.nome} />
                       )}
                     </div>
                   </TableCell>
