@@ -3,6 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { slugify } from "@/lib/slug";
 
+const COVER_BUCKET = "beat-covers";
+const PREVIEW_BUCKET = "beat-previews";
+
 const urlField = z
   .string()
   .trim()
@@ -11,6 +14,8 @@ const urlField = z
   .optional()
   .or(z.literal(""))
   .transform((v) => (v ? v : null));
+
+const pathField = z.string().trim().max(300).optional().nullable();
 
 const beatInputSchema = z.object({
   produtora_id: z.string().uuid("Produtora obrigatória"),
@@ -28,7 +33,9 @@ const beatInputSchema = z.object({
   descricao: z.string().trim().max(2000).optional().transform((v) => v || null),
   status: z.enum(["rascunho", "ativo", "vendido"]).default("rascunho"),
   capa_url: urlField,
+  capa_path: pathField,
   preview_url: urlField,
+  preview_path: pathField,
   wav_url: urlField,
   stems_url: urlField,
 });
@@ -78,6 +85,18 @@ async function assertProducerActive(
   if (data.status !== "ativa") throw new Error("Produtora está inativa");
 }
 
+async function signFromBucket(
+  supabaseAdmin: Awaited<ReturnType<typeof assertAdmin>>,
+  bucket: string,
+  path: string | null,
+  ttl = 60 * 60,
+): Promise<string | null> {
+  if (!path) return null;
+  const { data, error } = await supabaseAdmin.storage.from(bucket).createSignedUrl(path, ttl);
+  if (error) return null;
+  return data.signedUrl;
+}
+
 export const listBeats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -118,10 +137,14 @@ export const listBeats = createServerFn({ method: "POST" })
       producerMap = new Map(producers?.map((p) => [p.id, { nome_artistico: p.nome_artistico }]));
     }
 
-    const enriched = (rows ?? []).map((r) => ({
-      ...r,
-      produtora_nome: producerMap.get(r.produtora_id)?.nome_artistico ?? "—",
-    }));
+    const enriched = await Promise.all(
+      (rows ?? []).map(async (r) => ({
+        ...r,
+        produtora_nome: producerMap.get(r.produtora_id)?.nome_artistico ?? "—",
+        capa_signed_url: await signFromBucket(supabaseAdmin, COVER_BUCKET, r.capa_path),
+        preview_signed_url: await signFromBucket(supabaseAdmin, PREVIEW_BUCKET, r.preview_path),
+      })),
+    );
     return { rows: enriched, total: count ?? 0 };
   });
 
@@ -137,8 +160,23 @@ export const getBeat = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!row) throw new Error("Beat não encontrado");
-    return row;
+    return {
+      ...row,
+      capa_signed_url: await signFromBucket(supabaseAdmin, COVER_BUCKET, row.capa_path),
+      preview_signed_url: await signFromBucket(supabaseAdmin, PREVIEW_BUCKET, row.preview_path),
+    };
   });
+
+async function removeIfChanged(
+  supabaseAdmin: Awaited<ReturnType<typeof assertAdmin>>,
+  bucket: string,
+  oldPath: string | null | undefined,
+  newPath: string | null | undefined,
+) {
+  if (oldPath && oldPath !== newPath) {
+    await supabaseAdmin.storage.from(bucket).remove([oldPath]);
+  }
+}
 
 export const createBeat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -162,7 +200,9 @@ export const createBeat = createServerFn({ method: "POST" })
         descricao: data.descricao,
         status: data.status,
         capa_url: data.capa_url,
+        capa_path: data.capa_path ?? null,
         preview_url: data.preview_url,
+        preview_path: data.preview_path ?? null,
         wav_url: data.wav_url,
         stems_url: data.stems_url,
       })
@@ -186,6 +226,25 @@ export const updateBeat = createServerFn({ method: "POST" })
     if (rest.slug !== undefined) {
       const base = rest.slug || (rest.nome ? slugify(rest.nome) : "");
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
+    }
+
+    if (rest.capa_path !== undefined || rest.preview_path !== undefined) {
+      const { data: existing } = await supabaseAdmin
+        .from("beats")
+        .select("capa_path, preview_path")
+        .eq("id", id)
+        .maybeSingle();
+      if (rest.capa_path !== undefined) {
+        await removeIfChanged(supabaseAdmin, COVER_BUCKET, existing?.capa_path, rest.capa_path);
+      }
+      if (rest.preview_path !== undefined) {
+        await removeIfChanged(
+          supabaseAdmin,
+          PREVIEW_BUCKET,
+          existing?.preview_path,
+          rest.preview_path,
+        );
+      }
     }
 
     const { data: updated, error } = await supabaseAdmin
@@ -226,4 +285,105 @@ export const listProducersForSelect = createServerFn({ method: "POST" })
       .order("nome_artistico", { ascending: true });
     if (error) throw new Error(error.message);
     return data ?? [];
+  });
+
+export const getBeatCoverUploadUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+        ext: z.enum(["jpg", "jpeg", "png", "webp"]),
+        beatId: z.string().uuid().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const folder = data.beatId ?? "new";
+    const path = `beats/${folder}/cover-${Date.now()}.${data.ext}`;
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from(COVER_BUCKET)
+      .createSignedUploadUrl(path);
+    if (error) throw new Error(error.message);
+    return { path, token: signed.token };
+  });
+
+export const getBeatPreviewUploadUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        contentType: z.enum(["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave"]),
+        ext: z.enum(["mp3", "wav"]),
+        beatId: z.string().uuid().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const folder = data.beatId ?? "new";
+    const path = `beats/${folder}/preview-${Date.now()}.${data.ext}`;
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from(PREVIEW_BUCKET)
+      .createSignedUploadUrl(path);
+    if (error) throw new Error(error.message);
+    return { path, token: signed.token };
+  });
+
+export const signBeatMedia = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        capa_path: z.string().max(300).optional().nullable(),
+        preview_path: z.string().max(300).optional().nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    return {
+      capa_signed_url: await signFromBucket(supabaseAdmin, COVER_BUCKET, data.capa_path ?? null),
+      preview_signed_url: await signFromBucket(
+        supabaseAdmin,
+        PREVIEW_BUCKET,
+        data.preview_path ?? null,
+      ),
+    };
+  });
+
+export const getAdminMetrics = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const [producersTotal, producersActive, beatsTotal, beatsAtivos, beatsVendidos, beatsRascunho] =
+      await Promise.all([
+        supabaseAdmin.from("producers").select("id", { count: "exact", head: true }),
+        supabaseAdmin
+          .from("producers")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "ativa"),
+        supabaseAdmin.from("beats").select("id", { count: "exact", head: true }),
+        supabaseAdmin
+          .from("beats")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "ativo"),
+        supabaseAdmin
+          .from("beats")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "vendido"),
+        supabaseAdmin
+          .from("beats")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "rascunho"),
+      ]);
+    return {
+      produtorasTotal: producersTotal.count ?? 0,
+      produtorasAtivas: producersActive.count ?? 0,
+      beatsTotal: beatsTotal.count ?? 0,
+      beatsAtivos: beatsAtivos.count ?? 0,
+      beatsVendidos: beatsVendidos.count ?? 0,
+      beatsRascunho: beatsRascunho.count ?? 0,
+    };
   });

@@ -258,10 +258,9 @@ function BeatsPage() {
                 <TableRow key={b.id}>
                   <TableCell>
                     <div className="h-10 w-10 rounded-md bg-muted overflow-hidden flex items-center justify-center">
-                      {b.capa_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                      {b.capa_signed_url || b.capa_url ? (
                         <img
-                          src={b.capa_url}
+                          src={(b.capa_signed_url ?? b.capa_url) as string}
                           alt={b.nome}
                           className="h-full w-full object-cover"
                         />
@@ -299,7 +298,11 @@ function BeatsPage() {
                           descricao: b.descricao,
                           status: b.status as BeatStatus,
                           capa_url: b.capa_url,
+                          capa_path: b.capa_path,
+                          capa_signed_url: b.capa_signed_url,
                           preview_url: b.preview_url,
+                          preview_path: b.preview_path,
+                          preview_signed_url: b.preview_signed_url,
                           wav_url: b.wav_url,
                           stems_url: b.stems_url,
                         });

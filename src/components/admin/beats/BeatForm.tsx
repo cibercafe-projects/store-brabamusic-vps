@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,6 +31,8 @@ import {
   updateBeat,
 } from "@/lib/beats.functions";
 import { slugify } from "@/lib/slug";
+import { BeatCoverUploader } from "./BeatCoverUploader";
+import { BeatPreviewUploader } from "./BeatPreviewUploader";
 
 const urlOpt = z
   .string()
@@ -56,8 +58,8 @@ const schema = z.object({
   preco: z.string().optional().or(z.literal("")),
   descricao: z.string().trim().max(2000).optional().or(z.literal("")),
   status: z.enum(["rascunho", "ativo", "vendido"]),
-  capa_url: urlOpt,
-  preview_url: urlOpt,
+  capa_path: z.string().max(300).optional().or(z.literal("")),
+  preview_path: z.string().max(300).optional().or(z.literal("")),
   wav_url: urlOpt,
   stems_url: urlOpt,
 });
@@ -77,7 +79,11 @@ export type BeatFormInitial = {
   descricao?: string | null;
   status?: "rascunho" | "ativo" | "vendido";
   capa_url?: string | null;
+  capa_path?: string | null;
+  capa_signed_url?: string | null;
   preview_url?: string | null;
+  preview_path?: string | null;
+  preview_signed_url?: string | null;
   wav_url?: string | null;
   stems_url?: string | null;
 };
@@ -93,6 +99,13 @@ export function BeatForm({ initial, onDone }: Props) {
   const update = useServerFn(updateBeat);
   const listProducers = useServerFn(listProducersForSelect);
   const isEdit = !!initial?.id;
+
+  const [coverPreview, setCoverPreview] = useState<string | null>(
+    initial?.capa_signed_url ?? initial?.capa_url ?? null,
+  );
+  const [audioPreview, setAudioPreview] = useState<string | null>(
+    initial?.preview_signed_url ?? initial?.preview_url ?? null,
+  );
 
   const producersQuery = useQuery({
     queryKey: ["admin", "producers", "select"],
@@ -113,8 +126,8 @@ export function BeatForm({ initial, onDone }: Props) {
       preco: initial?.preco != null ? String(initial.preco) : "",
       descricao: initial?.descricao ?? "",
       status: initial?.status ?? "rascunho",
-      capa_url: initial?.capa_url ?? "",
-      preview_url: initial?.preview_url ?? "",
+      capa_path: initial?.capa_path ?? "",
+      preview_path: initial?.preview_path ?? "",
       wav_url: initial?.wav_url ?? "",
       stems_url: initial?.stems_url ?? "",
     },
@@ -142,8 +155,10 @@ export function BeatForm({ initial, onDone }: Props) {
         preco: values.preco ? Number(values.preco) : null,
         descricao: values.descricao || "",
         status: values.status,
-        capa_url: values.capa_url || "",
-        preview_url: values.preview_url || "",
+        capa_url: "",
+        capa_path: values.capa_path || null,
+        preview_url: "",
+        preview_path: values.preview_path || null,
         wav_url: values.wav_url || "",
         stems_url: values.stems_url || "",
       };
@@ -223,7 +238,7 @@ export function BeatForm({ initial, onDone }: Props) {
               <FormControl>
                 <Input {...field} placeholder="trap-da-rua" />
               </FormControl>
-              <FormDescription>Usado em URLs públicas (Sprint 4+).</FormDescription>
+              <FormDescription>Usado em URLs públicas (Sprint 5+).</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -334,35 +349,44 @@ export function BeatForm({ initial, onDone }: Props) {
         />
 
         <div className="space-y-4 rounded-md border p-4">
+          <div>
+            <p className="text-sm font-medium mb-2">Capa</p>
+            <BeatCoverUploader
+              previewUrl={coverPreview}
+              beatId={initial?.id}
+              onUploaded={(path, url) => {
+                form.setValue("capa_path", path, { shouldDirty: true });
+                setCoverPreview(url);
+              }}
+              onClear={() => {
+                form.setValue("capa_path", "", { shouldDirty: true });
+                setCoverPreview(null);
+              }}
+            />
+          </div>
+
+          <div>
+            <p className="text-sm font-medium mb-2">Preview de áudio</p>
+            <BeatPreviewUploader
+              previewUrl={audioPreview}
+              beatId={initial?.id}
+              onUploaded={(path, url) => {
+                form.setValue("preview_path", path, { shouldDirty: true });
+                setAudioPreview(url);
+              }}
+              onClear={() => {
+                form.setValue("preview_path", "", { shouldDirty: true });
+                setAudioPreview(null);
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-md border p-4">
           <p className="text-xs text-muted-foreground">
-            Uploads reais virão na Sprint 4. Por enquanto, cole URLs externas (opcional).
+            Arquivos protegidos (WAV/STEMS) virão em sprints futuras. Por enquanto, apenas URLs
+            externas (opcional).
           </p>
-          <FormField
-            control={form.control}
-            name="capa_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Capa (URL)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="https://..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="preview_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Preview (URL)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="https://..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <FormField
             control={form.control}
             name="wav_url"
