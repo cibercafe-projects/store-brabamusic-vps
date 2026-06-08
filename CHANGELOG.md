@@ -13,7 +13,29 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 3 — Gestão de Beats
+
+### Added
+
+- Migração SQL:
+  - Enum `public.beat_status` (`rascunho`, `ativo`, `vendido`).
+  - Tabela `public.beats` (produtora_id FK RESTRICT, nome, slug único, genero, bpm, tom, mood, preco, descricao, status, capa_url, preview_url, wav_url, stems_url, timestamps).
+  - Índices em `slug`, `produtora_id`, `status`, `created_at`, `nome`.
+  - CHECKs: BPM 40–300, preço ≥ 0.
+  - Trigger `set_updated_at` em `beats`.
+  - RLS: SELECT/INSERT/UPDATE restritos a admins via `has_role`. Sem DELETE.
+- `src/lib/beats.functions.ts` — server fns: `listBeats`, `getBeat`, `createBeat`, `updateBeat`, `setBeatStatus`, `listProducersForSelect`. Validação de produtora ativa em create/update.
+- `src/components/admin/beats/BeatForm.tsx` — formulário react-hook-form + zod, com select de produtora ativa e campos URL placeholder.
+- Página `/admin/beats` reescrita: tabela com capa, nome, produtora, gênero, preço, status, busca, filtros por status e produtora, paginação, sheet de criação/edição, dropdown de mudança de status com confirmação para "vendido".
+
+### Docs
+
+- `SPRINT_3_REPORT.md` — relatório da sprint com modelagem, relacionamento e sugestões para Sprint 4.
+
+---
+
 ## Sprint 2 — Gestão de Produtoras
+
 
 ### Added
 
