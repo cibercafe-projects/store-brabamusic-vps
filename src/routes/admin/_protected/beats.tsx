@@ -265,7 +265,7 @@ function BeatsPage() {
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        <BeatCoverFallback name={b.nome} />
                       )}
                     </div>
                   </TableCell>
