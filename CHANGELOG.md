@@ -13,6 +13,31 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 2 — Gestão de Produtoras
+
+### Added
+
+- Migração SQL:
+  - Enum `public.producer_status` (`ativa`, `inativa`).
+  - Tabela `public.producers` (slug único, nome_artistico, instagram, spotify, cidade, bio, foto_perfil_path, status, timestamps).
+  - Índices em `slug`, `status` e `nome_artistico`.
+  - Trigger `set_updated_at` em `producers`.
+  - RLS: SELECT/INSERT/UPDATE restritos a admins via `has_role`. Sem DELETE (desativação lógica).
+- Storage:
+  - Bucket privado `producer-avatars`.
+  - Policies admin-only para leitura/upload/update/delete em `storage.objects`.
+- `src/lib/producers.functions.ts` — server fns: `listProducers`, `getProducer`, `createProducer`, `updateProducer`, `setProducerStatus`, `getAvatarUploadUrl`.
+- `src/lib/slug.ts` — utilitário `slugify`.
+- `src/components/admin/producers/ProducerForm.tsx` — formulário react-hook-form + zod.
+- `src/components/admin/producers/ProducerAvatarUploader.tsx` — upload via signed URL.
+- Página `/admin/produtoras` reescrita: tabela com busca, filtro de status, paginação, sheet de criação/edição e confirmação de ativação/desativação.
+
+### Docs
+
+- `SPRINT_2_REPORT.md` — relatório da sprint com estrutura, segurança, dívidas e proposta para Sprint 3 (CRUD Beats).
+
+---
+
 ## Sprint 1 — Fundação do Backoffice Administrativo
 
 ### Added
