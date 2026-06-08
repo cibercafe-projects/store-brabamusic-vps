@@ -157,7 +157,7 @@ export const updateProducer = createServerFn({ method: "POST" })
     const supabaseAdmin = await assertAdmin(context.userId);
     const { id, ...rest } = data;
 
-    const patch: Record<string, unknown> = { ...rest };
+    const patch = { ...rest } as typeof rest & { slug?: string };
     if (rest.slug !== undefined) {
       const base = rest.slug || (rest.nome_artistico ? slugify(rest.nome_artistico) : "");
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
