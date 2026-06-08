@@ -63,6 +63,7 @@ import {
   setBeatStatus,
 } from "@/lib/beats.functions";
 import { BeatForm, type BeatFormInitial } from "@/components/admin/beats/BeatForm";
+import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
 
 export const Route = createFileRoute("/admin/_protected/beats")({
   component: BeatsPage,
