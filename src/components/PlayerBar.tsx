@@ -67,6 +67,10 @@ export function PlayerBar() {
               {current.bpm ? ` · ${current.bpm} BPM` : ""}
               {current.tom ? ` · ${current.tom}` : ""}
             </p>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
+              <Play className="h-3 w-3" />
+              {(current.plays_count ?? 0).toLocaleString("pt-BR")} reproduções
+            </p>
           </div>
 
           {hasAudio ? (
@@ -76,7 +80,22 @@ export function PlayerBar() {
               controls
               className="w-full"
               onEnded={() => usePlayer.setState({ playing: false })}
-              onPlay={() => usePlayer.setState({ playing: true })}
+              onPlay={() => {
+                usePlayer.setState({ playing: true });
+                if (current && !counted.has(current.id)) {
+                  markCounted(current.id);
+                  increment({ data: { beatId: current.id } })
+                    .then((res) => {
+                      const next = res?.plays_count ?? (current.plays_count ?? 0) + 1;
+                      usePlayer.setState((s) =>
+                        s.current && s.current.id === current.id
+                          ? { current: { ...s.current, plays_count: next } }
+                          : {},
+                      );
+                    })
+                    .catch(() => {});
+                }
+              }}
               onPause={() => usePlayer.setState({ playing: false })}
             />
           ) : (
