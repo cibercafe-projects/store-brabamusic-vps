@@ -13,6 +13,42 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 5 — Catálogo Público Real
+
+### Added
+
+- `src/lib/catalog.functions.ts` — server functions públicas (sem auth) para o catálogo: `listPublicBeats`, `getPublicBeatBySlug`, `listPublicProducers`, `getPublicProducerBySlug`, `listPublicFilters`. Assinam capas / previews / avatares via signed URL (TTL 4h).
+- `src/lib/catalog.types.ts` — tipos `PublicBeat` e `PublicProducer` compartilhados.
+- `src/routes/produtora.$slug.tsx` — nova rota pública da produtora (foto, bio, redes, beats ativos).
+- `SPRINT_5_REPORT.md`.
+
+### Changed
+
+- `src/routes/index.tsx` — catálogo agora consome `listPublicBeats`. Filtros (gênero, produtora, BPM máx) e busca persistidos em URL via `validateSearch`. Paginação no rodapé.
+- `src/routes/beat.$slug.tsx` — alimentado por `getPublicBeatBySlug`. Sem CTAs comerciais (compra, WhatsApp, interesse) — layout pronto para Sprint 6.
+- `src/routes/produtores.tsx` — lista produtoras reais com foto e contagem de beats ativos. Links agora apontam para `/produtora/:slug`.
+- `src/routes/produtor.$slug.tsx` — convertida em `redirect` para `/produtora/:slug` (compat).
+- `src/components/BeatCard.tsx` — aceita `PublicBeat`. Cobertura usa `BeatCoverFallback` quando ausente. CTA reduzido a "Ver beat".
+- `src/components/PlayerBar.tsx` — `<audio>` real controlado por ref. Capa real + fallback. Mensagem amigável quando o beat não tem prévia.
+- `src/components/PlayerStore.tsx` — store reescrito para `PublicBeat` (id-based). `useInterests` mantido como legado (feature flag off).
+
+### Hidden
+
+- Botões de compra, "Tenho interesse", WhatsApp e formulário de e-mail removidos do catálogo público. Reaparecerão na Sprint 6.
+
+### Preserved
+
+- `src/data/beats.ts` mantido — a tela `/app` (mockup do aplicativo) ainda usa como ilustração estática.
+- `src/routes/meus-interesses.tsx` permanece desligado via `FEATURES.interests`.
+
+### Docs
+
+- `SPRINT_5_REPORT.md` com escopo, pontos de atenção e roadmap da Sprint 6.
+
+---
+
+
+
 ## Sprint 3 — Gestão de Beats
 
 ### Added
