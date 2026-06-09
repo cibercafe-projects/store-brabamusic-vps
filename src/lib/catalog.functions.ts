@@ -58,7 +58,7 @@ export const listPublicBeats = createServerFn({ method: "POST" })
     let q = admin
       .from("beats")
       .select(
-        "id,slug,nome,genero,bpm,tom,mood,preco,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at",
+        "id,slug,nome,genero,bpm,tom,mood,preco,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
         { count: "exact" },
       )
       .eq("status", "ativo")
@@ -119,6 +119,7 @@ export const listPublicBeats = createServerFn({ method: "POST" })
         preview_url: r.preview_path
           ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
           : (r.preview_url ?? null),
+        plays_count: r.plays_count ?? 0,
       })),
     );
 
@@ -166,6 +167,7 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
         preview_url: row.preview_path
           ? await sign(admin, PREVIEW_BUCKET, row.preview_path)
           : (row.preview_url ?? null),
+        plays_count: row.plays_count ?? 0,
       },
       produtora: prod
         ? {
@@ -229,7 +231,7 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
     const { data: beats } = await admin
       .from("beats")
       .select(
-        "id,slug,nome,genero,bpm,tom,mood,preco,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at",
+        "id,slug,nome,genero,bpm,tom,mood,preco,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
       )
       .eq("produtora_id", prod.id)
       .eq("status", "ativo")
@@ -255,6 +257,7 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
         preview_url: r.preview_path
           ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
           : (r.preview_url ?? null),
+        plays_count: r.plays_count ?? 0,
       })),
     );
 
