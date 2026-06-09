@@ -146,6 +146,15 @@ function BeatDetail() {
             ))}
           </dl>
 
+          <button
+            onClick={handleShare}
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
+            aria-label="Compartilhar beat"
+          >
+            {copied ? <Check className="h-4 w-4 text-accent" /> : <Share2 className="h-4 w-4" />}
+            {copied ? "Link copiado" : "Compartilhar beat"}
+          </button>
+
           {beat.descricao && (
             <div className="mt-8">
               <h2 className="font-display text-2xl">Sobre o beat</h2>
