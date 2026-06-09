@@ -13,6 +13,7 @@ export type PublicBeat = {
   produtora_slug: string;
   capa_url: string | null;
   preview_url: string | null;
+  plays_count: number;
 };
 
 export type PublicProducer = {

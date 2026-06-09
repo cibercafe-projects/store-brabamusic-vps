@@ -25,6 +25,7 @@ export type Database = {
           id: string
           mood: string | null
           nome: string
+          plays_count: number
           preco: number | null
           preview_path: string | null
           preview_url: string | null
@@ -46,6 +47,7 @@ export type Database = {
           id?: string
           mood?: string | null
           nome: string
+          plays_count?: number
           preco?: number | null
           preview_path?: string | null
           preview_url?: string | null
@@ -67,6 +69,7 @@ export type Database = {
           id?: string
           mood?: string | null
           nome?: string
+          plays_count?: number
           preco?: number | null
           preview_path?: string | null
           preview_url?: string | null
@@ -166,6 +169,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_beat_plays: { Args: { _beat_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin"

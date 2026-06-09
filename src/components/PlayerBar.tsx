@@ -1,11 +1,14 @@
 import { useEffect, useRef } from "react";
 import { Play, Pause, X, Volume2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { usePlayer } from "./PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
+import { incrementBeatPlays } from "@/lib/catalog.functions";
 
 export function PlayerBar() {
-  const { current, playing, toggle, stop } = usePlayer();
+  const { current, playing, toggle, stop, markCounted, counted } = usePlayer();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const increment = useServerFn(incrementBeatPlays);
 
   useEffect(() => {
     const a = audioRef.current;
@@ -64,6 +67,10 @@ export function PlayerBar() {
               {current.bpm ? ` · ${current.bpm} BPM` : ""}
               {current.tom ? ` · ${current.tom}` : ""}
             </p>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
+              <Play className="h-3 w-3" />
+              {(current.plays_count ?? 0).toLocaleString("pt-BR")} reproduções
+            </p>
           </div>
 
           {hasAudio ? (
@@ -73,7 +80,22 @@ export function PlayerBar() {
               controls
               className="w-full"
               onEnded={() => usePlayer.setState({ playing: false })}
-              onPlay={() => usePlayer.setState({ playing: true })}
+              onPlay={() => {
+                usePlayer.setState({ playing: true });
+                if (current && !counted.has(current.id)) {
+                  markCounted(current.id);
+                  increment({ data: { beatId: current.id } })
+                    .then((res) => {
+                      const next = res?.plays_count ?? (current.plays_count ?? 0) + 1;
+                      usePlayer.setState((s) =>
+                        s.current && s.current.id === current.id
+                          ? { current: { ...s.current, plays_count: next } }
+                          : {},
+                      );
+                    })
+                    .catch(() => {});
+                }
+              }}
               onPause={() => usePlayer.setState({ playing: false })}
             />
           ) : (

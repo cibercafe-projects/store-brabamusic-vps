@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   ChevronLeft,
   ChevronRight,
+  Headphones,
   Image as ImageIcon,
   Loader2,
   MoreHorizontal,
@@ -237,6 +238,7 @@ function BeatsPage() {
               <TableHead>Produtora</TableHead>
               <TableHead>Gênero</TableHead>
               <TableHead>Preço</TableHead>
+              <TableHead>Plays</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -244,13 +246,13 @@ function BeatsPage() {
           <TableBody>
             {query.isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={8} className="h-24 text-center">
                   <Loader2 className="inline h-4 w-4 animate-spin" /> Carregando...
                 </TableCell>
               </TableRow>
             ) : query.data?.rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                   Nenhum beat cadastrado.
                 </TableCell>
               </TableRow>
@@ -276,6 +278,12 @@ function BeatsPage() {
                     {b.genero ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell>{formatPrice(b.preco)}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1 text-sm tabular-nums">
+                      <Headphones className="h-3.5 w-3.5 text-muted-foreground" />
+                      {((b as { plays_count?: number }).plays_count ?? 0).toLocaleString("pt-BR")}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[b.status as BeatStatus]}>
                       {statusLabel[b.status as BeatStatus]}
