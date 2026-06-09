@@ -4,14 +4,17 @@ import type { PublicBeat } from "@/lib/catalog.types";
 type PlayerState = {
   current: PublicBeat | null;
   playing: boolean;
+  counted: Set<string>;
   play: (b: PublicBeat) => void;
   toggle: () => void;
   stop: () => void;
+  markCounted: (id: string) => void;
 };
 
 export const usePlayer = create<PlayerState>((set, get) => ({
   current: null,
   playing: false,
+  counted: new Set<string>(),
   play: (b) => {
     const { current, playing } = get();
     if (current?.id === b.id) set({ playing: !playing });
@@ -19,6 +22,11 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   },
   toggle: () => set((s) => ({ playing: !s.playing })),
   stop: () => set({ current: null, playing: false }),
+  markCounted: (id) => {
+    const next = new Set(get().counted);
+    next.add(id);
+    set({ counted: next });
+  },
 }));
 
 // Legacy interests store (feature flag disabled — kept for backwards compat).
