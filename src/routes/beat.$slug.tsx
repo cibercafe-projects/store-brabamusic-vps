@@ -45,6 +45,34 @@ function BeatDetail() {
   const { current, playing, play } = usePlayer();
   const isPlaying = current?.id === beat.id && playing;
   const hasPreview = !!beat.preview_url;
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const shareData = {
+      title: `${beat.nome} — Braba Beats`,
+      text: produtora
+        ? `Ouça "${beat.nome}" prod. ${produtora.nome_artistico} na Braba Beats`
+        : `Ouça "${beat.nome}" na Braba Beats`,
+      url,
+    };
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      // user cancelled or share failed — fall through to clipboard
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success("Link copiado!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Não foi possível copiar o link.");
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
