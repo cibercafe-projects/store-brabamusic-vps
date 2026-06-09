@@ -18,6 +18,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as ProdutoraSlugRouteImport } from './routes/produtora.$slug'
 import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -72,6 +73,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const ProdutoraSlugRoute = ProdutoraSlugRouteImport.update({
+  id: '/produtora/$slug',
+  path: '/produtora/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ProdutorSlugRoute = ProdutorSlugRouteImport.update({
   id: '/produtor/$slug',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
+  '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/beats': typeof AdminProtectedBeatsRoute
   '/admin/configuracoes': typeof AdminProtectedConfiguracoesRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
+  '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/beats': typeof AdminProtectedBeatsRoute
   '/admin/configuracoes': typeof AdminProtectedConfiguracoesRoute
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
+  '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/_protected/beats': typeof AdminProtectedBeatsRoute
   '/admin/_protected/configuracoes': typeof AdminProtectedConfiguracoesRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/beat/$slug'
     | '/produtor/$slug'
+    | '/produtora/$slug'
     | '/admin/'
     | '/admin/beats'
     | '/admin/configuracoes'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/beat/$slug'
     | '/produtor/$slug'
+    | '/produtora/$slug'
     | '/admin/beats'
     | '/admin/configuracoes'
     | '/admin/dashboard'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/beat/$slug'
     | '/produtor/$slug'
+    | '/produtora/$slug'
     | '/admin/'
     | '/admin/_protected/beats'
     | '/admin/_protected/configuracoes'
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   TermosUsoRoute: typeof TermosUsoRoute
   BeatSlugRoute: typeof BeatSlugRoute
   ProdutorSlugRoute: typeof ProdutorSlugRoute
+  ProdutoraSlugRoute: typeof ProdutoraSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -315,6 +328,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/produtora/$slug': {
+      id: '/produtora/$slug'
+      path: '/produtora/$slug'
+      fullPath: '/produtora/$slug'
+      preLoaderRoute: typeof ProdutoraSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/produtor/$slug': {
       id: '/produtor/$slug'
@@ -428,6 +448,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosUsoRoute: TermosUsoRoute,
   BeatSlugRoute: BeatSlugRoute,
   ProdutorSlugRoute: ProdutorSlugRoute,
+  ProdutoraSlugRoute: ProdutoraSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

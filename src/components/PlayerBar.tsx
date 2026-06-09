@@ -1,9 +1,27 @@
-import { Play, Pause, X } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Play, Pause, X, Volume2 } from "lucide-react";
 import { usePlayer } from "./PlayerStore";
+import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
 
 export function PlayerBar() {
   const { current, playing, toggle, stop } = usePlayer();
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) {
+      a.play().catch(() => {
+        // autoplay blocked or media error — keep modal but pause state
+      });
+    } else {
+      a.pause();
+    }
+  }, [playing, current?.id]);
+
   if (!current) return null;
+
+  const hasAudio = !!current.preview_url;
 
   return (
     <div
@@ -19,45 +37,60 @@ export function PlayerBar() {
         <button
           onClick={stop}
           aria-label="Fechar player"
-          className="absolute top-3 right-3 grid place-items-center h-9 w-9 rounded-full bg-white/10 hover:bg-white/20"
+          className="absolute top-3 right-3 z-10 grid place-items-center h-9 w-9 rounded-full bg-white/10 hover:bg-white/20"
         >
           <X className="h-4 w-4" />
         </button>
 
         <div className="p-6 flex flex-col items-center gap-5 text-center">
-          <img
-            src={current.cover}
-            alt=""
-            className="h-48 w-48 rounded-xl object-cover shadow-lg"
-          />
+          <div className="h-48 w-48 rounded-xl overflow-hidden shadow-lg">
+            {current.capa_url ? (
+              <img
+                src={current.capa_url}
+                alt={current.nome}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <BeatCoverFallback name={current.nome} />
+            )}
+          </div>
           <div className="min-w-0 w-full">
-            <p className="font-display text-2xl truncate">{current.title}</p>
+            <p className="font-display text-2xl truncate">{current.nome}</p>
             <p className="text-sm text-muted-foreground mt-1 truncate">
-              prod. {current.producer} · {current.bpm} BPM · {current.key}
+              prod. {current.produtora_nome}
+              {current.bpm ? ` · ${current.bpm} BPM` : ""}
+              {current.tom ? ` · ${current.tom}` : ""}
             </p>
           </div>
 
-          {/* Fake waveform */}
-          <div className="flex items-end gap-0.5 h-14 w-full">
-            {Array.from({ length: 60 }).map((_, i) => (
-              <span
-                key={i}
-                className={`flex-1 rounded-sm bg-gradient-to-t from-primary to-accent ${playing ? "animate-pulse" : ""}`}
-                style={{
-                  height: `${20 + Math.abs(Math.sin(i * 0.7)) * 80}%`,
-                  animationDelay: `${i * 30}ms`,
-                }}
-              />
-            ))}
-          </div>
+          {hasAudio ? (
+            <audio
+              ref={audioRef}
+              src={current.preview_url ?? undefined}
+              controls
+              className="w-full"
+              onEnded={() => usePlayer.setState({ playing: false })}
+              onPlay={() => usePlayer.setState({ playing: true })}
+              onPause={() => usePlayer.setState({ playing: false })}
+            />
+          ) : (
+            <p className="text-xs text-muted-foreground flex items-center gap-2">
+              <Volume2 className="h-4 w-4" /> Sem prévia disponível para este beat.
+            </p>
+          )}
 
-          <button
-            onClick={toggle}
-            aria-label={playing ? "Pausar" : "Tocar"}
-            className="grid place-items-center h-16 w-16 rounded-full bg-accent text-accent-foreground glow-magenta"
-          >
-            {playing ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
-          </button>
+          {hasAudio && (
+            <button
+              onClick={toggle}
+              aria-label={playing ? "Pausar" : "Tocar"}
+              className="grid place-items-center h-16 w-16 rounded-full bg-accent text-accent-foreground glow-magenta"
+            >
+              {playing ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
+            </button>
+          )}
         </div>
       </div>
     </div>

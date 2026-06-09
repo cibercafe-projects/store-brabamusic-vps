@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import type { Beat } from "@/data/beats";
+import type { PublicBeat } from "@/lib/catalog.types";
 
 type PlayerState = {
-  current: Beat | null;
+  current: PublicBeat | null;
   playing: boolean;
-  play: (b: Beat) => void;
+  play: (b: PublicBeat) => void;
   toggle: () => void;
   stop: () => void;
 };
@@ -14,13 +14,14 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   playing: false,
   play: (b) => {
     const { current, playing } = get();
-    if (current?.slug === b.slug) set({ playing: !playing });
+    if (current?.id === b.id) set({ playing: !playing });
     else set({ current: b, playing: true });
   },
   toggle: () => set((s) => ({ playing: !s.playing })),
   stop: () => set({ current: null, playing: false }),
 }));
 
+// Legacy interests store (feature flag disabled — kept for backwards compat).
 type InterestState = {
   items: string[];
   toggle: (slug: string) => void;
@@ -29,10 +30,16 @@ type InterestState = {
 };
 
 export const useInterests = create<InterestState>((set, get) => ({
-  items: typeof window !== "undefined" ? JSON.parse(localStorage.getItem("braba-interests") || "[]") : [],
+  items:
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("braba-interests") || "[]")
+      : [],
   toggle: (slug) => {
-    const items = get().items.includes(slug) ? get().items.filter((s) => s !== slug) : [...get().items, slug];
-    if (typeof window !== "undefined") localStorage.setItem("braba-interests", JSON.stringify(items));
+    const items = get().items.includes(slug)
+      ? get().items.filter((s) => s !== slug)
+      : [...get().items, slug];
+    if (typeof window !== "undefined")
+      localStorage.setItem("braba-interests", JSON.stringify(items));
     set({ items });
   },
   has: (slug) => get().items.includes(slug),
