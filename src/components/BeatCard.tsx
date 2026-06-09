@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Headphones } from "lucide-react";
 import { usePlayer } from "./PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
 import type { PublicBeat } from "@/lib/catalog.types";
@@ -51,6 +51,13 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
             </span>
           )}
         </div>
+        <span
+          title={`${beat.plays_count} reproduções`}
+          className="absolute top-3 right-3 rounded-full bg-black/60 backdrop-blur px-2 py-1 text-[10px] flex items-center gap-1"
+        >
+          <Headphones className="h-3 w-3" />
+          {(beat.plays_count ?? 0).toLocaleString("pt-BR")}
+        </span>
       </div>
       <div className="p-4">
         <Link to="/beat/$slug" params={{ slug: beat.slug }} className="block">
