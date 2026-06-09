@@ -67,7 +67,7 @@ function Index() {
 
   const onSearch = (q: string) => {
     setQLocal(q);
-    navigate({ search: (prev) => ({ ...prev, q: q || undefined, page: 1 }) });
+    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, q: q || undefined, page: 1 }) });
   };
 
   const generos = ["Todos", ...filters.generos];
@@ -125,7 +125,7 @@ function Index() {
                 key={g}
                 onClick={() =>
                   navigate({
-                    search: (prev) => ({
+                    search: (prev: Record<string, unknown>) => ({
                       ...prev,
                       genero: g === "Todos" ? undefined : g,
                       page: 1,
@@ -147,7 +147,7 @@ function Index() {
               value={search.produtora ?? ""}
               onChange={(e) =>
                 navigate({
-                  search: (prev) => ({
+                  search: (prev: Record<string, unknown>) => ({
                     ...prev,
                     produtora: e.target.value || undefined,
                     page: 1,
@@ -171,7 +171,7 @@ function Index() {
               value={bpmMax}
               onChange={(e) =>
                 navigate({
-                  search: (prev) => ({
+                  search: (prev: Record<string, unknown>) => ({
                     ...prev,
                     bpmMax: Number(e.target.value),
                     page: 1,
@@ -222,7 +222,7 @@ function Pagination({
       <button
         disabled={page <= 1}
         onClick={() =>
-          navigate({ search: (prev) => ({ ...prev, page: Math.max(1, page - 1) }) })
+          navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, page: Math.max(1, page - 1) }) })
         }
         className="rounded-full border border-white/15 px-4 py-1.5 text-sm disabled:opacity-40"
       >
@@ -234,7 +234,7 @@ function Pagination({
       <button
         disabled={page >= totalPages}
         onClick={() =>
-          navigate({ search: (prev) => ({ ...prev, page: Math.min(totalPages, page + 1) }) })
+          navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, page: Math.min(totalPages, page + 1) }) })
         }
         className="rounded-full border border-white/15 px-4 py-1.5 text-sm disabled:opacity-40"
       >
