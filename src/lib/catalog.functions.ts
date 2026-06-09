@@ -304,3 +304,16 @@ export const listPublicFilters = createServerFn({ method: "POST" }).handler(asyn
     produtoras,
   };
 });
+
+export const incrementBeatPlays = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ beatId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const admin = await getAdmin();
+    const { data: count, error } = await admin.rpc("increment_beat_plays", {
+      _beat_id: data.beatId,
+    });
+    if (error) return { plays_count: 0 };
+    return { plays_count: (count as number) ?? 0 };
+  });

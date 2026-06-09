@@ -1,11 +1,14 @@
 import { useEffect, useRef } from "react";
 import { Play, Pause, X, Volume2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { usePlayer } from "./PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
+import { incrementBeatPlays } from "@/lib/catalog.functions";
 
 export function PlayerBar() {
-  const { current, playing, toggle, stop } = usePlayer();
+  const { current, playing, toggle, stop, markCounted, counted } = usePlayer();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const increment = useServerFn(incrementBeatPlays);
 
   useEffect(() => {
     const a = audioRef.current;
