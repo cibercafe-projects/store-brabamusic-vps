@@ -1,6 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Play, Pause, Instagram, Music2 } from "lucide-react";
+import { Play, Pause, Instagram, Music2, Share2, Check } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { getPublicBeatBySlug } from "@/lib/catalog.functions";
 import { usePlayer } from "@/components/PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
@@ -43,6 +45,34 @@ function BeatDetail() {
   const { current, playing, play } = usePlayer();
   const isPlaying = current?.id === beat.id && playing;
   const hasPreview = !!beat.preview_url;
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const shareData = {
+      title: `${beat.nome} — Braba Beats`,
+      text: produtora
+        ? `Ouça "${beat.nome}" prod. ${produtora.nome_artistico} na Braba Beats`
+        : `Ouça "${beat.nome}" na Braba Beats`,
+      url,
+    };
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      // user cancelled or share failed — fall through to clipboard
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      toast.success("Link copiado!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Não foi possível copiar o link.");
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
@@ -115,6 +145,15 @@ function BeatDetail() {
               </div>
             ))}
           </dl>
+
+          <button
+            onClick={handleShare}
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
+            aria-label="Compartilhar beat"
+          >
+            {copied ? <Check className="h-4 w-4 text-accent" /> : <Share2 className="h-4 w-4" />}
+            {copied ? "Link copiado" : "Compartilhar beat"}
+          </button>
 
           {beat.descricao && (
             <div className="mt-8">
