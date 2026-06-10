@@ -27,7 +27,7 @@ function Como() {
         Fluxo simples e direto: catálogo → interesse no WhatsApp → pagamento manual → entrega manual.
       </p>
 
-      <ol className="mt-12 grid gap-4 md:grid-cols-2">
+      <ol className="mt-12 grid gap-4 grid-cols-1">
         {steps.map((s) => (
           <li key={s.n} className="glass rounded-2xl p-5 flex gap-4">
             <span className="font-display text-3xl text-accent">{s.n}</span>
