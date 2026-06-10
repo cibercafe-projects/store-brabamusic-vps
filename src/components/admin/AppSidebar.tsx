@@ -64,6 +64,16 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {roleQuery.data?.isSuperAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/admin/usuarios")}>
+                    <Link to="/admin/usuarios" className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Usuários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
