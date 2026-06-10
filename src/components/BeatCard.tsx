@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Play, Pause, Headphones } from "lucide-react";
+import { Play, Pause, Headphones, MessageCircle } from "lucide-react";
 import { usePlayer } from "./PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
+import { InterestForm } from "@/components/InterestForm";
 import type { PublicBeat } from "@/lib/catalog.types";
 
 export function BeatCard({ beat }: { beat: PublicBeat }) {
+  const [interestOpen, setInterestOpen] = useState(false);
+
   const { current, playing, play } = usePlayer();
   const isCurrent = current?.id === beat.id;
   const isPlaying = isCurrent && playing;
