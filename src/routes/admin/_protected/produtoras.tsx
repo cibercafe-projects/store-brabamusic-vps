@@ -12,6 +12,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { listProducers, setProducerStatus } from "@/lib/producers.functions";
+import { listProducers, setProducerStatus, deleteProducer } from "@/lib/producers.functions";
 import { ProducerForm, type ProducerFormInitial } from "@/components/admin/producers/ProducerForm";
 
 export const Route = createFileRoute("/admin/_protected/produtoras")({
@@ -63,6 +64,7 @@ type Row = Awaited<ReturnType<typeof listProducers>>["rows"][number];
 function ProdutorasPage() {
   const list = useServerFn(listProducers);
   const toggleStatus = useServerFn(setProducerStatus);
+  const removeProducer = useServerFn(deleteProducer);
   const qc = useQueryClient();
 
   const [search, setSearch] = useState("");
@@ -73,6 +75,7 @@ function ProdutorasPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<ProducerFormInitial | undefined>(undefined);
   const [statusConfirm, setStatusConfirm] = useState<Row | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Row | null>(null);
 
   const query = useQuery({
     queryKey: ["admin", "producers", { search, status, page, pageSize }],
@@ -96,6 +99,16 @@ function ProdutorasPage() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
     onSettled: () => setStatusConfirm(null),
+  });
+
+  const mutateDelete = useMutation({
+    mutationFn: async (p: Row) => removeProducer({ data: { id: p.id } }),
+    onSuccess: () => {
+      toast.success("Produtora excluída.");
+      qc.invalidateQueries({ queryKey: ["admin", "producers"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao excluir"),
+    onSettled: () => setDeleteConfirm(null),
   });
 
   return (
@@ -240,6 +253,15 @@ function ProdutorasPage() {
                       )}
                       {p.status === "ativa" ? "Desativar" : "Ativar"}
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setDeleteConfirm(p)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -309,6 +331,29 @@ function ProdutorasPage() {
               onClick={() => statusConfirm && mutateStatus.mutate(statusConfirm)}
             >
               Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => !o && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir produtora?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente e remove <strong>{deleteConfirm?.nome_artistico}</strong> do sistema,
+              incluindo a foto de perfil. Se houver beats vinculados a exclusão será bloqueada — desative
+              a produtora ou reatribua os beats antes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirm && mutateDelete.mutate(deleteConfirm)}
+              disabled={mutateDelete.isPending}
+            >
+              {mutateDelete.isPending ? "Excluindo..." : "Excluir definitivamente"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
