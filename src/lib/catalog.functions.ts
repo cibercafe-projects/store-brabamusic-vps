@@ -87,7 +87,7 @@ export const listPublicBeats = createServerFn({ method: "POST" })
     }
 
     const { data: rows, error, count } = await q;
-    if (error) throw new Error(error.message);
+    if (error) console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.');
 
     const ids = Array.from(new Set((rows ?? []).map((r) => r.produtora_id)));
     const prodMap = new Map<string, { nome_artistico: string; slug: string }>();
@@ -138,7 +138,7 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
       .eq("slug", data.slug)
       .eq("status", "ativo")
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.');
     if (!row) return null;
 
     const { data: prod } = await admin
@@ -192,7 +192,7 @@ export const listPublicProducers = createServerFn({ method: "POST" }).handler(as
     .select("id, slug, nome_artistico, cidade, bio, instagram, spotify, foto_perfil_path")
     .eq("status", "ativa")
     .order("nome_artistico", { ascending: true });
-  if (error) throw new Error(error.message);
+  if (error) console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.');
   const { data: beatRows } = await admin
     .from("beats")
     .select("produtora_id")
@@ -225,7 +225,7 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
       .select("id, slug, nome_artistico, cidade, bio, instagram, spotify, foto_perfil_path, status")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.');
     if (!prod || prod.status !== "ativa") return null;
 
     const { data: beats } = await admin
