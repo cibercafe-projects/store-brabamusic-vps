@@ -101,6 +101,16 @@ function ProdutorasPage() {
     onSettled: () => setStatusConfirm(null),
   });
 
+  const mutateDelete = useMutation({
+    mutationFn: async (p: Row) => removeProducer({ data: { id: p.id } }),
+    onSuccess: () => {
+      toast.success("Produtora excluída.");
+      qc.invalidateQueries({ queryKey: ["admin", "producers"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao excluir"),
+    onSettled: () => setDeleteConfirm(null),
+  });
+
   return (
     <div className="space-y-6">
       <header className="flex items-center justify-between gap-4 flex-wrap">
