@@ -13,6 +13,29 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Pós-Sprint 5 — Ajustes & Hardening
+
+### Added
+
+- **Compartilhar beat** — `src/routes/beat.$slug.tsx` ganhou botão "Compartilhar" usando Web Share API com fallback para `navigator.clipboard` (copia URL canônica do beat). Toast de feedback.
+- **Contador de plays por beat:**
+  - Migração: coluna `beats.plays_count integer not null default 0` + RPC `public.increment_beat_plays(_beat_id uuid)` `SECURITY DEFINER` (incrementa atômico e devolve o novo total).
+  - `incrementBeatPlays` em `src/lib/catalog.functions.ts` chama a RPC.
+  - `PlayerStore` mantém `Set<string>` de beats já contados na sessão (evita inflar o contador em re-toques).
+  - `PlayerBar` dispara o incremento ao primeiro `play` real do `<audio>` por beat.
+  - `BeatCard` mostra o ícone ▶ + total formatado.
+  - Admin (`/admin/beats`) exibe a coluna "Plays" na tabela de cadastro.
+- **Exclusão de produtora** — `deleteProducer` em `src/lib/producers.functions.ts`. Bloqueia se houver beats vinculados (FK RESTRICT) e remove o avatar do bucket `producer-avatars`. Ação "Excluir" com `AlertDialog` em `/admin/produtoras`.
+- **Exclusão de beat** — `deleteBeat` em `src/lib/beats.functions.ts`. Remove capa (`beat-covers`) e prévia (`beat-previews`) do Storage e apaga o registro. Item "Excluir beat" no dropdown de ações em `/admin/beats` com confirmação.
+- Migração: nova policy `DELETE` em `public.beats` restrita a admins (`has_role(auth.uid(), 'admin')`).
+
+### Security
+
+- Findings `beats_producers_no_public_select` e `storage_no_public_read_beat_previews_covers` marcados como **ignored / by design** no scanner: o catálogo público é mediado server-side via `supabaseAdmin` em `catalog.functions.ts` (filtra `status = 'ativo'` e projeta apenas colunas seguras) e a mídia é entregue por **signed URL** (TTL 4h). Buckets seguem privados intencionalmente.
+- `@security-memory` atualizado para refletir essa decisão.
+
+---
+
 ## Sprint 5 — Catálogo Público Real
 
 ### Added
