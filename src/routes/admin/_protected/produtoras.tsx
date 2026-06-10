@@ -64,6 +64,7 @@ type Row = Awaited<ReturnType<typeof listProducers>>["rows"][number];
 function ProdutorasPage() {
   const list = useServerFn(listProducers);
   const toggleStatus = useServerFn(setProducerStatus);
+  const removeProducer = useServerFn(deleteProducer);
   const qc = useQueryClient();
 
   const [search, setSearch] = useState("");
