@@ -383,27 +383,50 @@ export const getAdminMetrics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const supabaseAdmin = await assertAdmin(context.userId);
-    const [producersTotal, producersActive, beatsTotal, beatsAtivos, beatsVendidos, beatsRascunho] =
-      await Promise.all([
-        supabaseAdmin.from("producers").select("id", { count: "exact", head: true }),
-        supabaseAdmin
-          .from("producers")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "ativa"),
-        supabaseAdmin.from("beats").select("id", { count: "exact", head: true }),
-        supabaseAdmin
-          .from("beats")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "ativo"),
-        supabaseAdmin
-          .from("beats")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "vendido"),
-        supabaseAdmin
-          .from("beats")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "rascunho"),
-      ]);
+    const [
+      producersTotal,
+      producersActive,
+      beatsTotal,
+      beatsAtivos,
+      beatsVendidos,
+      beatsRascunho,
+      leadsTotal,
+      leadsNovos,
+      leadsNegociacao,
+      leadsConvertidos,
+    ] = await Promise.all([
+      supabaseAdmin.from("producers").select("id", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("producers")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "ativa"),
+      supabaseAdmin.from("beats").select("id", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("beats")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "ativo"),
+      supabaseAdmin
+        .from("beats")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "vendido"),
+      supabaseAdmin
+        .from("beats")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "rascunho"),
+      supabaseAdmin.from("leads").select("id", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "novo"),
+      supabaseAdmin
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "negociacao"),
+      supabaseAdmin
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pago", "entregue"]),
+    ]);
     return {
       produtorasTotal: producersTotal.count ?? 0,
       produtorasAtivas: producersActive.count ?? 0,
@@ -411,5 +434,10 @@ export const getAdminMetrics = createServerFn({ method: "POST" })
       beatsAtivos: beatsAtivos.count ?? 0,
       beatsVendidos: beatsVendidos.count ?? 0,
       beatsRascunho: beatsRascunho.count ?? 0,
+      leadsTotal: leadsTotal.count ?? 0,
+      leadsNovos: leadsNovos.count ?? 0,
+      leadsNegociacao: leadsNegociacao.count ?? 0,
+      leadsConvertidos: leadsConvertidos.count ?? 0,
     };
   });
+
