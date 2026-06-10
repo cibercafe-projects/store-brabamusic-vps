@@ -253,6 +253,15 @@ function ProdutorasPage() {
                       )}
                       {p.status === "ativa" ? "Desativar" : "Ativar"}
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setDeleteConfirm(p)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Excluir
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
