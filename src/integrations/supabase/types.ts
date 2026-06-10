@@ -138,20 +138,26 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          active: boolean
           created_at: string
           id: string
+          is_super: boolean
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          active?: boolean
           created_at?: string
           id?: string
+          is_super?: boolean
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          active?: boolean
           created_at?: string
           id?: string
+          is_super?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
@@ -170,6 +176,8 @@ export type Database = {
         Returns: boolean
       }
       increment_beat_plays: { Args: { _beat_id: string }; Returns: number }
+      is_admin_active: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin"

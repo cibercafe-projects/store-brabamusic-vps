@@ -1,5 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Music, Inbox, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Music, Inbox, Settings, LogOut, ShieldCheck } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Sidebar,
   SidebarContent,
@@ -12,7 +14,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { checkAdminRole } from "@/lib/admin.functions";
 
 const items = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
@@ -26,6 +28,12 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const checkRole = useServerFn(checkAdminRole);
+  const roleQuery = useQuery({
+    queryKey: ["admin-role"],
+    queryFn: () => checkRole(),
+    staleTime: 60_000,
+  });
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
@@ -56,6 +64,16 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {roleQuery.data?.isSuperAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/admin/usuarios")}>
+                    <Link to="/admin/usuarios" className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Usuários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
