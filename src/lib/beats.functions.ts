@@ -274,6 +274,31 @@ export const setBeatStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deleteBeat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+
+    const { data: existing, error: getErr } = await supabaseAdmin
+      .from("beats")
+      .select("capa_path, preview_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (getErr) throw new Error(getErr.message);
+
+    const { error } = await supabaseAdmin.from("beats").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    if (existing?.capa_path) {
+      await supabaseAdmin.storage.from(COVER_BUCKET).remove([existing.capa_path]);
+    }
+    if (existing?.preview_path) {
+      await supabaseAdmin.storage.from(PREVIEW_BUCKET).remove([existing.preview_path]);
+    }
+    return { ok: true };
+  });
+
 export const listProducersForSelect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
