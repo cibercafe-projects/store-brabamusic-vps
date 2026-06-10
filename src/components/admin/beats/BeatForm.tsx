@@ -315,7 +315,7 @@ export function BeatForm({ initial, onDone }: Props) {
                     onChange={(e) =>
                       field.onChange(e.target.value.replace(/[^\d,.]/g, ""))
                     }
-                  />)
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
