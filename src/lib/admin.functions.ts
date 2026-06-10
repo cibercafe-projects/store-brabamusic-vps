@@ -9,12 +9,16 @@ export const checkAdminRole = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("user_roles")
-      .select("role")
+      .select("role, is_super, active")
       .eq("user_id", context.userId)
       .eq("role", "admin")
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return { isAdmin: !!data };
+    const isAdmin = !!data && data.active === true;
+    return {
+      isAdmin,
+      isSuperAdmin: isAdmin && data?.is_super === true,
+    };
   });
 
 /**
