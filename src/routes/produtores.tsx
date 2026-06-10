@@ -11,8 +11,8 @@ const producersQuery = queryOptions({
 export const Route = createFileRoute("/produtores")({
   loader: ({ context }) => context.queryClient.ensureQueryData(producersQuery),
   component: Producers,
-  errorComponent: ({ error }) => (
-    <p className="p-8 text-center text-sm text-muted-foreground">{error.message}</p>
+  errorComponent: () => (
+    <p className="p-8 text-center text-sm text-muted-foreground">Não foi possível carregar as produtoras agora. Tente novamente em instantes.</p>
   ),
 });
 
