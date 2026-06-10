@@ -155,7 +155,7 @@ export function BeatForm({ initial, onDone }: Props) {
         bpm: values.bpm ? Number(values.bpm) : null,
         tom: values.tom || "",
         mood: values.mood || "",
-        preco: values.preco ? Number(values.preco) : null,
+        preco: values.preco ? Number(String(values.preco).replace(",", ".")) : null,
         descricao: values.descricao || "",
         status: values.status,
         capa_url: "",
