@@ -72,6 +72,32 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 
 
+## Sprint 4 — Infraestrutura de Mídia & Dashboard
+
+### Added
+
+- **Storage de capas** — bucket privado `beat-covers` (RLS admin-only). Server fn `getBeatCoverUploadUrl` (signed upload URL). Componente `src/components/admin/beats/BeatCoverUploader.tsx` com validação (jpg/jpeg/png/webp ≤ 5MB) e preview imediato. Nova coluna `beats.capa_path`; a capa anterior é removida do bucket ao trocar.
+- **Storage de previews** — bucket privado `beat-previews` (RLS admin-only). Server fn `getBeatPreviewUploadUrl`. Componente `src/components/admin/beats/BeatPreviewUploader.tsx` (MP3/WAV ≤ 30MB, `<audio>` de teste). Nova coluna `beats.preview_path`; prévia anterior removida ao trocar.
+- **Dashboard admin** — `/admin/dashboard` consome `getAdminMetrics`: total de produtoras (e ativas), total de beats, beats ativos, vendidos e rascunhos. Estrutura preparada para receber métricas de vendas/leads.
+- **`BeatCoverFallback`** — fallback visual estilizado para beats sem capa, reaproveitado em `BeatCard`, `PlayerBar` e detalhe.
+- `SPRINT_4_REPORT.md`.
+
+### Changed
+
+- `listBeats` / `getBeat` (admin) passaram a retornar `capa_signed_url` e `preview_signed_url` (TTL 1h).
+- Server fn auxiliar `signBeatMedia` para reassinar paths sob demanda.
+- `BeatForm` integrado aos novos uploaders.
+
+### Preserved
+
+- Colunas legadas `beats.capa_url` / `beats.preview_url` mantidas como fallback para importações externas.
+
+### Docs
+
+- `SPRINT_4_REPORT.md` com modelagem, segurança de Storage e sugestões para Sprint 5.
+
+---
+
 ## Sprint 3 — Gestão de Beats
 
 ### Added
