@@ -307,7 +307,15 @@ export function BeatForm({ initial, onDone }: Props) {
               <FormItem>
                 <FormLabel>Preço (R$)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" min={0} {...field} placeholder="199.90" />
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    {...field}
+                    placeholder="199,99"
+                    onChange={(e) =>
+                      field.onChange(e.target.value.replace(/[^\d,.]/g, ""))
+                    }
+                  />)
                 </FormControl>
                 <FormMessage />
               </FormItem>
