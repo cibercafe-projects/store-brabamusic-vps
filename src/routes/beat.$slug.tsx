@@ -48,6 +48,9 @@ function BeatDetail() {
   const isPlaying = current?.id === beat.id && playing;
   const hasPreview = !!beat.preview_url;
   const [copied, setCopied] = useState(false);
+  const [interestOpen, setInterestOpen] = useState(false);
+
+
 
   const handleShare = async () => {
     const url = typeof window !== "undefined" ? window.location.href : "";
@@ -148,14 +151,31 @@ function BeatDetail() {
             ))}
           </dl>
 
-          <button
-            onClick={handleShare}
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
-            aria-label="Compartilhar beat"
-          >
-            {copied ? <Check className="h-4 w-4 text-accent" /> : <Share2 className="h-4 w-4" />}
-            {copied ? "Link copiado" : "Compartilhar beat"}
-          </button>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              onClick={() => setInterestOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground glow-magenta px-6 py-3 text-sm font-bold hover:opacity-90 transition"
+            >
+              <MessageCircle className="h-4 w-4" /> Tenho interesse
+            </button>
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
+              aria-label="Compartilhar beat"
+            >
+              {copied ? <Check className="h-4 w-4 text-accent" /> : <Share2 className="h-4 w-4" />}
+              {copied ? "Link copiado" : "Compartilhar"}
+            </button>
+          </div>
+
+          <InterestForm
+            beatId={beat.id}
+            beatName={beat.nome}
+            produtora={produtora?.nome_artistico ?? null}
+            open={interestOpen}
+            onOpenChange={setInterestOpen}
+          />
+
 
           {beat.descricao && (
             <div className="mt-8">
