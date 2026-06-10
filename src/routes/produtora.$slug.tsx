@@ -27,7 +27,7 @@ export const Route = createFileRoute("/produtora/$slug")({
       </Link>
     </div>
   ),
-  errorComponent: ({ error }) => <p className="p-8 text-center">{error.message}</p>,
+  errorComponent: () => <p className="p-8 text-center">Não foi possível carregar esta produtora agora. Tente novamente em instantes.</p>,
 });
 
 function ProducerPage() {
