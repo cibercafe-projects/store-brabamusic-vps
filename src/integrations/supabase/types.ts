@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       beats: {
         Row: {
           bpm: number | null
@@ -87,6 +105,53 @@ export type Database = {
             columns: ["produtora_id"]
             isOneToOne: false
             referencedRelation: "producers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          beat_id: string
+          created_at: string
+          email: string
+          id: string
+          instagram: string | null
+          mensagem: string | null
+          nome: string
+          status: Database["public"]["Enums"]["lead_status"]
+          telefone: string
+          updated_at: string
+        }
+        Insert: {
+          beat_id: string
+          created_at?: string
+          email: string
+          id?: string
+          instagram?: string | null
+          mensagem?: string | null
+          nome: string
+          status?: Database["public"]["Enums"]["lead_status"]
+          telefone: string
+          updated_at?: string
+        }
+        Update: {
+          beat_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          instagram?: string | null
+          mensagem?: string | null
+          nome?: string
+          status?: Database["public"]["Enums"]["lead_status"]
+          telefone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_beat_id_fkey"
+            columns: ["beat_id"]
+            isOneToOne: false
+            referencedRelation: "beats"
             referencedColumns: ["id"]
           },
         ]
@@ -182,6 +247,13 @@ export type Database = {
     Enums: {
       app_role: "admin"
       beat_status: "rascunho" | "ativo" | "vendido"
+      lead_status:
+        | "novo"
+        | "contatado"
+        | "negociacao"
+        | "pago"
+        | "entregue"
+        | "perdido"
       producer_status: "ativa" | "inativa"
     }
     CompositeTypes: {
@@ -312,6 +384,14 @@ export const Constants = {
     Enums: {
       app_role: ["admin"],
       beat_status: ["rascunho", "ativo", "vendido"],
+      lead_status: [
+        "novo",
+        "contatado",
+        "negociacao",
+        "pago",
+        "entregue",
+        "perdido",
+      ],
       producer_status: ["ativa", "inativa"],
     },
   },
