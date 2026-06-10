@@ -13,6 +13,34 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 6 — Governança Administrativa
+
+### Added
+
+- **Módulo de usuários administrativos** (`/admin/usuarios`): listagem, criação, edição (e-mail / senha), ativação/desativação e remoção de administradores. Acessível **somente para o super administrador** (item no menu lateral só aparece para ele e a rota mostra "Acesso restrito" para demais admins).
+- **Server functions** em `src/lib/admin-users.functions.ts`: `listAdminUsers`, `createAdminUser`, `updateAdminUser`, `setAdminUserActive`, `deleteAdminUser`. Todas com guard `assertSuperAdmin` e uso da Auth Admin API via `supabaseAdmin`.
+- **Níveis administrativos**: `admin` (gerencia produtoras, beats, dashboard) e **super_admin** (acrescenta gestão de usuários). Modelado por colunas booleanas `is_super` e `active` em `public.user_roles` — sem mexer no enum `app_role` (evita migração destrutiva).
+- **Funções `is_super_admin(uuid)`** e **`is_admin_active(uuid)`** (`SECURITY DEFINER`) para uso em policies e checagens server-side.
+- **Trigger `protect_super_admin`** em `public.user_roles` bloqueia:
+  - `DELETE` de super admin,
+  - rebaixamento (`is_super` `true` → `false`),
+  - desativação (`active` `true` → `false`) de super admin,
+  - troca de `role` de super admin.
+- **Auto-promoção do dono técnico**: primeiro registro de admin existente foi promovido a super_admin pela migração; `bootstrapFirstAdmin` agora cria o primeiro admin já como super.
+- **`checkAdminRole`** retorna `{ isAdmin, isSuperAdmin }` para condicionalmente exibir UI sensível.
+
+### Changed
+
+- `has_role(uuid, app_role)` agora exige `active = true` — usuários desativados perdem acesso imediato a produtoras/beats (RLS).
+- `assertAdmin` em `producers.functions.ts` e `beats.functions.ts` passa a filtrar `active = true`.
+- `AppSidebar` consulta `checkAdminRole` e renderiza o item **Usuários** apenas quando `isSuperAdmin === true`.
+
+### Notes
+
+- Exclusão de beats e produtoras (com confirmação e bloqueio por FK em produtoras com beats) já entregue no Pós-Sprint 5 — Sprint 6 apenas formaliza os requisitos no fluxo de governança.
+
+---
+
 ## Pós-Sprint 5 — Ajustes & Hardening
 
 ### Added
