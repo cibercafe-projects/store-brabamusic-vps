@@ -123,7 +123,10 @@ export function BeatForm({ initial, onDone }: Props) {
       bpm: initial?.bpm != null ? String(initial.bpm) : "",
       tom: initial?.tom ?? "",
       mood: initial?.mood ?? "",
-      preco: initial?.preco != null ? String(initial.preco) : "",
+      preco:
+        initial?.preco != null
+          ? String(initial.preco).replace(".", ",")
+          : "199,99",
       descricao: initial?.descricao ?? "",
       status: initial?.status ?? "rascunho",
       capa_path: initial?.capa_path ?? "",
