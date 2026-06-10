@@ -23,6 +23,7 @@ import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
+import { Route as AdminProtectedUsuariosRouteImport } from './routes/admin/_protected/usuarios'
 import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
 import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
 import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
@@ -98,6 +99,11 @@ const AdminProtectedRouteRoute = AdminProtectedRouteRouteImport.update({
   id: '/_protected',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminProtectedUsuariosRoute = AdminProtectedUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
 const AdminProtectedProdutorasRoute =
   AdminProtectedProdutorasRouteImport.update({
     id: '/produtoras',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/usuarios': typeof AdminProtectedUsuariosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/usuarios': typeof AdminProtectedUsuariosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/admin/_protected/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/usuarios'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/usuarios'
   id:
     | '__root__'
     | '/'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/dashboard'
     | '/admin/_protected/leads'
     | '/admin/_protected/produtoras'
+    | '/admin/_protected/usuarios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -364,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedRouteRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/_protected/usuarios': {
+      id: '/admin/_protected/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminProtectedUsuariosRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/produtoras': {
       id: '/admin/_protected/produtoras'
       path: '/produtoras'
@@ -408,6 +427,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedDashboardRoute: typeof AdminProtectedDashboardRoute
   AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
   AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
+  AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
 }
 
 const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
@@ -416,6 +436,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedDashboardRoute: AdminProtectedDashboardRoute,
   AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
   AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
+  AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
 }
 
 const AdminProtectedRouteRouteWithChildren =
