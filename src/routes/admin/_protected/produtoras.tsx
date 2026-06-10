@@ -335,6 +335,29 @@ function ProdutorasPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => !o && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir produtora?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente e remove <strong>{deleteConfirm?.nome_artistico}</strong> do sistema,
+              incluindo a foto de perfil. Se houver beats vinculados a exclusão será bloqueada — desative
+              a produtora ou reatribua os beats antes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirm && mutateDelete.mutate(deleteConfirm)}
+              disabled={mutateDelete.isPending}
+            >
+              {mutateDelete.isPending ? "Excluindo..." : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
