@@ -28,6 +28,12 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const checkRole = useServerFn(checkAdminRole);
+  const roleQuery = useQuery({
+    queryKey: ["admin-role"],
+    queryFn: () => checkRole(),
+    staleTime: 60_000,
+  });
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
