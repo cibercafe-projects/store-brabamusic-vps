@@ -123,7 +123,10 @@ export function BeatForm({ initial, onDone }: Props) {
       bpm: initial?.bpm != null ? String(initial.bpm) : "",
       tom: initial?.tom ?? "",
       mood: initial?.mood ?? "",
-      preco: initial?.preco != null ? String(initial.preco) : "",
+      preco:
+        initial?.preco != null
+          ? String(initial.preco).replace(".", ",")
+          : "199,99",
       descricao: initial?.descricao ?? "",
       status: initial?.status ?? "rascunho",
       capa_path: initial?.capa_path ?? "",
@@ -152,7 +155,7 @@ export function BeatForm({ initial, onDone }: Props) {
         bpm: values.bpm ? Number(values.bpm) : null,
         tom: values.tom || "",
         mood: values.mood || "",
-        preco: values.preco ? Number(values.preco) : null,
+        preco: values.preco ? Number(String(values.preco).replace(",", ".")) : null,
         descricao: values.descricao || "",
         status: values.status,
         capa_url: "",
@@ -304,7 +307,15 @@ export function BeatForm({ initial, onDone }: Props) {
               <FormItem>
                 <FormLabel>Preço (R$)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" min={0} {...field} placeholder="199.90" />
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    {...field}
+                    placeholder="199,99"
+                    onChange={(e) =>
+                      field.onChange(e.target.value.replace(/[^\d,.]/g, ""))
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
