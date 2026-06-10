@@ -13,7 +13,37 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 7 — Fluxo Comercial e Gestão de Leads
+
+### Added
+
+- **Tabela `public.leads`** com campos `beat_id` (FK → `beats`, `ON DELETE CASCADE`), `nome`, `email`, `telefone`, `instagram`, `mensagem`, `status` (enum `lead_status`: `novo`, `contatado`, `negociacao`, `pago`, `entregue`, `perdido`). Índices em `beat_id`, `status` e `created_at DESC`. RLS: somente admins ativos (`is_admin_active`) gerenciam; inserções públicas passam pela server fn (`supabaseAdmin`), sem grant a `anon`.
+- **Tabela `public.app_settings`** (chave/valor) com seed `whatsapp_number=''`. RLS restrita a admins ativos. Usada hoje para o número de WhatsApp comercial; preparada para crescer.
+- **Server functions** em `src/lib/leads.functions.ts`:
+  - `createLead` (público, sem auth) — valida com Zod, garante beat `ativo`, insere e devolve `{ leadId, whatsappNumber, beat, produtora }` para montar o link do WhatsApp no cliente.
+  - `listLeads`, `updateLeadStatus`, `deleteLead` (admin) — busca textual em nome/e-mail/telefone/Instagram + filtro por status, com join leve em beat/produtora.
+- **Server functions** em `src/lib/settings.functions.ts`: `getAppSettings`, `updateAppSettings` (admin only). Sanitiza o número de WhatsApp para apenas dígitos e `+` antes de gravar.
+- **Componente reutilizável** `src/components/InterestForm.tsx` — `Dialog` shadcn com Nome*, E-mail*, Telefone*, Instagram, Mensagem, validação Zod no cliente, `useMutation` de TanStack Query e abertura do WhatsApp (`wa.me/{numero}?text=...`) após sucesso. Mensagem pré-preenchida com beat, produtora e dados do lead. Se o admin ainda não configurou o número, abre `wa.me/?text=...` para o usuário escolher.
+- **Botão "Tenho interesse"** nos cards do catálogo (`BeatCard`) e na página individual do beat (`/beat/:slug`) — abre o `InterestForm` sem sair da página.
+- **Backoffice `/admin/leads`** (substitui o placeholder): cards listando leads, busca por nome/e-mail/telefone/Instagram, filtro por status, alteração inline de status (`Select`), link para o beat relacionado (abre em nova aba), atalhos `mailto:` / `wa.me` / Instagram e remoção com `AlertDialog`.
+- **Backoffice `/admin/configuracoes`** (substitui o placeholder): edição do número de WhatsApp comercial.
+- **Dashboard** ganhou seção **"Funil comercial"** com 4 métricas: Total de Leads, Leads Novos, Em Negociação e Convertidos (pagos + entregues). `getAdminMetrics` foi estendido para incluir as agregações.
+
+### Changed
+
+- `getAdminMetrics` em `src/lib/beats.functions.ts` agora também retorna `leadsTotal`, `leadsNovos`, `leadsNegociacao`, `leadsConvertidos` — todas com queries `head: true` em paralelo (`Promise.all`).
+- `BeatCard.tsx` reorganiza o rodapé: preço à esquerda, "Ver" + "Interesse" à direita (preserva o link existente para a página do beat).
+- `src/routes/beat.$slug.tsx` agora destaca o CTA "Tenho interesse" ao lado de "Compartilhar".
+
+### Notes
+
+- Pagamento online, Mercado Pago, Stripe, checkout, entrega automática e contratos automáticos **não foram implementados** — venda continua manual via WhatsApp, conforme escopo da sprint.
+
+---
+
 ## Sprint 6 — Governança Administrativa
+
+
 
 ### Added
 

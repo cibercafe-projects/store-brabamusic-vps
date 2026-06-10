@@ -10,10 +10,15 @@ import {
   FileEdit,
   Loader2,
   ArrowRight,
+  Inbox,
+  MessageCircle,
+  Handshake,
+  Trophy,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminMetrics } from "@/lib/beats.functions";
+
 
 export const Route = createFileRoute("/admin/_protected/dashboard")({
   component: DashboardPage,
@@ -100,20 +105,31 @@ function DashboardPage() {
           <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard label="Rascunhos" value={m.beatsRascunho} icon={FileEdit} />
           </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-xl">Funil comercial</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin/leads">
+                  Ver leads <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Total de Leads" value={m.leadsTotal} icon={Inbox} />
+              <MetricCard label="Leads Novos" value={m.leadsNovos} icon={MessageCircle} />
+              <MetricCard label="Em Negociação" value={m.leadsNegociacao} icon={Handshake} />
+              <MetricCard
+                label="Convertidos"
+                value={m.leadsConvertidos}
+                icon={Trophy}
+                hint="Pagos + entregues"
+              />
+            </div>
+          </section>
         </>
       ) : null}
-
-      <section>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Próximos passos</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-1">
-            <p>• Sprint 5: catálogo público com capas e previews.</p>
-            <p>• Sprint 6+: leads, fluxo comercial e métricas de conversão.</p>
-          </CardContent>
-        </Card>
-      </section>
     </div>
   );
 }
+
