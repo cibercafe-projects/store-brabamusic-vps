@@ -80,19 +80,35 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
         ) : (
           <span className="text-xs text-muted-foreground">prod. {beat.produtora_nome}</span>
         )}
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3 flex items-center justify-between gap-2">
           <span className="text-lg font-bold text-accent">
             {beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : "—"}
           </span>
-          <Link
-            to="/beat/$slug"
-            params={{ slug: beat.slug }}
-            className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold hover:bg-primary/80"
-          >
-            Ver beat
-          </Link>
+          <div className="flex items-center gap-1.5">
+            <Link
+              to="/beat/$slug"
+              params={{ slug: beat.slug }}
+              className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"
+            >
+              Ver
+            </Link>
+            <button
+              onClick={() => setInterestOpen(true)}
+              className="inline-flex items-center gap-1 rounded-full bg-accent text-accent-foreground px-3 py-1.5 text-xs font-bold hover:opacity-90"
+            >
+              <MessageCircle className="h-3 w-3" /> Interesse
+            </button>
+          </div>
         </div>
       </div>
+      <InterestForm
+        beatId={beat.id}
+        beatName={beat.nome}
+        produtora={beat.produtora_nome}
+        open={interestOpen}
+        onOpenChange={setInterestOpen}
+      />
     </article>
   );
 }
+
