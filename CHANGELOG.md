@@ -13,6 +13,29 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Pós-Sprint 5 — Ajustes & Hardening
+
+### Added
+
+- **Compartilhar beat** — `src/routes/beat.$slug.tsx` ganhou botão "Compartilhar" usando Web Share API com fallback para `navigator.clipboard` (copia URL canônica do beat). Toast de feedback.
+- **Contador de plays por beat:**
+  - Migração: coluna `beats.plays_count integer not null default 0` + RPC `public.increment_beat_plays(_beat_id uuid)` `SECURITY DEFINER` (incrementa atômico e devolve o novo total).
+  - `incrementBeatPlays` em `src/lib/catalog.functions.ts` chama a RPC.
+  - `PlayerStore` mantém `Set<string>` de beats já contados na sessão (evita inflar o contador em re-toques).
+  - `PlayerBar` dispara o incremento ao primeiro `play` real do `<audio>` por beat.
+  - `BeatCard` mostra o ícone ▶ + total formatado.
+  - Admin (`/admin/beats`) exibe a coluna "Plays" na tabela de cadastro.
+- **Exclusão de produtora** — `deleteProducer` em `src/lib/producers.functions.ts`. Bloqueia se houver beats vinculados (FK RESTRICT) e remove o avatar do bucket `producer-avatars`. Ação "Excluir" com `AlertDialog` em `/admin/produtoras`.
+- **Exclusão de beat** — `deleteBeat` em `src/lib/beats.functions.ts`. Remove capa (`beat-covers`) e prévia (`beat-previews`) do Storage e apaga o registro. Item "Excluir beat" no dropdown de ações em `/admin/beats` com confirmação.
+- Migração: nova policy `DELETE` em `public.beats` restrita a admins (`has_role(auth.uid(), 'admin')`).
+
+### Security
+
+- Findings `beats_producers_no_public_select` e `storage_no_public_read_beat_previews_covers` marcados como **ignored / by design** no scanner: o catálogo público é mediado server-side via `supabaseAdmin` em `catalog.functions.ts` (filtra `status = 'ativo'` e projeta apenas colunas seguras) e a mídia é entregue por **signed URL** (TTL 4h). Buckets seguem privados intencionalmente.
+- `@security-memory` atualizado para refletir essa decisão.
+
+---
+
 ## Sprint 5 — Catálogo Público Real
 
 ### Added
@@ -48,6 +71,32 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 ---
 
 
+
+## Sprint 4 — Infraestrutura de Mídia & Dashboard
+
+### Added
+
+- **Storage de capas** — bucket privado `beat-covers` (RLS admin-only). Server fn `getBeatCoverUploadUrl` (signed upload URL). Componente `src/components/admin/beats/BeatCoverUploader.tsx` com validação (jpg/jpeg/png/webp ≤ 5MB) e preview imediato. Nova coluna `beats.capa_path`; a capa anterior é removida do bucket ao trocar.
+- **Storage de previews** — bucket privado `beat-previews` (RLS admin-only). Server fn `getBeatPreviewUploadUrl`. Componente `src/components/admin/beats/BeatPreviewUploader.tsx` (MP3/WAV ≤ 30MB, `<audio>` de teste). Nova coluna `beats.preview_path`; prévia anterior removida ao trocar.
+- **Dashboard admin** — `/admin/dashboard` consome `getAdminMetrics`: total de produtoras (e ativas), total de beats, beats ativos, vendidos e rascunhos. Estrutura preparada para receber métricas de vendas/leads.
+- **`BeatCoverFallback`** — fallback visual estilizado para beats sem capa, reaproveitado em `BeatCard`, `PlayerBar` e detalhe.
+- `SPRINT_4_REPORT.md`.
+
+### Changed
+
+- `listBeats` / `getBeat` (admin) passaram a retornar `capa_signed_url` e `preview_signed_url` (TTL 1h).
+- Server fn auxiliar `signBeatMedia` para reassinar paths sob demanda.
+- `BeatForm` integrado aos novos uploaders.
+
+### Preserved
+
+- Colunas legadas `beats.capa_url` / `beats.preview_url` mantidas como fallback para importações externas.
+
+### Docs
+
+- `SPRINT_4_REPORT.md` com modelagem, segurança de Storage e sugestões para Sprint 5.
+
+---
 
 ## Sprint 3 — Gestão de Beats
 

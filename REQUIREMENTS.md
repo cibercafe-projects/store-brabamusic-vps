@@ -1,146 +1,154 @@
-# REQUIREMENTS — BRABA Loja de Beats (Fase 1)
+# REQUIREMENTS — BRABA Loja de Beats
 
-Inventário completo das funcionalidades e regras de negócio **implementadas hoje** no MVP. Tudo o que está aqui já roda no preview; itens não implementados estão listados na seção final.
+Inventário das funcionalidades **implementadas hoje** (após Sprint 5 + ajustes).
+A Fase 1 mockada (`localStorage`, beats fictícios em `src/data/beats.ts`) foi substituída por backend real (Lovable Cloud) a partir da Sprint 1; o que ainda é mock está sinalizado explicitamente.
 
 ---
 
 ## A. Telas / Rotas
 
+### Públicas
+
 | Rota | Arquivo | Descrição |
 |------|---------|-----------|
-| `/` | `src/routes/index.tsx` | **Home / Catálogo.** Hero com headline + busca, filtros por gênero e BPM, grid responsivo de beats. |
-| `/beat/:slug` | `src/routes/beat.$slug.tsx` | **Detalhe do beat.** Capa grande, waveform fake animado, metadados (BPM, tom, duração, preço), tags de mood, seletor de licença, CTAs (interesse, WhatsApp, favoritar), modal de confirmação, beats relacionados. |
-| `/produtores` | `src/routes/produtores.tsx` | Grid de produtores com avatar de iniciais, cidade, contagem de beats, bio curta, Instagram. |
-| `/produtor/:slug` | `src/routes/produtor.$slug.tsx` | Página individual do produtor com seus beats. |
-| `/meus-interesses` | `src/routes/meus-interesses.tsx` | Lista de favoritos. **Exige login.** Gera mensagem única de WhatsApp com todos os beats + total estimado. |
-| `/como-funciona` | `src/routes/como-funciona.tsx` | 7 passos do fluxo de compra + FAQ com 7 perguntas. |
-| `/app` | `src/routes/app.tsx` | Mockup mobile (phone frame) demonstrando o catálogo via WebView no app BRABA. |
+| `/` | `src/routes/index.tsx` | **Catálogo público real.** Hero + busca, filtros por gênero, produtora e BPM máx, grid responsivo paginado (24/pg). Filtros e busca persistidos na URL via `validateSearch`. Mostra apenas beats com `status = ativo`. |
+| `/beat/:slug` | `src/routes/beat.$slug.tsx` | **Detalhe do beat.** Capa real, prévia (signed URL), metadados (BPM, tom, mood, preço), descrição, bloco da produtora e botão **Compartilhar** (Web Share API + fallback clipboard). Sem CTA comercial nesta fase. |
+| `/produtores` | `src/routes/produtores.tsx` | Lista produtoras ativas reais (foto, cidade, bio, Instagram, contagem de beats ativos). |
+| `/produtora/:slug` | `src/routes/produtora.$slug.tsx` | Página individual da produtora com seus beats ativos. |
+| `/produtor/:slug` | `src/routes/produtor.$slug.tsx` | Redirect 301 para `/produtora/:slug` (compat). |
+| `/como-funciona` | `src/routes/como-funciona.tsx` | Fluxo MVP em 5 passos + FAQ. |
+| `/app` | `src/routes/app.tsx` | Mockup mobile (phone frame). Ainda usa `src/data/beats.ts`. |
+| `/meus-interesses` | `src/routes/meus-interesses.tsx` | Placeholder "Em breve" enquanto `FEATURES.interests = false`. |
+| `/politica-privacidade`, `/termos-uso` | — | Páginas institucionais. |
+
+### Backoffice administrativo (`/admin/*`)
+
+Protegido por `_protected/route.tsx` (gate de sessão + role `admin`).
+
+| Rota | Descrição |
+|------|-----------|
+| `/admin/login` | Login e-mail+senha. Bootstrap do primeiro admin se a tabela `user_roles` estiver vazia. |
+| `/admin/dashboard` | Métricas: total de produtoras (ativas), total de beats, ativos, vendidos, rascunhos. |
+| `/admin/produtoras` | CRUD de produtoras (tabela com busca, filtro de status, ativar/desativar, **excluir** com confirmação — bloqueado se houver beats vinculados). |
+| `/admin/beats` | CRUD de beats (busca, filtros por status/produtora, paginação, mudança de status, upload de capa e prévia, contagem de plays na tabela, **excluir** com confirmação). |
+| `/admin/leads`, `/admin/configuracoes` | Placeholders. |
 
 ---
 
-## B. Componentes principais
+## B. Backend (Lovable Cloud)
 
-- **`Header`** — sticky, glassmorphism, nav desktop + drawer mobile (Sheet/hamburger). Badge com contagem de interesses, estado de login (nome + logout), link externo para `brabamusic.com.br`.
-- **`BeatCard`** — capa com hover-play, botão favorito (com gate de auth), badges de gênero/BPM, preço destacado, CTA "Tenho interesse".
-- **`PlayerBar`** — popup **modal centralizado** (anteriormente era barra inferior fixa), com capa, waveform fake animado, controle play/pause e botão de fechar.
-- **`AuthModal`** — cadastro rápido passwordless (nome + e-mail), com texto explicando o uso do e-mail.
+### Tabelas (`public`)
+
+- **`user_roles`** — `(user_id, role app_role)` com unique. Enum `app_role` = `admin`. RLS: o usuário só lê os próprios papéis. Função `has_role(uuid, app_role)` `SECURITY DEFINER`.
+- **`producers`** — `slug` único, `nome_artistico`, `instagram`, `spotify`, `cidade`, `bio`, `foto_perfil_path`, `status producer_status (ativa|inativa)`. RLS admin-only.
+- **`beats`** — `slug` único, `produtora_id` FK RESTRICT, `nome`, `genero`, `bpm` (40–300), `tom`, `mood`, `preco` ≥ 0, `descricao`, `status beat_status (rascunho|ativo|vendido)`, `capa_path`, `preview_path`, `capa_url`/`preview_url` (legado), `plays_count int default 0`. RLS: SELECT/INSERT/UPDATE/DELETE admin-only via `has_role`.
+- RPC **`increment_beat_plays(_beat_id)`** `SECURITY DEFINER` — incremento atômico de `plays_count`, devolve o novo total.
+
+### Storage (buckets privados)
+
+| Bucket | Conteúdo | Acesso |
+|--------|----------|--------|
+| `producer-avatars` | Fotos das produtoras | Admin: gerenciar. Público: via signed URL gerada server-side. |
+| `beat-covers` | Capas dos beats | idem |
+| `beat-previews` | Prévias MP3/WAV | idem |
+
+Decisão de segurança: buckets **permanecem privados**; o catálogo público entrega assets via **signed URL** com TTL de 4h gerada em `src/lib/catalog.functions.ts`.
+
+### Server functions
+
+- `src/lib/admin.functions.ts` — `checkAdminRole`, `adminBootstrapNeeded`, `bootstrapFirstAdmin`, `getAdminMetrics`.
+- `src/lib/producers.functions.ts` — `listProducers`, `getProducer`, `createProducer`, `updateProducer`, `setProducerStatus`, `deleteProducer`, `getAvatarUploadUrl`.
+- `src/lib/beats.functions.ts` — `listBeats`, `getBeat`, `createBeat`, `updateBeat`, `setBeatStatus`, `deleteBeat`, `listProducersForSelect`, `getBeatCoverUploadUrl`, `getBeatPreviewUploadUrl`, `signBeatMedia`.
+- `src/lib/catalog.functions.ts` (público, sem auth) — `listPublicBeats`, `getPublicBeatBySlug`, `listPublicProducers`, `getPublicProducerBySlug`, `listPublicFilters`, `incrementBeatPlays`. Projeta apenas colunas seguras (nunca `wav_url` / `stems_url`).
 
 ---
 
 ## C. Regras de negócio
 
-### C.1 Autenticação (mock, client-side)
+### C.1 Visibilidade pública
 
-- Login **passwordless**: apenas `name` + `email`.
-- Persistido em `localStorage` sob a chave `braba-user`.
-- Pattern `requireAuth(action)` na store (`AuthStore.tsx`):
-  - se já há usuário → executa `action()` imediatamente;
-  - senão → abre `AuthModal` e enfileira `action` para rodar após login.
-- **Ações protegidas por auth:**
-  - Salvar/remover beat dos interesses (favoritos).
-  - Abrir modal "Tenho interesse" na página de detalhe do beat.
-  - Acessar `/meus-interesses` (tela bloqueada com CTA de login se deslogado).
-- Logout limpa a chave do `localStorage`.
+- Apenas beats com `status = 'ativo'` aparecem no catálogo, na busca, em `/beat/:slug` e na página da produtora.
+- Apenas produtoras com `status = 'ativa'` aparecem em `/produtores` e `/produtora/:slug`.
+- Tentar acessar slug de rascunho/vendido ou produtora inativa → not found.
 
-### C.2 Catálogo
+### C.2 Catálogo e busca
 
-- **8 beats** mock em `src/data/beats.ts`. Cada beat tem: `slug`, `title`, `producerSlug`, `producer`, `genre`, `bpm`, `key`, `duration`, `price`, `mood[]`, `cover`.
-- **4 produtores** mock: DJ NYX, MC PROD, KIRA BEATS, 808 FAVELA — com cidade, bio, Instagram.
-- **Filtros combináveis** na home:
-  - Gênero (lista fixa: Todos, Trap, Funk, Funk 150, Drill, Boom Bap, Melodic Trap, Phonk) — match por `includes` (ex: "Funk" pega "Funk" e "Funk 150").
-  - BPM máximo via slider (60–180).
-  - Busca textual em título + produtor + gênero (case-insensitive).
-- **Beats relacionados** na página de detalhe: até 4 beats do mesmo gênero, excluindo o atual.
+- Busca textual `ILIKE` em `beats.nome`, `beats.genero`, `beats.mood` + match por `produtora_id` (resolvido via `ILIKE` em `producers.nome_artistico`).
+- Filtros combináveis: gênero, slug da produtora, `bpmMax`.
+- Paginação 24/pg via `range`. Total devolvido por `count: 'exact'`.
 
-### C.3 Licenças
+### C.3 Player & contagem de plays
 
-Definidas em `LICENSES` (`src/data/beats.ts`). Preços indicativos.
+- Player popup (`PlayerBar`) com `<audio>` real controlado por ref. Capa real + fallback estilizado.
+- Quando o beat não tem prévia, abre com aviso "Sem prévia disponível" e oculta o play.
+- **Contagem de plays:** dispara `incrementBeatPlays` no primeiro `play` real do `<audio>` por beat por sessão (deduplicado via `Set` em memória). Exibida em `BeatCard` (▶ + total formatado) e na tabela admin.
 
-| Licença | Preço base | Inclui |
-|---------|-----------|--------|
-| **Lease** | R$ 199 | MP3 + WAV · Streams ilimitados (não-comercial) · 1 distribuição · Crédito ao produtor |
-| **Premium** ⭐ | R$ 499 | MP3 + WAV + Trackouts · Streams comerciais ilimitados · Distribuição em DSPs · Vídeo-clipe permitido |
-| **Exclusiva** | R$ 2.499 | Todos os arquivos + stems · Direitos exclusivos · Beat removido do catálogo · Contrato registrado |
+### C.4 Compartilhamento
 
-A licença **Premium** é marcada como POPULAR (destaque visual). A seleção da licença é refletida na mensagem de WhatsApp e no modal de confirmação.
+- `/beat/:slug` expõe botão **Compartilhar**: usa `navigator.share` quando disponível, caso contrário copia a URL canônica e mostra toast.
 
-### C.4 Interesses (favoritos)
+### C.5 Exclusão administrativa
 
-- Store Zustand `useInterests` em `PlayerStore.tsx`.
-- Persistência em `localStorage` sob a chave `braba-interests` (array de slugs).
-- Operações: `toggle(slug)`, `has(slug)`, `clear()`.
-- Em `/meus-interesses`:
-  - Soma automática dos preços base.
-  - Botão "Enviar tudo via WhatsApp" gera uma mensagem consolidada com nome do cliente, e-mail e lista completa.
-  - Botão "Limpar lista".
+- **Produtora:** soft-block — `deleteProducer` rejeita se existir qualquer beat com `produtora_id` apontando para ela (FK RESTRICT). Em caso de sucesso, remove o avatar do bucket.
+- **Beat:** `deleteBeat` apaga o registro e os arquivos correspondentes em `beat-covers` e `beat-previews`.
+- Ambas as ações exigem confirmação (`AlertDialog`) e estão restritas a admins.
 
-### C.5 Fluxo de compra (7 passos, simulado)
+### C.6 Autenticação
 
-Documentado em `/como-funciona` e implementado parcialmente nas telas:
+- **Admin:** Supabase Auth (e-mail+senha). E-mail auto-confirmado, HIBP password check ativo. Gate por `has_role(uuid, 'admin')`. Bootstrap do primeiro admin se `user_roles` estiver vazia.
+- **Cliente final:** `FEATURES.auth = false`. `requireAuth` é no-op; `AuthModal` não é montado. Sem cadastro público nesta fase.
 
-1. **Acessa o catálogo** — `loja.brabamusic.com.br` ou aba Beats do app.
-2. **Escuta a prévia** — sem login.
-3. **Cadastro rápido (sem senha)** — nome + e-mail, gatilhado ao favoritar ou pedir.
-4. **Marca interesse** — botão no card ou agrupado em `/meus-interesses`.
-5. **Recebe link de pagamento por e-mail** — Pix ou gateway externo (manual nesta fase).
-6. **Envia comprovante via WhatsApp** — após pagar.
-7. **Recebe o beat** — link de download por WhatsApp + e-mail.
+### C.7 Flags ativas (`src/config/features.ts`)
 
-O modal de confirmação na página do beat simula visualmente o passo 4→5, mostrando para qual e-mail será enviado o link.
-
-### C.6 WhatsApp
-
-- Número placeholder em `WHATSAPP_NUMBER = "5500000000000"` (`src/data/beats.ts`) — **trocar pelo número real antes de publicar**.
-- Mensagens pré-preenchidas via `encodeURIComponent`:
-  - **Beat individual:** `"Olá BRABA! Tenho interesse no beat *[título]* (prod. [produtor]) — licença *[licença]*. Pode me passar o link de pagamento?"`
-  - **Lista de interesses:** identificação do cliente + lista de beats com preço + pedido de links.
+| Flag | Estado | Efeito |
+|------|--------|--------|
+| `auth` | `false` | Sem login do cliente final, sem `AuthModal`. |
+| `interests` | `false` | Favoritos ocultos; store `useInterests` preservada. |
+| `appPromo` | `false` | Sem promoção do app no Header / Home. |
 
 ---
 
 ## D. Design system
 
-- Tema **dark** com base roxa BRABA (`#2a1458` → `#4a1f8c`), acentos magenta (`#e94db8`) e verde-limão (`#c8ff3b`).
-- Tipografia: **display** graffiti/handwritten para títulos, **Inter** para corpo.
-- Tokens semânticos em `src/styles.css` no formato `oklch` (`--background`, `--primary`, `--accent`, etc.).
-- Utilitários customizados: `.glass` (glassmorphism), `.glow-magenta` (shadow neon), `.text-gradient`.
-- **Responsivo mobile-first.** Header colapsa em drawer no mobile (`Sheet`).
-- Microinterações: hover-lift nos cards, pulse no botão de play, waveform animado.
+- Tema **dark** roxo BRABA (`#2a1458` → `#4a1f8c`), acentos magenta (`#e94db8`) e verde-limão (`#c8ff3b`).
+- Tokens semânticos em `src/styles.css` (`oklch`).
+- Tipografia: display graffiti para títulos, Inter para corpo.
+- Utilitários: `.glass`, `.glow-magenta`, `.text-gradient`.
+- Mobile-first; Header colapsa em `Sheet` (drawer).
 
 ---
 
-## E. Persistência
+## E. Segurança
 
-| Chave | Conteúdo | Local |
-|-------|----------|-------|
-| `braba-user` | `{ name, email }` do usuário logado | `localStorage` |
-| `braba-interests` | Array de slugs de beats favoritados | `localStorage` |
-
-Nada é enviado a servidor nesta fase.
+- RLS habilitada em `user_roles`, `producers`, `beats`.
+- `GRANT` explícitos em todas as tabelas públicas.
+- Catálogo público acessado via `supabaseAdmin` server-side, projetando colunas seguras e filtrando por status.
+- Buckets de mídia **privados**; acesso via signed URL (TTL 4h público, 1h admin).
+- Auth admin com HIBP password check.
+- Findings `beats_producers_no_public_select` e `storage_no_public_read_*` registrados como **by design** no `@security-memory`.
 
 ---
 
-## F. O que **NÃO** está implementado (fora de escopo da Fase 1)
+## F. O que NÃO está implementado (pós-Sprint 5)
 
-- ❌ Backend / banco de dados (sem Lovable Cloud / Supabase).
-- ❌ Áudio real — o player é puramente visual com waveform fake animado.
-- ❌ Pagamento automatizado (Pix instantâneo, Stripe, Mercado Pago).
+- ❌ Pagamento automatizado (Pix, Stripe, Mercado Pago).
+- ❌ Captura de leads / "Tenho interesse" (planejado para Sprint 6).
+- ❌ Integração WhatsApp Business API.
 - ❌ Envio real de e-mail transacional.
-- ❌ Integração com WhatsApp Business API — só link `wa.me` com texto pré-preenchido.
-- ❌ Painel administrativo / dashboard do produtor.
-- ❌ Upload de beats / gestão de catálogo.
+- ❌ Painel do produtor (acesso self-service da própria produtora).
 - ❌ Contrato eletrônico para licença Exclusiva.
-- ❌ Verificação de e-mail / autenticação real (qualquer string é aceita no cadastro).
-- ❌ Sessão server-side, recuperação de cadastro entre dispositivos.
-- ❌ Sistema de cupons, promoções, bundles.
-- ❌ Histórico de pedidos do cliente.
-- ❌ SEO avançado (sitemap, JSON-LD por beat) — só meta básico.
+- ❌ Login do cliente final (passwordless ou senha) — desligado por flag.
+- ❌ Sistema de favoritos público — desligado por flag.
+- ❌ Sitemap.xml dinâmico, OG image por beat/produtora.
+- ❌ Busca full-text (`to_tsvector` + GIN) — hoje usa `ILIKE`.
+- ❌ Ordenação configurável no catálogo (preço, BPM, popularidade).
 
 ---
 
-## G. Pendências conhecidas antes de ir ao ar
+## G. Pendências antes do go-live público comercial
 
-1. Substituir `WHATSAPP_NUMBER` placeholder pelo número real da equipe.
-2. Substituir capas geradas por capas reais (ou validar uso das atuais).
-3. Trocar dados mock de produtores/beats pelo catálogo real.
-4. Definir preços finais de cada licença por beat (hoje todos compartilham os mesmos 3 níveis fixos).
-5. Configurar subdomínio `loja.brabamusic.com.br` apontando para o deploy.
+1. Substituir `WHATSAPP_NUMBER` placeholder em `src/data/beats.ts` quando reativar CTAs (Sprint 6).
+2. Definir política de licenciamento por beat (hoje há apenas o campo `preco` único).
+3. Revisar conteúdo jurídico em `/politica-privacidade` e `/termos-uso`.
+4. Configurar domínio definitivo `loja.brabamusic.com.br`.
+5. Definir estratégia de cache/CDN para signed URLs com TTL curto (ou liberar buckets como públicos).

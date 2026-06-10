@@ -1,28 +1,29 @@
 # BRABA — Loja de Beats
 
-Catálogo online de beats do selo **BRABA Music**, pensado como uma extensão do site oficial em `loja.brabamusic.com.br`. Esta é a **Fase 1 (MVP)** do projeto: um mockup navegável, com dados mock e persistência em `localStorage`, sem backend real.
+Catálogo online de beats do selo **BRABA Music**, com backoffice administrativo e vitrine pública alimentada por dados reais (Lovable Cloud). Hospedado em `loja.brabamusic.com.br`.
 
-> **URL de preview:** https://store-brabamusic.lovable.app
+> **Preview:** https://store-brabamusic.lovable.app
 
 ---
 
 ## Sobre
 
-A loja é um catálogo de beats com prévia, sistema de favoritos ("interesses") e fluxo manual de venda — o pagamento e a entrega do beat são feitos fora da aplicação, via e-mail e WhatsApp, pela equipe BRABA. O cadastro do cliente é passwordless (apenas nome + e-mail) para receber o link de pagamento e, depois, o link de download do beat.
+Catálogo público de beats do selo **BRABA Music**, com backoffice administrativo completo (produtoras, beats, upload de mídia, dashboard) e vitrine pública alimentada por dados reais do **Lovable Cloud**.
 
-A mesma vitrine é projetada para aparecer também dentro do app BRABA, em uma aba **Beats**, via WebView nesta fase.
+A primeira fase mockada (`localStorage` + dados fictícios) foi substituída a partir da Sprint 1 por backend real. A fase atual (pós-Sprint 5) entrega o **catálogo público real** — sem CTAs comerciais ainda; vendas / leads / WhatsApp entram na Sprint 6.
 
 ---
 
 ## Stack
 
-- **TanStack Start v1** (file-based routing, SSR-ready) + **Vite 7**
-- **React 19** + **TypeScript** (strict)
-- **Tailwind CSS v4** (tokens semânticos em `src/styles.css`, formato `oklch`)
-- **Zustand** — stores de player, auth e interesses
-- **shadcn/ui** — componentes base (Sheet, Dialog, etc.)
-- **lucide-react** — ícones
-- Sem **Lovable Cloud** nesta fase (sem banco, sem auth real, sem edge functions)
+- **TanStack Start v1** (file-based routing, SSR) + **Vite 7**
+- **React 19** + **TypeScript** strict
+- **Tailwind CSS v4** (tokens semânticos `oklch` em `src/styles.css`)
+- **shadcn/ui** + **lucide-react**
+- **Zustand** — player + interesses (legado)
+- **TanStack Query** — loaders com `ensureQueryData` + `useSuspenseQuery`
+- **Lovable Cloud** (Supabase gerenciado) — Auth, Postgres com RLS, Storage privado
+- Server logic via `createServerFn` (`@tanstack/react-start`)
 
 ---
 
@@ -30,27 +31,35 @@ A mesma vitrine é projetada para aparecer também dentro do app BRABA, em uma a
 
 ```
 src/
-├── routes/             # Rotas (file-based)
+├── routes/
 │   ├── __root.tsx
-│   ├── index.tsx              # / — catálogo
-│   ├── beat.$slug.tsx         # /beat/:slug
-│   ├── produtores.tsx         # /produtores
-│   ├── produtor.$slug.tsx     # /produtor/:slug
-│   ├── meus-interesses.tsx    # /meus-interesses
-│   ├── como-funciona.tsx      # /como-funciona
-│   └── app.tsx                # /app (mockup mobile)
+│   ├── index.tsx                  # / — catálogo público real
+│   ├── beat.$slug.tsx             # /beat/:slug (com botão Compartilhar)
+│   ├── produtores.tsx             # /produtores
+│   ├── produtora.$slug.tsx        # /produtora/:slug
+│   ├── produtor.$slug.tsx         # redirect 301 → /produtora/:slug
+│   ├── como-funciona.tsx
+│   ├── app.tsx                    # mockup mobile (ainda mock)
+│   └── admin/
+│       ├── login.tsx
+│       └── _protected/
+│           ├── dashboard.tsx
+│           ├── produtoras.tsx     # CRUD + excluir
+│           ├── beats.tsx          # CRUD + upload + excluir + plays
+│           ├── leads.tsx
+│           └── configuracoes.tsx
 ├── components/
-│   ├── Header.tsx
-│   ├── BeatCard.tsx
-│   ├── PlayerBar.tsx          # modal popup centralizado
-│   ├── PlayerStore.tsx        # zustand: player + interesses
-│   ├── AuthModal.tsx
-│   ├── AuthStore.tsx
-│   └── ui/                    # shadcn
-├── data/
-│   └── beats.ts               # mock: beats, produtores, licenças
-├── assets/                    # capas dos beats (geradas)
-└── styles.css                 # tokens do design system
+│   ├── Header.tsx, Footer.tsx, BeatCard.tsx, PlayerBar.tsx
+│   ├── PlayerStore.tsx            # player + contagem de plays
+│   └── admin/                     # forms, uploaders, sidebar
+├── lib/
+│   ├── catalog.functions.ts       # server fns públicas (catálogo + plays)
+│   ├── beats.functions.ts         # admin: CRUD + storage + delete
+│   ├── producers.functions.ts     # admin: CRUD + delete
+│   └── admin.functions.ts         # auth admin + métricas
+├── config/features.ts             # feature flags (auth/interests/appPromo)
+└── styles.css
+supabase/migrations/               # schema, RLS, RPCs, buckets
 ```
 
 ---
@@ -62,36 +71,34 @@ bun install
 bun dev
 ```
 
-Acesse `http://localhost:5173`.
+Acesse `http://localhost:5173`. O backoffice fica em `/admin`.
 
 ---
 
-## Status atual
+## Status atual (pós-Sprint 5)
 
-- ✅ Catálogo navegável com 8 beats e 4 produtores fictícios
-- ✅ Filtros (gênero, BPM, busca textual)
-- ✅ Player visual com waveform animado (sem áudio real)
-- ✅ Sistema de favoritos persistido em `localStorage`
-- ✅ Cadastro rápido sem senha (nome + e-mail)
-- ✅ 3 níveis de licença (Lease / Premium / Exclusiva)
-- ✅ CTAs para WhatsApp com mensagem pré-preenchida
-- ✅ Página de FAQ + fluxo "Como funciona" em 7 passos
-- ✅ Mockup do app mobile (phone frame)
-- ✅ Header responsivo com drawer mobile
+- ✅ Backoffice administrativo (auth, dashboard, CRUD de produtoras e beats)
+- ✅ Upload real de capas, prévias e avatares (Storage privado + signed URL)
+- ✅ Catálogo público alimentado por dados reais
+- ✅ Filtros (gênero, produtora, BPM) e busca persistidos em URL
+- ✅ Player com `<audio>` real + contagem de plays por beat
+- ✅ Página individual do beat com botão Compartilhar
+- ✅ Página individual da produtora
+- ✅ Exclusão de produtoras e beats no admin (com confirmação e limpeza de Storage)
+- 🚧 CTAs comerciais (interesse, WhatsApp, pagamento) — planejado para Sprint 6
 
-Veja o detalhamento completo em [REQUIREMENTS.md](./REQUIREMENTS.md).
+Veja [REQUIREMENTS.md](./REQUIREMENTS.md) e os relatórios `SPRINT_*.md`.
 
 ---
 
-## Próximos passos sugeridos (Fase 2+)
+## Próximos passos sugeridos (Sprint 6+)
 
-- Habilitar **Lovable Cloud** para auth real, banco e storage de áudio
-- Áudio real com player funcional (HLS ou MP3 + waveform real)
-- Gateway de pagamento (Pix automatizado, Stripe ou Mercado Pago)
-- Integração com WhatsApp Business API para envio automático
-- Painel do produtor (upload de beats, métricas)
-- Contrato eletrônico para licença Exclusiva
-- Sistema de cupons e promoções
+- Botão "Tenho interesse" + tabela `leads`
+- Integração WhatsApp Business Cloud API
+- SEO por rota (`head()` dinâmico, OG image por beat)
+- Sitemap.xml dinâmico
+- Ordenação configurável no catálogo
+- Avaliar tornar buckets `beat-covers` e `producer-avatars` públicos (CDN)
 
 ---
 
