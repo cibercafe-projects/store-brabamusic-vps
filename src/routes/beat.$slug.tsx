@@ -33,7 +33,7 @@ export const Route = createFileRoute("/beat/$slug")({
       </Link>
     </div>
   ),
-  errorComponent: ({ error }) => <p className="p-8 text-center">{error.message}</p>,
+  errorComponent: () => <p className="p-8 text-center">Não foi possível carregar este beat agora. Tente novamente em instantes.</p>,
 });
 
 function BeatDetail() {
