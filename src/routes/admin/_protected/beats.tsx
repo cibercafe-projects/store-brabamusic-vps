@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  deleteBeat,
   listBeats,
   listProducersForSelect,
   setBeatStatus,
@@ -96,6 +98,7 @@ function BeatsPage() {
   const list = useServerFn(listBeats);
   const listProducers = useServerFn(listProducersForSelect);
   const changeStatus = useServerFn(setBeatStatus);
+  const removeBeat = useServerFn(deleteBeat);
   const qc = useQueryClient();
 
   const [search, setSearch] = useState("");
@@ -107,6 +110,7 @@ function BeatsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<BeatFormInitial | undefined>(undefined);
   const [sellConfirm, setSellConfirm] = useState<Row | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Row | null>(null);
 
   const producersQuery = useQuery({
     queryKey: ["admin", "producers", "select"],
@@ -143,6 +147,16 @@ function BeatsPage() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
     onSettled: () => setSellConfirm(null),
+  });
+
+  const mutateDelete = useMutation({
+    mutationFn: async (id: string) => removeBeat({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Beat removido.");
+      qc.invalidateQueries({ queryKey: ["admin", "beats"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao remover"),
+    onSettled: () => setDeleteConfirm(null),
   });
 
   const producers = producersQuery.data ?? [];
@@ -352,6 +366,14 @@ function BeatsPage() {
                         >
                           Marcar como vendido
                         </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setDeleteConfirm(b)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Excluir beat
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -420,6 +442,30 @@ function BeatsPage() {
               }
             >
               Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </AlertDialog>
+
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => !o && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir beat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é permanente. O beat{" "}
+              <strong>{deleteConfirm?.nome}</strong> e seus arquivos de capa e prévia
+              serão removidos. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirm && mutateDelete.mutate(deleteConfirm.id)}
+              disabled={mutateDelete.isPending}
+            >
+              {mutateDelete.isPending ? "Excluindo..." : "Excluir definitivamente"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
