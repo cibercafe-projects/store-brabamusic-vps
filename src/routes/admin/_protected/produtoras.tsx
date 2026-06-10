@@ -52,7 +52,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { listProducers, setProducerStatus } from "@/lib/producers.functions";
+import { listProducers, setProducerStatus, deleteProducer } from "@/lib/producers.functions";
 import { ProducerForm, type ProducerFormInitial } from "@/components/admin/producers/ProducerForm";
 
 export const Route = createFileRoute("/admin/_protected/produtoras")({
