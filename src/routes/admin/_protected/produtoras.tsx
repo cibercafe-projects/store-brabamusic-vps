@@ -75,6 +75,7 @@ function ProdutorasPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<ProducerFormInitial | undefined>(undefined);
   const [statusConfirm, setStatusConfirm] = useState<Row | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Row | null>(null);
 
   const query = useQuery({
     queryKey: ["admin", "producers", { search, status, page, pageSize }],
