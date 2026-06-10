@@ -201,6 +201,39 @@ export const setProducerStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deleteProducer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+
+    const { count: beatsCount, error: countErr } = await supabaseAdmin
+      .from("beats")
+      .select("id", { count: "exact", head: true })
+      .eq("produtora_id", data.id);
+    if (countErr) throw new Error(countErr.message);
+    if ((beatsCount ?? 0) > 0) {
+      throw new Error(
+        `Não é possível excluir: a produtora possui ${beatsCount} beat(s) vinculado(s). Remova ou reatribua os beats antes.`,
+      );
+    }
+
+    const { data: existing } = await supabaseAdmin
+      .from("producers")
+      .select("foto_perfil_path")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    const { error } = await supabaseAdmin.from("producers").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    if (existing?.foto_perfil_path) {
+      await supabaseAdmin.storage.from(BUCKET).remove([existing.foto_perfil_path]);
+    }
+
+    return { ok: true };
+  });
+
 export const getAvatarUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
