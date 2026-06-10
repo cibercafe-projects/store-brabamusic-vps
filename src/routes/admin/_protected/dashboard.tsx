@@ -10,10 +10,15 @@ import {
   FileEdit,
   Loader2,
   ArrowRight,
+  Inbox,
+  MessageCircle,
+  Handshake,
+  Trophy,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminMetrics } from "@/lib/beats.functions";
+
 
 export const Route = createFileRoute("/admin/_protected/dashboard")({
   component: DashboardPage,
