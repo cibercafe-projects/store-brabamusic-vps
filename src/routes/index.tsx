@@ -52,8 +52,8 @@ export const Route = createFileRoute("/")({
     ]);
   },
   component: Index,
-  errorComponent: ({ error }) => (
-    <p className="p-8 text-center text-sm text-muted-foreground">{error.message}</p>
+  errorComponent: () => (
+    <p className="p-8 text-center text-sm text-muted-foreground">Não foi possível carregar o catálogo agora. Tente novamente em instantes.</p>
   ),
 });
 
