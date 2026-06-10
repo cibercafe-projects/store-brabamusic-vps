@@ -41,7 +41,10 @@ export const bootstrapFirstAdmin = createServerFn({ method: "POST" })
       .from("user_roles")
       .select("*", { count: "exact", head: true })
       .eq("role", "admin");
-    if (countErr) throw new Error(countErr.message);
+    if (countErr) {
+      console.error("[bootstrapFirstAdmin] count error", countErr);
+      throw new Error("Erro interno. Tente novamente em instantes.");
+    }
     if ((count ?? 0) > 0) {
       throw new Error("Um administrador já foi configurado. Use o login.");
     }
@@ -52,15 +55,17 @@ export const bootstrapFirstAdmin = createServerFn({ method: "POST" })
       email_confirm: true,
     });
     if (createErr || !created.user) {
-      throw new Error(createErr?.message ?? "Falha ao criar usuário.");
+      console.error("[bootstrapFirstAdmin] create user error", createErr);
+      throw new Error("Não foi possível criar o administrador. Tente novamente.");
     }
 
     const { error: roleErr } = await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: created.user.id, role: "admin", is_super: true, active: true });
     if (roleErr) {
+      console.error("[bootstrapFirstAdmin] role insert error", roleErr);
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-      throw new Error(roleErr.message);
+      throw new Error("Não foi possível concluir a configuração inicial. Tente novamente.");
     }
 
     return { ok: true };
@@ -73,6 +78,10 @@ export const adminBootstrapNeeded = createServerFn({ method: "GET" }).handler(as
     .from("user_roles")
     .select("*", { count: "exact", head: true })
     .eq("role", "admin");
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[adminBootstrapNeeded] count error", error);
+    throw new Error("Erro interno. Tente novamente em instantes.");
+  }
   return { needed: (count ?? 0) === 0 };
 });
+
