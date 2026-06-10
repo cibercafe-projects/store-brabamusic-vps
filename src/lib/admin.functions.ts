@@ -57,7 +57,7 @@ export const bootstrapFirstAdmin = createServerFn({ method: "POST" })
 
     const { error: roleErr } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: created.user.id, role: "admin" });
+      .insert({ user_id: created.user.id, role: "admin", is_super: true, active: true });
     if (roleErr) {
       await supabaseAdmin.auth.admin.deleteUser(created.user.id);
       throw new Error(roleErr.message);
