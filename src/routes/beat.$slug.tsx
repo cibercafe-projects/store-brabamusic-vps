@@ -1,6 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Play, Pause, Instagram, Music2, Share2, Check, MessageCircle } from "lucide-react";
+import { Play, Pause, Instagram, Music2, Share2, Check, MessageCircle, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getPublicBeatBySlug } from "@/lib/catalog.functions";
@@ -79,8 +79,32 @@ function BeatDetail() {
     }
   };
 
+  const router = useRouter();
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.history.back();
+    } else {
+      router.navigate({ to: "/" });
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <button
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </button>
+        <Link
+          to="/"
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Ir ao catálogo
+        </Link>
+      </div>
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
           <div className="relative rounded-3xl overflow-hidden glass aspect-square">
