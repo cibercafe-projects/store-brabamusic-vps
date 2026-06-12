@@ -245,22 +245,25 @@ export const updateBeat = createServerFn({ method: "POST" })
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
     }
 
-    if (rest.capa_path !== undefined || rest.preview_path !== undefined) {
+    const privateFields = ["capa_path", "preview_path", "wav_path", "stems_path", "license_path"] as const;
+    const anyPrivateChanged = privateFields.some((f) => rest[f] !== undefined);
+    if (anyPrivateChanged) {
       const { data: existing } = await supabaseAdmin
         .from("beats")
-        .select("capa_path, preview_path")
+        .select("capa_path, preview_path, wav_path, stems_path, license_path")
         .eq("id", id)
         .maybeSingle();
-      if (rest.capa_path !== undefined) {
-        await removeIfChanged(supabaseAdmin, COVER_BUCKET, existing?.capa_path, rest.capa_path);
-      }
-      if (rest.preview_path !== undefined) {
-        await removeIfChanged(
-          supabaseAdmin,
-          PREVIEW_BUCKET,
-          existing?.preview_path,
-          rest.preview_path,
-        );
+      const bucketMap: Record<(typeof privateFields)[number], string> = {
+        capa_path: COVER_BUCKET,
+        preview_path: PREVIEW_BUCKET,
+        wav_path: WAV_BUCKET,
+        stems_path: STEMS_BUCKET,
+        license_path: LICENSE_BUCKET,
+      };
+      for (const f of privateFields) {
+        if (rest[f] !== undefined) {
+          await removeIfChanged(supabaseAdmin, bucketMap[f], existing?.[f], rest[f]);
+        }
       }
     }
 
