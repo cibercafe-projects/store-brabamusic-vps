@@ -5,6 +5,16 @@ import { slugify } from "@/lib/slug";
 
 const COVER_BUCKET = "beat-covers";
 const PREVIEW_BUCKET = "beat-previews";
+const WAV_BUCKET = "beat-wav";
+const STEMS_BUCKET = "beat-stems";
+const LICENSE_BUCKET = "beat-licenses";
+
+export const BEAT_PRIVATE_BUCKETS = {
+  wav: WAV_BUCKET,
+  stems: STEMS_BUCKET,
+  license: LICENSE_BUCKET,
+} as const;
+export type BeatPrivateKind = keyof typeof BEAT_PRIVATE_BUCKETS;
 
 const urlField = z
   .string()
@@ -38,6 +48,9 @@ const beatInputSchema = z.object({
   preview_path: pathField,
   wav_url: urlField,
   stems_url: urlField,
+  wav_path: pathField,
+  stems_path: pathField,
+  license_path: pathField,
 });
 
 async function assertAdmin(userId: string) {
@@ -206,6 +219,9 @@ export const createBeat = createServerFn({ method: "POST" })
         preview_path: data.preview_path ?? null,
         wav_url: data.wav_url,
         stems_url: data.stems_url,
+        wav_path: data.wav_path ?? null,
+        stems_path: data.stems_path ?? null,
+        license_path: data.license_path ?? null,
       })
       .select("*")
       .single();
