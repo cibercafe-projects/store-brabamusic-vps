@@ -2,9 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Upload, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,11 +15,9 @@ import {
   RELEASE_MOODS,
   RELEASE_INSTRUMENTS,
   RELEASE_TYPES,
-  MAX_IMAGE_BYTES,
-  MAX_PROMO_PHOTOS,
   type ReleaseType,
 } from "@/lib/releases.constants";
-import { getReleaseUploadUrl, submitRelease } from "@/lib/releases.functions";
+import { submitRelease } from "@/lib/releases.functions";
 
 export const Route = createFileRoute("/enviar-lancamento")({
   head: () => ({
@@ -35,10 +32,6 @@ export const Route = createFileRoute("/enviar-lancamento")({
   }),
   component: SubmitReleasePage,
 });
-
-function extFromName(name: string): string {
-  return (name.split(".").pop() || "").toLowerCase();
-}
 
 const DRIVE_RE = /^https?:\/\/(drive|docs)\.google\.com\//i;
 
@@ -56,6 +49,8 @@ function SubmitReleasePage() {
   const [lyrics, setLyrics] = useState("");
   const [isrc, setIsrc] = useState("");
   const [audioDriveUrl, setAudioDriveUrl] = useState("");
+  const [coverDriveUrl, setCoverDriveUrl] = useState("");
+  const [photosDriveUrl, setPhotosDriveUrl] = useState("");
   const [genres, setGenres] = useState<string[]>([]);
   const [moods, setMoods] = useState<string[]>([]);
   const [instruments, setInstruments] = useState<string[]>([]);
@@ -66,14 +61,6 @@ function SubmitReleasePage() {
   const [hasVideoclip, setHasVideoclip] = useState<"sim" | "nao">("nao");
   const [website, setWebsite] = useState(""); // honeypot
 
-  const [coverPath, setCoverPath] = useState<string | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [uploadingCover, setUploadingCover] = useState(false);
-
-  const [photos, setPhotos] = useState<{ path: string }[]>([]);
-  const [uploadingPhotos, setUploadingPhotos] = useState(false);
-
-  const uploadFn = useServerFn(getReleaseUploadUrl);
   const submitFn = useServerFn(submitRelease);
 
   const isMulti = releaseType !== "single";
@@ -83,66 +70,6 @@ function SubmitReleasePage() {
     if (arr.length >= max) return arr;
     return [...arr, v];
   };
-
-  async function uploadOne(
-    file: File,
-    kind: "cover" | "photo",
-  ): Promise<{ path: string }> {
-    const ext = extFromName(file.name);
-    const { path, token, bucket } = await uploadFn({
-      data: { kind, ext, contentType: file.type || "application/octet-stream" },
-    });
-    const { error } = await supabase.storage
-      .from(bucket)
-      .uploadToSignedUrl(path, token, file, {
-        contentType: file.type,
-        upsert: true,
-      });
-    if (error) throw error;
-    return { path };
-  }
-
-  async function handleCover(file: File) {
-    if (file.size > MAX_IMAGE_BYTES) {
-      toast.error("Imagem deve ter até 10MB.");
-      return;
-    }
-    setUploadingCover(true);
-    try {
-      const { path } = await uploadOne(file, "cover");
-      setCoverPath(path);
-      setCoverPreview(URL.createObjectURL(file));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha no upload da capa.");
-    } finally {
-      setUploadingCover(false);
-    }
-  }
-
-  async function handlePhotos(files: FileList) {
-    const list = Array.from(files);
-    if (photos.length + list.length > MAX_PROMO_PHOTOS) {
-      toast.error(`Máximo de ${MAX_PROMO_PHOTOS} fotos.`);
-      return;
-    }
-    setUploadingPhotos(true);
-    try {
-      const uploaded: { path: string }[] = [];
-      for (const f of list) {
-        if (f.size > MAX_IMAGE_BYTES) {
-          toast.error(`${f.name}: até 10MB.`);
-          continue;
-        }
-        const { path } = await uploadOne(f, "photo");
-        uploaded.push({ path });
-      }
-      setPhotos((prev) => [...prev, ...uploaded]);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha no upload das fotos.");
-    } finally {
-      setUploadingPhotos(false);
-    }
-  }
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -157,8 +84,9 @@ function SubmitReleasePage() {
           tracklist: isMulti ? tracklist : "",
           lyrics,
           isrc,
-          audio_drive_url: audioDriveUrl,
-          cover_path: coverPath!,
+          audio_drive_url: audioDriveUrl.trim(),
+          cover_drive_url: coverDriveUrl.trim(),
+          photos_drive_url: photosDriveUrl.trim(),
           genres,
           moods,
           instruments,
@@ -167,7 +95,6 @@ function SubmitReleasePage() {
           about_artist: aboutArtist,
           about_release: aboutRelease,
           has_videoclip: hasVideoclip === "sim",
-          promo_photos: photos,
           website,
           started_at: startedAt,
         },
