@@ -173,7 +173,8 @@ export const submitRelease = createServerFn({ method: "POST" })
         lyrics: data.lyrics,
         isrc: data.isrc ? data.isrc.toUpperCase() : null,
         audio_drive_url: data.audio_drive_url,
-        cover_path: data.cover_path,
+        cover_drive_url: data.cover_drive_url,
+        photos_drive_url: data.photos_drive_url || null,
         genres: data.genres,
         moods: data.moods,
         instruments: data.instruments,
@@ -191,20 +192,7 @@ export const submitRelease = createServerFn({ method: "POST" })
       throw new Error("Não foi possível registrar o lançamento. Tente novamente.");
     }
 
-    const releaseId = inserted.id;
-
-    if (data.promo_photos.length) {
-      const { error: pErr } = await admin.from("release_promo_photos").insert(
-        data.promo_photos.map((f, i) => ({
-          release_id: releaseId,
-          path: f.path,
-          order_index: i,
-        })),
-      );
-      if (pErr) console.error("[releases.photos]", pErr);
-    }
-
-    return { ok: true, releaseId };
+    return { ok: true, releaseId: inserted.id };
   });
 
 // ---------- Admin ----------
