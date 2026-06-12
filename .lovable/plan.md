@@ -1,77 +1,64 @@
-# Sprint 8A — MVP Operacional de Lançamentos
+## Ajustes no formulário `/enviar-lancamento`
 
-Objetivo: substituir o Google Forms por um fluxo nativo já nesta semana. Foco em velocidade, simples e operacional.
+### 1. ISRC — opcional
+- Remover obrigatoriedade no Zod (`isrc: z.string().trim().regex(isrcRegex).max(20).optional().or(z.literal(""))`).
+- Label muda para "ISRC (opcional)" e remove asterisco.
+- Texto auxiliar: "Se ainda não tiver, deixe em branco — geramos/atribuímos depois."
+- Para EP/Álbum, vira "ISRCs (opcional)" — textarea livre, 1 por linha.
 
-## 1. Banco de dados (1 migração)
+### 2. Upload de áudio → URL do Google Drive
+- Remover totalmente os componentes de upload de áudio, o bucket `release-audio` deixa de ser usado pelo form (mantido no storage, sem mudança).
+- Novo campo único: **"Link do Google Drive com a(s) música(s) *"** — `audio_drive_url`, tipo URL.
+  - Validação: precisa ser uma URL `drive.google.com` ou `docs.google.com`.
+  - Texto auxiliar: "Pode ser uma pasta com 1 ou várias faixas. Garanta que o link esteja como 'Qualquer pessoa com o link pode visualizar'."
+- Server function: remover `audio_files[]` do schema; adicionar `audio_drive_url` em `releases` (nova coluna `audio_drive_url text`).
+- `release_audio_files` deixa de ser populada pelo form (tabela permanece para histórico, sem alteração de schema).
 
-Tabela `releases`:
-- Identificação: `email`, `full_name`, `cpf`, `artist_name`
-- Lançamento: `release_type` (enum: `single` | `ep` | `album`), `release_name`, `lyrics`, `isrc`, `cover_path`
-- Categorização: `genres text[]`, `moods text[]`, `instruments text[]`
-- Conteúdo: `technical_sheet`, `royalties`, `about_artist`, `about_release`, `has_videoclip boolean`
-- Status: `status` enum (`recebido` default, `em_analise`, `aprovado`, `distribuido`)
-- created_at / updated_at + trigger
+### 3. Lógica Single vs EP/Álbum (campos adaptativos)
+Renderização condicional baseada em `release_type`:
 
-Tabela `release_audio_files`: `release_id`, `path`, `original_name`, `size_bytes`, `format` (wav|mp3), `order_index`.
+**Single (1 música):**
+- "Nome da música *" (`release_name`)
+- "Letra da música *" (`lyrics`) — textarea
+- "ISRC (opcional)" — input único
+- "Sobre a música *" (`about_release`)
+- "Ficha técnica *" (`technical_sheet`) — "Quem produziu, mixou, masterizou esta música"
 
-Tabela `release_promo_photos`: `release_id`, `path`, `order_index`.
+**EP / Álbum (várias músicas):**
+- "Nome do EP/Álbum *" (`release_name`) — nome do projeto
+- "Lista de músicas *" (`tracklist`) — textarea grande, placeholder "Uma música por linha, na ordem do projeto. Ex:\n1. Intro\n2. Faixa título\n3. ..."
+  - Helper: "Liste todas as faixas que estão no link do Drive, na ordem oficial."
+- "Letras *" (`lyrics`) — textarea grande, helper: "Cole as letras separando por faixa (ex: '## Faixa 1 - Nome' antes de cada letra)."
+- "ISRCs (opcional)" — textarea, 1 por linha.
+- "Sobre o EP/Álbum *" (`about_release`)
+- "Ficha técnica *" — "Produção, mix e master de todas as faixas."
 
-**RLS / GRANTs:**
-- `releases`, `release_audio_files`, `release_promo_photos`: SELECT/UPDATE para admin (`has_role('admin')`); INSERT via service_role na server function pública.
-- GRANT em todas para `authenticated` e `service_role`. Sem grant para `anon` (envio passa por serverFn com supabaseAdmin após validação).
+Os labels/legendas dos demais campos comuns (gêneros, moods, instrumentos, royalties, sobre o artista, fotos, capa) ficam iguais, mas com microcopy ajustada para refletir "projeto" em vez de "música" quando EP/Álbum.
 
-## 2. Storage
+### 4. Schema do banco (1 migração nova)
+- `ALTER TABLE public.releases ADD COLUMN audio_drive_url text;`
+- `ALTER TABLE public.releases ALTER COLUMN isrc DROP NOT NULL;` (se for NOT NULL hoje — confirmar; se já é nullable, pular).
+- Sem mudar `release_audio_files` / `release_promo_photos`.
 
-Buckets privados novos:
-- `release-covers` (imagens, até 10MB)
-- `release-audio` (wav/mp3, até 100MB)
-- `release-photos` (imagens, até 10MB, máx 10)
+### 5. Server function `submitRelease`
+- Trocar `audio_files` por `audio_drive_url` no schema Zod e no insert.
+- ISRC: aceitar vazio/`null`.
+- Validar URL do Drive no servidor (mesma regex do client).
 
-Policies: leitura via signed URL pelo admin; upload via signed URL emitido pela serverFn.
+### 6. Detalhe admin `/admin/lancamentos/$id`
+- Substituir bloco "Áudios" por "Link do Google Drive": botão "Abrir no Drive" (link externo, target=_blank, rel=noopener).
+- Mostrar tracklist (quando preenchida) em bloco separado para EP/Álbum.
+- Esconder "Áudios" antigos quando não houver `release_audio_files` (registros novos não terão).
 
-## 3. Formulário público `/enviar-lancamento`
+### 7. Fora de escopo
+- Não baixar arquivos do Drive automaticamente.
+- Não validar permissão pública do link.
+- Não migrar releases antigos.
 
-Rota pública nova (`src/routes/enviar-lancamento.tsx`). Campos exatamente conforme o briefing, com:
-- Validação Zod no client e no server.
-- **Anti-spam**: honeypot + verificação de tempo mínimo de preenchimento (sem dependência externa de captcha).
-- Tipo de lançamento:
-  - Single → 1 arquivo de áudio
-  - EP / Álbum → múltiplos arquivos
-- Aceita `.wav` e `.mp3` (até 100MB cada).
-- Listas fixas no código (`src/lib/releases.constants.ts`): gêneros, moods, instrumentos.
-- Upload via signed URLs (mesmo padrão dos beats).
-- Tela de sucesso após envio.
-
-## 4. Server functions (`src/lib/releases.functions.ts`)
-
-- `getReleaseUploadUrl({ kind: 'cover'|'audio'|'photo', ext, contentType })` — pública, valida MIME/extensão.
-- `submitRelease({ ...campos, coverPath, audioFiles[], photoPaths[] })` — pública, valida tudo com Zod, anti-spam, insere com `supabaseAdmin`.
-- `listReleases()` — protegida (`requireSupabaseAuth` + check admin).
-- `getRelease(id)` — protegida; retorna dados + signed URLs para download.
-- `updateReleaseStatus(id, status)` — protegida.
-- `countNewReleases()` — protegida; conta status = `recebido`.
-
-## 5. Backoffice `/admin/lancamentos`
-
-Novo item no `AppSidebar` ("Lançamentos") com **badge** mostrando contagem de status `recebido` (via `useQuery` em `countNewReleases`, refetch a cada 60s).
-
-- **Listagem** (`src/routes/admin/_protected/lancamentos.tsx`): Data | Artista | Nome do lançamento | Tipo | Status. Filtros por status. Ações por linha: Ver.
-- **Detalhe** (`/admin/lancamentos/$id`): mostra todos os dados + capa + lista de áudios com botão "Baixar" (signed URL) + fotos de divulgação. Select para alterar status.
-
-## 6. Entregáveis
-
-- Substituir o Google Forms imediatamente, divulgando `/enviar-lancamento`.
-- Backoffice operacional para receber, visualizar, baixar arquivos e mover status.
-- Badge de novos lançamentos no menu.
-
-## 7. Fora de escopo (não implementar)
-
-Distribuidoras, royalties automáticos, contratos, automações, envio de e-mail/WhatsApp, login do artista.
-
-## Detalhes técnicos
-
-- Stack: TanStack Start + Supabase (já em uso). Server functions seguindo padrão atual (`*.functions.ts` + `supabaseAdmin` carregado dentro do handler).
-- Validação: Zod compartilhada client/server.
-- Uploads: `uploadToSignedUrl` (mesmo padrão de `BeatCoverUploader`).
-- Anti-spam pragmático: campo honeypot oculto + timestamp; sem dependência externa nesta sprint.
-- Relatório: `SPRINT_8A_REPORT.md` + entrada em `CHANGELOG.md`.
+### Arquivos
+- Migração SQL nova.
+- `src/lib/releases.functions.ts` — schema + insert.
+- `src/lib/releases.constants.ts` — helper de regex Drive.
+- `src/routes/enviar-lancamento.tsx` — UI condicional, novo campo, novo tracklist.
+- `src/routes/admin/_protected/lancamentos.$id.tsx` — mostrar link Drive + tracklist.
+- `CHANGELOG.md`.
