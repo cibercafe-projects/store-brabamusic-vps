@@ -201,6 +201,71 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_requests: {
+        Row: {
+          admin_notes: string | null
+          beat_id: string
+          continuation_token: string
+          created_at: string
+          email: string
+          forma_pagamento: Database["public"]["Enums"]["purchase_payment_method"]
+          id: string
+          instagram: string | null
+          nome_cliente: string
+          receipt_path: string | null
+          receipt_uploaded_at: string | null
+          status: Database["public"]["Enums"]["purchase_status"]
+          termos_aceitos: boolean
+          updated_at: string
+          valor: number | null
+          whatsapp: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          beat_id: string
+          continuation_token?: string
+          created_at?: string
+          email: string
+          forma_pagamento: Database["public"]["Enums"]["purchase_payment_method"]
+          id?: string
+          instagram?: string | null
+          nome_cliente: string
+          receipt_path?: string | null
+          receipt_uploaded_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_status"]
+          termos_aceitos?: boolean
+          updated_at?: string
+          valor?: number | null
+          whatsapp: string
+        }
+        Update: {
+          admin_notes?: string | null
+          beat_id?: string
+          continuation_token?: string
+          created_at?: string
+          email?: string
+          forma_pagamento?: Database["public"]["Enums"]["purchase_payment_method"]
+          id?: string
+          instagram?: string | null
+          nome_cliente?: string
+          receipt_path?: string | null
+          receipt_uploaded_at?: string | null
+          status?: Database["public"]["Enums"]["purchase_status"]
+          termos_aceitos?: boolean
+          updated_at?: string
+          valor?: number | null
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_requests_beat_id_fkey"
+            columns: ["beat_id"]
+            isOneToOne: false
+            referencedRelation: "beats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       release_audio_files: {
         Row: {
           created_at: string
@@ -415,6 +480,13 @@ export type Database = {
         | "entregue"
         | "perdido"
       producer_status: "ativa" | "inativa"
+      purchase_payment_method: "pix" | "link"
+      purchase_status:
+        | "aguardando_pagamento"
+        | "comprovante_recebido"
+        | "pagamento_confirmado"
+        | "arquivos_enviados"
+        | "cancelado"
       release_audio_format: "wav" | "mp3"
       release_status: "recebido" | "em_analise" | "aprovado" | "distribuido"
       release_type: "single" | "ep" | "album"
@@ -556,6 +628,14 @@ export const Constants = {
         "perdido",
       ],
       producer_status: ["ativa", "inativa"],
+      purchase_payment_method: ["pix", "link"],
+      purchase_status: [
+        "aguardando_pagamento",
+        "comprovante_recebido",
+        "pagamento_confirmado",
+        "arquivos_enviados",
+        "cancelado",
+      ],
       release_audio_format: ["wav", "mp3"],
       release_status: ["recebido", "em_analise", "aprovado", "distribuido"],
       release_type: ["single", "ep", "album"],
