@@ -10,14 +10,14 @@ export function BeatCoverFallback({ name, className = "" }: Props) {
   const len = label.length;
   const sizeClass =
     len <= 4
-      ? "text-[56%]"
+      ? "text-[90%]"
       : len <= 8
-        ? "text-[44%]"
+        ? "text-[70%]"
         : len <= 14
-          ? "text-[32%]"
+          ? "text-[52%]"
           : len <= 22
-            ? "text-[22%]"
-            : "text-[16%]";
+            ? "text-[36%]"
+            : "text-[26%]";
 
   return (
     <div
