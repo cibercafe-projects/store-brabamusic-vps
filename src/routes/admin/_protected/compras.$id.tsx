@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { DeliveryDialog } from "@/components/purchase/DeliveryDialog";
 
 export const Route = createFileRoute("/admin/_protected/compras/$id")({
   component: PurchaseDetailPage,
