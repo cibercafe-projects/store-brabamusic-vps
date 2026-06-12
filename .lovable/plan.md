@@ -1,36 +1,77 @@
-## Plano — Correções pós Sprint 6 (segurança)
+# Sprint 8A — MVP Operacional de Lançamentos
 
-Dois ajustes pequenos para fechar os achados do scanner sem alterar comportamento funcional.
+Objetivo: substituir o Google Forms por um fluxo nativo já nesta semana. Foco em velocidade, simples e operacional.
 
-### 1. Sanitizar erros do bootstrap de admin
+## 1. Banco de dados (1 migração)
 
-Arquivo: `src/lib/admin.functions.ts`
+Tabela `releases`:
+- Identificação: `email`, `full_name`, `cpf`, `artist_name`
+- Lançamento: `release_type` (enum: `single` | `ep` | `album`), `release_name`, `lyrics`, `isrc`, `cover_path`
+- Categorização: `genres text[]`, `moods text[]`, `instruments text[]`
+- Conteúdo: `technical_sheet`, `royalties`, `about_artist`, `about_release`, `has_videoclip boolean`
+- Status: `status` enum (`recebido` default, `em_analise`, `aprovado`, `distribuido`)
+- created_at / updated_at + trigger
 
-- Em `bootstrapFirstAdmin`, trocar os três `throw new Error(err.message)` por mensagens genéricas em PT-BR, registrando o erro real via `console.error` no servidor:
-  - `countErr` → `"Erro interno. Tente novamente em instantes."`
-  - `createErr` → `"Não foi possível criar o administrador. Tente novamente."`
-  - `roleErr` → `"Não foi possível concluir a configuração inicial. Tente novamente."`
-  - Preservar a checagem `(count ?? 0) > 0` que já devolve mensagem segura ("Um administrador já foi configurado. Use o login.").
-- Em `adminBootstrapNeeded`, sanitizar o `error` do count da mesma forma (log + mensagem genérica).
+Tabela `release_audio_files`: `release_id`, `path`, `original_name`, `size_bytes`, `format` (wav|mp3), `order_index`.
 
-A página `/admin/login` continua exibindo `err.message` no toast — agora só receberá strings seguras.
+Tabela `release_promo_photos`: `release_id`, `path`, `order_index`.
 
-### 2. Documentar `SECURITY DEFINER` como _by design_
+**RLS / GRANTs:**
+- `releases`, `release_audio_files`, `release_promo_photos`: SELECT/UPDATE para admin (`has_role('admin')`); INSERT via service_role na server function pública.
+- GRANT em todas para `authenticated` e `service_role`. Sem grant para `anon` (envio passa por serverFn com supabaseAdmin após validação).
 
-Não alterar o banco. As funções `has_role`, `is_admin_active` e `is_super_admin` precisam ser executáveis por `authenticated` para que as policies RLS funcionem com o invocador autenticado — é o padrão recomendado pela Supabase.
+## 2. Storage
 
-- Atualizar `@security-memory` para registrar explicitamente que esses três helpers são aceitos como `SECURITY DEFINER` executáveis por `authenticated`, e que o scanner não deve reabrir esse achado.
-- Marcar os dois findings atuais do scanner:
-  - `agent_security / bootstrap_raw_errors` → `mark_as_fixed` (descrevendo a sanitização).
-  - `supabase / SUPA_authenticated_security_definer_function_executable` → `ignore` (referenciando a justificativa acima e o padrão Supabase).
+Buckets privados novos:
+- `release-covers` (imagens, até 10MB)
+- `release-audio` (wav/mp3, até 100MB)
+- `release-photos` (imagens, até 10MB, máx 10)
 
-### Fora do escopo
+Policies: leitura via signed URL pelo admin; upload via signed URL emitido pela serverFn.
 
-- Sem migração SQL.
-- Sem mudanças de UI, rotas, server functions de admin, exclusão de beats/produtoras, ou layout — Sprint 6 permanece como está.
-- Sem alterar `src/routes/admin/login.tsx`.
+## 3. Formulário público `/enviar-lancamento`
 
-### Verificação
+Rota pública nova (`src/routes/enviar-lancamento.tsx`). Campos exatamente conforme o briefing, com:
+- Validação Zod no client e no server.
+- **Anti-spam**: honeypot + verificação de tempo mínimo de preenchimento (sem dependência externa de captcha).
+- Tipo de lançamento:
+  - Single → 1 arquivo de áudio
+  - EP / Álbum → múltiplos arquivos
+- Aceita `.wav` e `.mp3` (até 100MB cada).
+- Listas fixas no código (`src/lib/releases.constants.ts`): gêneros, moods, instrumentos.
+- Upload via signed URLs (mesmo padrão dos beats).
+- Tela de sucesso após envio.
 
-- Reler `src/lib/admin.functions.ts` após o edit para confirmar que nenhum `error.message` cru é mais propagado.
-- Confirmar via scanner que o finding `bootstrap_raw_errors` é resolvido.
+## 4. Server functions (`src/lib/releases.functions.ts`)
+
+- `getReleaseUploadUrl({ kind: 'cover'|'audio'|'photo', ext, contentType })` — pública, valida MIME/extensão.
+- `submitRelease({ ...campos, coverPath, audioFiles[], photoPaths[] })` — pública, valida tudo com Zod, anti-spam, insere com `supabaseAdmin`.
+- `listReleases()` — protegida (`requireSupabaseAuth` + check admin).
+- `getRelease(id)` — protegida; retorna dados + signed URLs para download.
+- `updateReleaseStatus(id, status)` — protegida.
+- `countNewReleases()` — protegida; conta status = `recebido`.
+
+## 5. Backoffice `/admin/lancamentos`
+
+Novo item no `AppSidebar` ("Lançamentos") com **badge** mostrando contagem de status `recebido` (via `useQuery` em `countNewReleases`, refetch a cada 60s).
+
+- **Listagem** (`src/routes/admin/_protected/lancamentos.tsx`): Data | Artista | Nome do lançamento | Tipo | Status. Filtros por status. Ações por linha: Ver.
+- **Detalhe** (`/admin/lancamentos/$id`): mostra todos os dados + capa + lista de áudios com botão "Baixar" (signed URL) + fotos de divulgação. Select para alterar status.
+
+## 6. Entregáveis
+
+- Substituir o Google Forms imediatamente, divulgando `/enviar-lancamento`.
+- Backoffice operacional para receber, visualizar, baixar arquivos e mover status.
+- Badge de novos lançamentos no menu.
+
+## 7. Fora de escopo (não implementar)
+
+Distribuidoras, royalties automáticos, contratos, automações, envio de e-mail/WhatsApp, login do artista.
+
+## Detalhes técnicos
+
+- Stack: TanStack Start + Supabase (já em uso). Server functions seguindo padrão atual (`*.functions.ts` + `supabaseAdmin` carregado dentro do handler).
+- Validação: Zod compartilhada client/server.
+- Uploads: `uploadToSignedUrl` (mesmo padrão de `BeatCoverUploader`).
+- Anti-spam pragmático: campo honeypot oculto + timestamp; sem dependência externa nesta sprint.
+- Relatório: `SPRINT_8A_REPORT.md` + entrada em `CHANGELOG.md`.

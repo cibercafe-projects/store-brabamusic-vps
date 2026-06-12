@@ -201,6 +201,151 @@ export type Database = {
         }
         Relationships: []
       }
+      release_audio_files: {
+        Row: {
+          created_at: string
+          format: Database["public"]["Enums"]["release_audio_format"]
+          id: string
+          order_index: number
+          original_name: string
+          path: string
+          release_id: string
+          size_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          format: Database["public"]["Enums"]["release_audio_format"]
+          id?: string
+          order_index?: number
+          original_name: string
+          path: string
+          release_id: string
+          size_bytes: number
+        }
+        Update: {
+          created_at?: string
+          format?: Database["public"]["Enums"]["release_audio_format"]
+          id?: string
+          order_index?: number
+          original_name?: string
+          path?: string
+          release_id?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_audio_files_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      release_promo_photos: {
+        Row: {
+          created_at: string
+          id: string
+          order_index: number
+          path: string
+          release_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          path: string
+          release_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_index?: number
+          path?: string
+          release_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_promo_photos_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      releases: {
+        Row: {
+          about_artist: string
+          about_release: string
+          artist_name: string
+          cover_path: string
+          cpf: string
+          created_at: string
+          email: string
+          full_name: string
+          genres: string[]
+          has_videoclip: boolean
+          id: string
+          instruments: string[]
+          isrc: string
+          lyrics: string
+          moods: string[]
+          release_name: string
+          release_type: Database["public"]["Enums"]["release_type"]
+          royalties: string
+          status: Database["public"]["Enums"]["release_status"]
+          technical_sheet: string
+          updated_at: string
+        }
+        Insert: {
+          about_artist: string
+          about_release: string
+          artist_name: string
+          cover_path: string
+          cpf: string
+          created_at?: string
+          email: string
+          full_name: string
+          genres?: string[]
+          has_videoclip?: boolean
+          id?: string
+          instruments?: string[]
+          isrc: string
+          lyrics: string
+          moods?: string[]
+          release_name: string
+          release_type: Database["public"]["Enums"]["release_type"]
+          royalties: string
+          status?: Database["public"]["Enums"]["release_status"]
+          technical_sheet: string
+          updated_at?: string
+        }
+        Update: {
+          about_artist?: string
+          about_release?: string
+          artist_name?: string
+          cover_path?: string
+          cpf?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          genres?: string[]
+          has_videoclip?: boolean
+          id?: string
+          instruments?: string[]
+          isrc?: string
+          lyrics?: string
+          moods?: string[]
+          release_name?: string
+          release_type?: Database["public"]["Enums"]["release_type"]
+          royalties?: string
+          status?: Database["public"]["Enums"]["release_status"]
+          technical_sheet?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           active: boolean
@@ -255,6 +400,9 @@ export type Database = {
         | "entregue"
         | "perdido"
       producer_status: "ativa" | "inativa"
+      release_audio_format: "wav" | "mp3"
+      release_status: "recebido" | "em_analise" | "aprovado" | "distribuido"
+      release_type: "single" | "ep" | "album"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -393,6 +541,9 @@ export const Constants = {
         "perdido",
       ],
       producer_status: ["ativa", "inativa"],
+      release_audio_format: ["wav", "mp3"],
+      release_status: ["recebido", "em_analise", "aprovado", "distribuido"],
+      release_type: ["single", "ep", "album"],
     },
   },
 } as const
