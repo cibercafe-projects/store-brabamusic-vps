@@ -284,7 +284,9 @@ export const updatePurchaseStatus = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => statusSchema.parse(input))
   .handler(async ({ context, data }) => {
     const admin = await assertAdmin(context.userId);
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: { status: PurchaseStatus; admin_notes?: string | null } = {
+      status: data.status,
+    };
     if (data.admin_notes !== undefined) patch.admin_notes = data.admin_notes;
     const { error } = await admin
       .from("purchase_requests")
