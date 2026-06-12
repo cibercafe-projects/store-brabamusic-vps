@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DeliveryDialog } from "@/components/purchase/DeliveryDialog";
+import { ResendInstructionsCard } from "@/components/purchase/ResendInstructionsCard";
 
 export const Route = createFileRoute("/admin/_protected/compras/$id")({
   component: PurchaseDetailPage,
