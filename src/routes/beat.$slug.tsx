@@ -50,6 +50,7 @@ function BeatDetail() {
   const hasPreview = !!beat.preview_url;
   const [copied, setCopied] = useState(false);
   const [interestOpen, setInterestOpen] = useState(false);
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
 
 
 
