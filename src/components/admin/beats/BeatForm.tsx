@@ -407,38 +407,30 @@ export function BeatForm({ initial, onDone }: Props) {
           </div>
         </div>
 
-        <div className="space-y-4 rounded-md border p-4">
-          <p className="text-xs text-muted-foreground">
-            Arquivos protegidos (WAV/STEMS) virão em sprints futuras. Por enquanto, apenas URLs
-            externas (opcional).
-          </p>
-          <FormField
-            control={form.control}
-            name="wav_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>WAV (URL)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="https://..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="stems_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Stems (URL)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="https://..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-3 rounded-md border p-4">
+          <div>
+            <p className="text-sm font-medium">Arquivos privados para entrega</p>
+            <p className="text-xs text-muted-foreground">
+              Enviados apenas ao comprador após confirmação do pagamento. Links assinados, válidos
+              por 7 dias.
+            </p>
+          </div>
+          {(["wav", "stems", "license"] as const).map((kind) => (
+            <BeatPrivateFileUploader
+              key={kind}
+              kind={kind}
+              beatId={initial?.id}
+              path={form.watch(`${kind}_path` as const) || null}
+              onUploaded={(path) =>
+                form.setValue(`${kind}_path` as const, path, { shouldDirty: true })
+              }
+              onClear={() =>
+                form.setValue(`${kind}_path` as const, "", { shouldDirty: true })
+              }
+            />
+          ))}
         </div>
+
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onDone}>
