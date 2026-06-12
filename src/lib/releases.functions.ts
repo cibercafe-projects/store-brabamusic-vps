@@ -99,14 +99,7 @@ export const getReleaseUploadUrl = createServerFn({ method: "POST" })
 // ---------- Submit (public) ----------
 
 const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
-const isrcRegex = /^[A-Z]{2}[A-Z0-9]{3}\d{2}\d{5}$/i;
-
-const audioFileSchema = z.object({
-  path: z.string().min(3).max(300),
-  original_name: z.string().min(1).max(200),
-  size_bytes: z.number().int().min(1).max(150 * 1024 * 1024),
-  format: z.enum(["wav", "mp3"]),
-});
+const driveUrlRegex = /^https?:\/\/(drive|docs)\.google\.com\//i;
 
 const submitSchema = z
   .object({
@@ -116,8 +109,15 @@ const submitSchema = z
     artist_name: z.string().trim().min(2).max(160),
     release_type: z.enum(["single", "ep", "album"]),
     release_name: z.string().trim().min(1).max(200),
-    lyrics: z.string().trim().min(1).max(10000),
-    isrc: z.string().trim().regex(isrcRegex, "ISRC inválido").max(20),
+    tracklist: z.string().trim().max(5000).optional().default(""),
+    lyrics: z.string().trim().min(1).max(20000),
+    isrc: z.string().trim().max(2000).optional().default(""),
+    audio_drive_url: z
+      .string()
+      .trim()
+      .url("Informe uma URL válida")
+      .max(500)
+      .regex(driveUrlRegex, "Use um link do Google Drive"),
     cover_path: z.string().min(3).max(300),
     genres: z.array(z.string().max(60)).min(1, "Selecione ao menos 1 gênero").max(10),
     moods: z.array(z.string().max(60)).min(1, "Selecione ao menos 1 mood").max(10),
@@ -127,7 +127,6 @@ const submitSchema = z
     about_artist: z.string().trim().min(1).max(5000),
     about_release: z.string().trim().min(1).max(5000),
     has_videoclip: z.boolean(),
-    audio_files: z.array(audioFileSchema).min(1).max(30),
     promo_photos: z
       .array(z.object({ path: z.string().min(3).max(300) }))
       .max(MAX_PROMO_PHOTOS)
@@ -137,11 +136,8 @@ const submitSchema = z
     started_at: z.number().int().positive(),
   })
   .refine(
-    (v) =>
-      v.release_type === "single"
-        ? v.audio_files.length === 1
-        : v.audio_files.length >= 1,
-    { message: "Single deve ter exatamente 1 arquivo de áudio.", path: ["audio_files"] },
+    (v) => (v.release_type === "single" ? true : v.tracklist.length > 0),
+    { message: "Liste as músicas do EP/Álbum.", path: ["tracklist"] },
   );
 
 export const submitRelease = createServerFn({ method: "POST" })
