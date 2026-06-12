@@ -1,0 +1,2 @@
+ALTER TABLE public.purchase_deliveries ADD COLUMN IF NOT EXISTS tipo text NOT NULL DEFAULT 'entrega_arquivos';
+CREATE INDEX IF NOT EXISTS purchase_deliveries_tipo_idx ON public.purchase_deliveries (purchase_id, tipo);
