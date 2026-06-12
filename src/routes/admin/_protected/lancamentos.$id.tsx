@@ -192,11 +192,26 @@ function LancamentoDetail() {
           </Card>
         )}
 
+        {r.photos_drive_url && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base">Fotos de divulgação</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button asChild size="sm" variant="outline">
+                <a href={r.photos_drive_url} target="_blank" rel="noopener noreferrer">
+                  Abrir fotos no Drive
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {r.promo_photos.length > 0 && (
           <Card className="md:col-span-2">
             <CardHeader>
               <CardTitle className="text-base">
-                Fotos de divulgação ({r.promo_photos.length})
+                Fotos antigas ({r.promo_photos.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
