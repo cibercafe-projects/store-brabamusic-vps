@@ -13,6 +13,20 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 8A — MVP de Lançamentos
+
+### Added
+
+- **Tabelas `releases`, `release_audio_files`, `release_promo_photos`** com enums `release_type` (single/ep/album), `release_status` (recebido/em_analise/aprovado/distribuido) e `release_audio_format` (wav/mp3). RLS: somente admins; envio público via server fn com `supabaseAdmin`.
+- **Buckets privados** `release-covers`, `release-audio` (até 100MB), `release-photos` (até 10 fotos, 10MB cada).
+- **Rota pública `/enviar-lancamento`** — formulário nativo substituindo o Google Forms. Tipo de lançamento (Single = 1 áudio; EP/Álbum = múltiplos), gêneros/mood/instrumentos com listas fixas, capa, ISRC, letra, ficha técnica, royalties, sobre artista/música, videoclipe. Anti-spam por honeypot + tempo mínimo de preenchimento.
+- **`/admin/lancamentos`** — listagem (data, artista, lançamento, tipo, status) com filtro/busca.
+- **`/admin/lancamentos/$id`** — detalhe completo, alteração de status, download de áudios via signed URL, galeria de fotos de divulgação.
+- **Badge no menu lateral** indicando lançamentos com status `recebido` (refetch a cada 60s).
+- `src/lib/releases.constants.ts`, `src/lib/releases.functions.ts`.
+
+---
+
 ## Sprint 7 — Fluxo Comercial e Gestão de Leads
 
 ### Added
