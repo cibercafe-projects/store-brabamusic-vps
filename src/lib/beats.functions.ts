@@ -433,9 +433,10 @@ export const removeBeatPrivateFile = createServerFn({ method: "POST" })
     if (oldPath) {
       await supabaseAdmin.storage.from(PRIVATE_RULES[data.kind].bucket).remove([oldPath]);
     }
+    const patch = { [col]: null } as unknown as { wav_path?: null; stems_path?: null; license_path?: null };
     const { error } = await supabaseAdmin
       .from("beats")
-      .update({ [col]: null })
+      .update(patch)
       .eq("id", data.beatId);
     if (error) throw new Error(error.message);
     return { ok: true };
