@@ -260,18 +260,27 @@ function SubmitReleasePage() {
               </p>
             </Field>
 
-            <Field label={isMulti ? `Letras das músicas` : "Letra da música"} required>
-              <Textarea
+            <Field
+              label={
+                isMulti
+                  ? "Link do Google Drive (.zip com as letras)"
+                  : "Link do Google Drive (.zip com a letra)"
+              }
+              required
+            >
+              <Input
                 required
-                rows={isMulti ? 10 : 6}
-                value={lyrics}
-                onChange={(e) => setLyrics(e.target.value)}
-                placeholder={
-                  isMulti
-                    ? "Cole as letras separando por faixa. Ex:\n\n## 1. Nome da faixa\n<letra>\n\n## 2. Outra faixa\n<letra>"
-                    : "Cole a letra completa da música."
-                }
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={lyricsDriveUrl}
+                onChange={(e) => setLyricsDriveUrl(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                {isMulti
+                  ? "Envie um arquivo .zip contendo um documento por faixa (PDF, DOC, DOCX ou TXT)."
+                  : "Envie um arquivo .zip contendo o documento com a letra (PDF, DOC, DOCX ou TXT)."}{" "}
+                Marque o link como <strong>“Qualquer pessoa com o link pode visualizar”</strong>.
+              </p>
             </Field>
 
             <Field label={isMulti ? "ISRCs (opcional)" : "ISRC (opcional)"}>
