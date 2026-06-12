@@ -13,6 +13,7 @@ import { Route as TermosUsoRouteImport } from './routes/termos-uso'
 import { Route as ProdutoresRouteImport } from './routes/produtores'
 import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
 import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
+import { Route as EnviarLancamentoRouteImport } from './routes/enviar-lancamento'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
@@ -29,6 +30,8 @@ import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protect
 import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
 import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/_protected/configuracoes'
 import { Route as AdminProtectedBeatsRouteImport } from './routes/admin/_protected/beats'
+import { Route as AdminProtectedLancamentosIndexRouteImport } from './routes/admin/_protected/lancamentos.index'
+import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
 
 const TermosUsoRoute = TermosUsoRouteImport.update({
   id: '/termos-uso',
@@ -48,6 +51,11 @@ const PoliticaPrivacidadeRoute = PoliticaPrivacidadeRouteImport.update({
 const MeusInteressesRoute = MeusInteressesRouteImport.update({
   id: '/meus-interesses',
   path: '/meus-interesses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnviarLancamentoRoute = EnviarLancamentoRouteImport.update({
+  id: '/enviar-lancamento',
+  path: '/enviar-lancamento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
@@ -131,12 +139,25 @@ const AdminProtectedBeatsRoute = AdminProtectedBeatsRouteImport.update({
   path: '/beats',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
+const AdminProtectedLancamentosIndexRoute =
+  AdminProtectedLancamentosIndexRouteImport.update({
+    id: '/lancamentos/',
+    path: '/lancamentos/',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
+const AdminProtectedLancamentosIdRoute =
+  AdminProtectedLancamentosIdRouteImport.update({
+    id: '/lancamentos/$id',
+    path: '/lancamentos/$id',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminProtectedRouteRouteWithChildren
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/enviar-lancamento': typeof EnviarLancamentoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -152,11 +173,14 @@ export interface FileRoutesByFullPath {
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
+  '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/admin/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/enviar-lancamento': typeof EnviarLancamentoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -172,6 +196,8 @@ export interface FileRoutesByTo {
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
+  '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/admin/lancamentos': typeof AdminProtectedLancamentosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,6 +205,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/enviar-lancamento': typeof EnviarLancamentoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -195,6 +222,8 @@ export interface FileRoutesById {
   '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
+  '/admin/_protected/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/admin/_protected/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -203,6 +232,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/como-funciona'
+    | '/enviar-lancamento'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -218,11 +248,14 @@ export interface FileRouteTypes {
     | '/admin/leads'
     | '/admin/produtoras'
     | '/admin/usuarios'
+    | '/admin/lancamentos/$id'
+    | '/admin/lancamentos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/app'
     | '/como-funciona'
+    | '/enviar-lancamento'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -238,12 +271,15 @@ export interface FileRouteTypes {
     | '/admin/leads'
     | '/admin/produtoras'
     | '/admin/usuarios'
+    | '/admin/lancamentos/$id'
+    | '/admin/lancamentos'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/app'
     | '/como-funciona'
+    | '/enviar-lancamento'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -260,6 +296,8 @@ export interface FileRouteTypes {
     | '/admin/_protected/leads'
     | '/admin/_protected/produtoras'
     | '/admin/_protected/usuarios'
+    | '/admin/_protected/lancamentos/$id'
+    | '/admin/_protected/lancamentos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -267,6 +305,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AppRoute: typeof AppRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
+  EnviarLancamentoRoute: typeof EnviarLancamentoRoute
   MeusInteressesRoute: typeof MeusInteressesRoute
   PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
   ProdutoresRoute: typeof ProdutoresRoute
@@ -304,6 +343,13 @@ declare module '@tanstack/react-router' {
       path: '/meus-interesses'
       fullPath: '/meus-interesses'
       preLoaderRoute: typeof MeusInteressesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enviar-lancamento': {
+      id: '/enviar-lancamento'
+      path: '/enviar-lancamento'
+      fullPath: '/enviar-lancamento'
+      preLoaderRoute: typeof EnviarLancamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/como-funciona': {
@@ -418,6 +464,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedBeatsRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/lancamentos/': {
+      id: '/admin/_protected/lancamentos/'
+      path: '/lancamentos'
+      fullPath: '/admin/lancamentos/'
+      preLoaderRoute: typeof AdminProtectedLancamentosIndexRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/lancamentos/$id': {
+      id: '/admin/_protected/lancamentos/$id'
+      path: '/lancamentos/$id'
+      fullPath: '/admin/lancamentos/$id'
+      preLoaderRoute: typeof AdminProtectedLancamentosIdRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
   }
 }
 
@@ -428,6 +488,8 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
   AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
+  AdminProtectedLancamentosIdRoute: typeof AdminProtectedLancamentosIdRoute
+  AdminProtectedLancamentosIndexRoute: typeof AdminProtectedLancamentosIndexRoute
 }
 
 const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
@@ -437,6 +499,8 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
   AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
+  AdminProtectedLancamentosIdRoute: AdminProtectedLancamentosIdRoute,
+  AdminProtectedLancamentosIndexRoute: AdminProtectedLancamentosIndexRoute,
 }
 
 const AdminProtectedRouteRouteWithChildren =
@@ -463,6 +527,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   AppRoute: AppRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
+  EnviarLancamentoRoute: EnviarLancamentoRoute,
   MeusInteressesRoute: MeusInteressesRoute,
   PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
   ProdutoresRoute: ProdutoresRoute,
