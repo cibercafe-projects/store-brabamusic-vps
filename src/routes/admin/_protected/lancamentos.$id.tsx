@@ -116,9 +116,20 @@ function LancamentoDetail() {
 
         <InfoCard title="Sobre o lançamento">
           <Info label="Tipo" value={RELEASE_TYPE_LABEL[r.release_type]} />
-          <Info label="ISRC" value={r.isrc} />
+          <Info label="ISRC" value={r.isrc || "—"} />
           <Info label="Videoclipe" value={r.has_videoclip ? "Sim" : "Não"} />
-          <Block label="Sobre a música" value={r.about_release} />
+          {r.audio_drive_url && (
+            <div>
+              <p className="text-xs text-muted-foreground">Link do Google Drive</p>
+              <Button asChild size="sm" variant="outline" className="mt-1">
+                <a href={r.audio_drive_url} target="_blank" rel="noopener noreferrer">
+                  Abrir no Drive
+                </a>
+              </Button>
+            </div>
+          )}
+          {r.tracklist && <Block label="Lista de músicas" value={r.tracklist} />}
+          <Block label="Sobre o lançamento" value={r.about_release} />
         </InfoCard>
 
         <InfoCard title="Categorização">
