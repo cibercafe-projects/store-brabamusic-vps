@@ -152,19 +152,21 @@ function DashboardPage() {
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Compras solicitadas" value={p?.total ?? 0} icon={ShoppingCart} />
               <MetricCard
-                label="Comprovantes pendentes"
-                value={p?.aguardando_pagamento ?? 0}
-                icon={FileText}
-              />
-              <MetricCard
-                label="Pagamentos confirmados"
+                label="Pendentes de envio"
                 value={p?.pagamento_confirmado ?? 0}
-                icon={CreditCard}
+                icon={FileText}
+                hint="Pagamento confirmado, aguardando entrega"
               />
               <MetricCard
                 label="Arquivos enviados"
                 value={p?.arquivos_enviados ?? 0}
                 icon={Send}
+              />
+              <MetricCard
+                label="Compras concluídas"
+                value={p?.arquivos_enviados ?? 0}
+                icon={CreditCard}
+                hint="Ciclo finalizado"
               />
             </div>
           </section>

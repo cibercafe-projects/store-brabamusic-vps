@@ -41,6 +41,7 @@ export type Database = {
           descricao: string | null
           genero: string | null
           id: string
+          license_path: string | null
           mood: string | null
           nome: string
           plays_count: number
@@ -50,9 +51,11 @@ export type Database = {
           produtora_id: string
           slug: string
           status: Database["public"]["Enums"]["beat_status"]
+          stems_path: string | null
           stems_url: string | null
           tom: string | null
           updated_at: string
+          wav_path: string | null
           wav_url: string | null
         }
         Insert: {
@@ -63,6 +66,7 @@ export type Database = {
           descricao?: string | null
           genero?: string | null
           id?: string
+          license_path?: string | null
           mood?: string | null
           nome: string
           plays_count?: number
@@ -72,9 +76,11 @@ export type Database = {
           produtora_id: string
           slug: string
           status?: Database["public"]["Enums"]["beat_status"]
+          stems_path?: string | null
           stems_url?: string | null
           tom?: string | null
           updated_at?: string
+          wav_path?: string | null
           wav_url?: string | null
         }
         Update: {
@@ -85,6 +91,7 @@ export type Database = {
           descricao?: string | null
           genero?: string | null
           id?: string
+          license_path?: string | null
           mood?: string | null
           nome?: string
           plays_count?: number
@@ -94,9 +101,11 @@ export type Database = {
           produtora_id?: string
           slug?: string
           status?: Database["public"]["Enums"]["beat_status"]
+          stems_path?: string | null
           stems_url?: string | null
           tom?: string | null
           updated_at?: string
+          wav_path?: string | null
           wav_url?: string | null
         }
         Relationships: [
@@ -201,12 +210,57 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_deliveries: {
+        Row: {
+          arquivos: Json
+          created_at: string
+          enviado_em: string
+          enviado_email: boolean
+          enviado_por: string | null
+          enviado_whatsapp: boolean
+          id: string
+          observacao: string | null
+          purchase_id: string
+        }
+        Insert: {
+          arquivos?: Json
+          created_at?: string
+          enviado_em?: string
+          enviado_email?: boolean
+          enviado_por?: string | null
+          enviado_whatsapp?: boolean
+          id?: string
+          observacao?: string | null
+          purchase_id: string
+        }
+        Update: {
+          arquivos?: Json
+          created_at?: string
+          enviado_em?: string
+          enviado_email?: boolean
+          enviado_por?: string | null
+          enviado_whatsapp?: boolean
+          id?: string
+          observacao?: string | null
+          purchase_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_deliveries_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_requests: {
         Row: {
           admin_notes: string | null
           beat_id: string
           continuation_token: string
           created_at: string
+          delivered_at: string | null
           email: string
           forma_pagamento: Database["public"]["Enums"]["purchase_payment_method"]
           id: string
@@ -225,6 +279,7 @@ export type Database = {
           beat_id: string
           continuation_token?: string
           created_at?: string
+          delivered_at?: string | null
           email: string
           forma_pagamento: Database["public"]["Enums"]["purchase_payment_method"]
           id?: string
@@ -243,6 +298,7 @@ export type Database = {
           beat_id?: string
           continuation_token?: string
           created_at?: string
+          delivered_at?: string | null
           email?: string
           forma_pagamento?: Database["public"]["Enums"]["purchase_payment_method"]
           id?: string

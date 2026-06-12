@@ -11,6 +11,7 @@ import {
   Mail,
   Instagram,
   Save,
+  PackageCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -33,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { DeliveryDialog } from "@/components/purchase/DeliveryDialog";
 
 export const Route = createFileRoute("/admin/_protected/compras/$id")({
   component: PurchaseDetailPage,
@@ -65,6 +67,7 @@ function PurchaseDetailPage() {
   const [status, setStatus] = useState<PurchaseStatus>("aguardando_pagamento");
   const [notes, setNotes] = useState("");
   const [loadingReceipt, setLoadingReceipt] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
 
   useEffect(() => {
     if (query.data) {
@@ -306,7 +309,84 @@ function PurchaseDetailPage() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="md:col-span-2 border-accent/30">
+          <CardHeader>
+            <CardTitle className="text-base inline-flex items-center gap-2">
+              <PackageCheck className="h-4 w-4" /> Entrega de arquivos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Cliente</p>
+                <p className="font-medium">{p.nome_cliente}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Beat</p>
+                <p className="font-medium">{beat?.nome ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">E-mail</p>
+                <p className="font-medium break-all">{p.email || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">WhatsApp</p>
+                <p className="font-medium">{p.whatsapp || "—"}</p>
+              </div>
+            </div>
+            <div className="rounded-md border p-3 text-xs space-y-1">
+              <p className="text-muted-foreground">Arquivos cadastrados no beat:</p>
+              <ul className="space-y-0.5">
+                <li>WAV: {beat?.wav_path ? "✅ disponível" : "❌ não cadastrado"}</li>
+                <li>STEMS: {beat?.stems_path ? "✅ disponível" : "❌ não cadastrado"}</li>
+                <li>Licença: {beat?.license_path ? "✅ disponível" : "❌ não cadastrada"}</li>
+              </ul>
+            </div>
+            {p.delivered_at && (
+              <p className="text-xs text-muted-foreground">
+                Última entrega registrada em {fmtDate(p.delivered_at)}.
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button
+                onClick={() => setDeliveryOpen(true)}
+                disabled={
+                  !(p.status === "pagamento_confirmado" || p.status === "arquivos_enviados")
+                }
+              >
+                <PackageCheck className="h-4 w-4" />{" "}
+                {p.status === "arquivos_enviados" ? "Reenviar arquivos" : "Entregar arquivos"}
+              </Button>
+              {p.status !== "pagamento_confirmado" && p.status !== "arquivos_enviados" && (
+                <p className="text-xs text-muted-foreground self-center">
+                  Confirme o pagamento antes de entregar.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      <DeliveryDialog
+        open={deliveryOpen}
+        onOpenChange={setDeliveryOpen}
+        purchase={{
+          id: p.id,
+          nome_cliente: p.nome_cliente,
+          email: p.email,
+          whatsapp: p.whatsapp,
+          beat: beat
+            ? {
+                nome: beat.nome,
+                wav_path: (beat as { wav_path?: string | null }).wav_path ?? null,
+                stems_path: (beat as { stems_path?: string | null }).stems_path ?? null,
+                license_path: (beat as { license_path?: string | null }).license_path ?? null,
+              }
+            : null,
+        }}
+      />
     </div>
   );
 }
+

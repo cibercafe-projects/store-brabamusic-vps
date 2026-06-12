@@ -5,6 +5,16 @@ import { slugify } from "@/lib/slug";
 
 const COVER_BUCKET = "beat-covers";
 const PREVIEW_BUCKET = "beat-previews";
+const WAV_BUCKET = "beat-wav";
+const STEMS_BUCKET = "beat-stems";
+const LICENSE_BUCKET = "beat-licenses";
+
+export const BEAT_PRIVATE_BUCKETS = {
+  wav: WAV_BUCKET,
+  stems: STEMS_BUCKET,
+  license: LICENSE_BUCKET,
+} as const;
+export type BeatPrivateKind = keyof typeof BEAT_PRIVATE_BUCKETS;
 
 const urlField = z
   .string()
@@ -38,6 +48,9 @@ const beatInputSchema = z.object({
   preview_path: pathField,
   wav_url: urlField,
   stems_url: urlField,
+  wav_path: pathField,
+  stems_path: pathField,
+  license_path: pathField,
 });
 
 async function assertAdmin(userId: string) {
@@ -206,6 +219,9 @@ export const createBeat = createServerFn({ method: "POST" })
         preview_path: data.preview_path ?? null,
         wav_url: data.wav_url,
         stems_url: data.stems_url,
+        wav_path: data.wav_path ?? null,
+        stems_path: data.stems_path ?? null,
+        license_path: data.license_path ?? null,
       })
       .select("*")
       .single();
@@ -229,22 +245,25 @@ export const updateBeat = createServerFn({ method: "POST" })
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
     }
 
-    if (rest.capa_path !== undefined || rest.preview_path !== undefined) {
+    const privateFields = ["capa_path", "preview_path", "wav_path", "stems_path", "license_path"] as const;
+    const anyPrivateChanged = privateFields.some((f) => rest[f] !== undefined);
+    if (anyPrivateChanged) {
       const { data: existing } = await supabaseAdmin
         .from("beats")
-        .select("capa_path, preview_path")
+        .select("capa_path, preview_path, wav_path, stems_path, license_path")
         .eq("id", id)
         .maybeSingle();
-      if (rest.capa_path !== undefined) {
-        await removeIfChanged(supabaseAdmin, COVER_BUCKET, existing?.capa_path, rest.capa_path);
-      }
-      if (rest.preview_path !== undefined) {
-        await removeIfChanged(
-          supabaseAdmin,
-          PREVIEW_BUCKET,
-          existing?.preview_path,
-          rest.preview_path,
-        );
+      const bucketMap: Record<(typeof privateFields)[number], string> = {
+        capa_path: COVER_BUCKET,
+        preview_path: PREVIEW_BUCKET,
+        wav_path: WAV_BUCKET,
+        stems_path: STEMS_BUCKET,
+        license_path: LICENSE_BUCKET,
+      };
+      for (const f of privateFields) {
+        if (rest[f] !== undefined) {
+          await removeIfChanged(supabaseAdmin, bucketMap[f], existing?.[f], rest[f]);
+        }
       }
     }
 
@@ -356,6 +375,76 @@ export const getBeatPreviewUploadUrl = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { path, token: signed.token };
   });
+
+// ===== Arquivos privados do beat (WAV / STEMS / Licença) =====
+const privateKindSchema = z.enum(["wav", "stems", "license"]);
+
+const PRIVATE_RULES: Record<
+  BeatPrivateKind,
+  { bucket: string; exts: readonly string[]; maxBytes: number }
+> = {
+  wav: { bucket: WAV_BUCKET, exts: ["wav"], maxBytes: 250 * 1024 * 1024 },
+  stems: { bucket: STEMS_BUCKET, exts: ["zip"], maxBytes: 500 * 1024 * 1024 },
+  license: { bucket: LICENSE_BUCKET, exts: ["pdf"], maxBytes: 20 * 1024 * 1024 },
+};
+
+export const getBeatPrivateUploadUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        kind: privateKindSchema,
+        ext: z.string().trim().toLowerCase().max(8),
+        beatId: z.string().uuid().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const rule = PRIVATE_RULES[data.kind];
+    if (!rule.exts.includes(data.ext)) {
+      throw new Error(`Extensão inválida. Use: ${rule.exts.join(", ")}`);
+    }
+    const folder = data.beatId ?? "new";
+    const path = `beats/${folder}/${data.kind}-${Date.now()}.${data.ext}`;
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from(rule.bucket)
+      .createSignedUploadUrl(path);
+    if (error) throw new Error(error.message);
+    return { path, token: signed.token, bucket: rule.bucket };
+  });
+
+export const removeBeatPrivateFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        beatId: z.string().uuid(),
+        kind: privateKindSchema,
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const col = `${data.kind}_path` as const;
+    const { data: row } = await supabaseAdmin
+      .from("beats")
+      .select(col)
+      .eq("id", data.beatId)
+      .maybeSingle();
+    const oldPath = (row as Record<string, string | null> | null)?.[col] ?? null;
+    if (oldPath) {
+      await supabaseAdmin.storage.from(PRIVATE_RULES[data.kind].bucket).remove([oldPath]);
+    }
+    const patch = { [col]: null } as unknown as { wav_path?: null; stems_path?: null; license_path?: null };
+    const { error } = await supabaseAdmin
+      .from("beats")
+      .update(patch)
+      .eq("id", data.beatId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 
 export const signBeatMedia = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

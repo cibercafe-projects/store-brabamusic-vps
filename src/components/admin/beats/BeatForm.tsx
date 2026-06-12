@@ -33,6 +33,7 @@ import {
 import { slugify } from "@/lib/slug";
 import { BeatCoverUploader } from "./BeatCoverUploader";
 import { BeatPreviewUploader } from "./BeatPreviewUploader";
+import { BeatPrivateFileUploader } from "./BeatPrivateFileUploader";
 
 const urlOpt = z
   .string()
@@ -62,6 +63,9 @@ const schema = z.object({
   preview_path: z.string().max(300).optional().or(z.literal("")),
   wav_url: urlOpt,
   stems_url: urlOpt,
+  wav_path: z.string().max(300).optional().or(z.literal("")),
+  stems_path: z.string().max(300).optional().or(z.literal("")),
+  license_path: z.string().max(300).optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -86,6 +90,9 @@ export type BeatFormInitial = {
   preview_signed_url?: string | null;
   wav_url?: string | null;
   stems_url?: string | null;
+  wav_path?: string | null;
+  stems_path?: string | null;
+  license_path?: string | null;
 };
 
 type Props = {
@@ -133,6 +140,9 @@ export function BeatForm({ initial, onDone }: Props) {
       preview_path: initial?.preview_path ?? "",
       wav_url: initial?.wav_url ?? "",
       stems_url: initial?.stems_url ?? "",
+      wav_path: initial?.wav_path ?? "",
+      stems_path: initial?.stems_path ?? "",
+      license_path: initial?.license_path ?? "",
     },
   });
 
@@ -164,6 +174,9 @@ export function BeatForm({ initial, onDone }: Props) {
         preview_path: values.preview_path || null,
         wav_url: values.wav_url || "",
         stems_url: values.stems_url || "",
+        wav_path: values.wav_path || null,
+        stems_path: values.stems_path || null,
+        license_path: values.license_path || null,
       };
       if (isEdit && initial?.id) {
         return update({ data: { id: initial.id, ...payload } });
@@ -394,38 +407,30 @@ export function BeatForm({ initial, onDone }: Props) {
           </div>
         </div>
 
-        <div className="space-y-4 rounded-md border p-4">
-          <p className="text-xs text-muted-foreground">
-            Arquivos protegidos (WAV/STEMS) virão em sprints futuras. Por enquanto, apenas URLs
-            externas (opcional).
-          </p>
-          <FormField
-            control={form.control}
-            name="wav_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>WAV (URL)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="https://..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="stems_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Stems (URL)</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="https://..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-3 rounded-md border p-4">
+          <div>
+            <p className="text-sm font-medium">Arquivos privados para entrega</p>
+            <p className="text-xs text-muted-foreground">
+              Enviados apenas ao comprador após confirmação do pagamento. Links assinados, válidos
+              por 7 dias.
+            </p>
+          </div>
+          {(["wav", "stems", "license"] as const).map((kind) => (
+            <BeatPrivateFileUploader
+              key={kind}
+              kind={kind}
+              beatId={initial?.id}
+              path={form.watch(`${kind}_path` as const) || null}
+              onUploaded={(path) =>
+                form.setValue(`${kind}_path` as const, path, { shouldDirty: true })
+              }
+              onClear={() =>
+                form.setValue(`${kind}_path` as const, "", { shouldDirty: true })
+              }
+            />
+          ))}
         </div>
+
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onDone}>
