@@ -80,21 +80,21 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
         ) : (
           <span className="text-xs text-muted-foreground">prod. {beat.produtora_nome}</span>
         )}
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-lg font-bold text-accent">
+        <div className="mt-3 space-y-2">
+          <div className="text-lg font-bold text-accent">
             {beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : "—"}
-          </span>
-          <div className="flex items-center gap-1.5">
+          </div>
+          <div className="flex items-center gap-2">
             <Link
               to="/beat/$slug"
               params={{ slug: beat.slug }}
-              className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10"
+              className="flex-1 text-center rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10"
             >
               Ver
             </Link>
             <button
               onClick={() => setInterestOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-bold hover:opacity-90"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-bold hover:opacity-90"
             >
               <MessageCircle className="h-4 w-4" /> Interesse
             </button>
