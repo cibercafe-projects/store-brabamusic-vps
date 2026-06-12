@@ -291,7 +291,8 @@ export type Database = {
           id: string
           instruments: string[]
           isrc: string | null
-          lyrics: string
+          lyrics: string | null
+          lyrics_drive_url: string | null
           moods: string[]
           photos_drive_url: string | null
           release_name: string
@@ -318,7 +319,8 @@ export type Database = {
           id?: string
           instruments?: string[]
           isrc?: string | null
-          lyrics: string
+          lyrics?: string | null
+          lyrics_drive_url?: string | null
           moods?: string[]
           photos_drive_url?: string | null
           release_name: string
@@ -345,7 +347,8 @@ export type Database = {
           id?: string
           instruments?: string[]
           isrc?: string | null
-          lyrics?: string
+          lyrics?: string | null
+          lyrics_drive_url?: string | null
           moods?: string[]
           photos_drive_url?: string | null
           release_name?: string
