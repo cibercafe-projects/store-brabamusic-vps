@@ -221,6 +221,7 @@ export type Database = {
           id: string
           observacao: string | null
           purchase_id: string
+          tipo: string
         }
         Insert: {
           arquivos?: Json
@@ -232,6 +233,7 @@ export type Database = {
           id?: string
           observacao?: string | null
           purchase_id: string
+          tipo?: string
         }
         Update: {
           arquivos?: Json
@@ -243,6 +245,7 @@ export type Database = {
           id?: string
           observacao?: string | null
           purchase_id?: string
+          tipo?: string
         }
         Relationships: [
           {

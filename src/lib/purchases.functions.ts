@@ -350,6 +350,54 @@ export const getPurchaseDashboardCounts = createServerFn({ method: "GET" })
     };
   });
 
+const resendSchema = z.object({
+  id: z.string().uuid(),
+  canal_email: z.boolean(),
+  canal_whatsapp: z.boolean(),
+});
+
+export const logResendInstructions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => resendSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    if (!data.canal_email && !data.canal_whatsapp) {
+      throw new Error("Selecione ao menos um canal.");
+    }
+    const admin = await assertAdmin(context.userId);
+    const { error } = await admin.from("purchase_deliveries").insert({
+      purchase_id: data.id,
+      tipo: "instrucoes_pagamento",
+      arquivos: [],
+      enviado_email: data.canal_email,
+      enviado_whatsapp: data.canal_whatsapp,
+      enviado_por: context.userId,
+    });
+    if (error) {
+      console.error("[purchases.resend]", error);
+      throw new Error("Erro ao registrar reenvio.");
+    }
+    return { ok: true };
+  });
+
+export const listResendInstructions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => idSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { data: rows, error } = await admin
+      .from("purchase_deliveries")
+      .select("id, enviado_em, enviado_email, enviado_whatsapp")
+      .eq("purchase_id", data.id)
+      .eq("tipo", "instrucoes_pagamento")
+      .order("enviado_em", { ascending: false })
+      .limit(20);
+    if (error) {
+      console.error("[purchases.listResend]", error);
+      throw new Error("Erro ao carregar histórico.");
+    }
+    return rows ?? [];
+  });
+
 export const PURCHASE_STATUS_LABELS: Record<PurchaseStatus, string> = {
   aguardando_pagamento: "Aguardando pagamento",
   comprovante_recebido: "Comprovante recebido",
