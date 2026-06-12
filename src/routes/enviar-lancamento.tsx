@@ -367,82 +367,30 @@ function SubmitReleasePage() {
           </Section>
 
           <Section title="Imagens">
-            <Field label="Foto de capa (JPG/PNG/WEBP, até 10MB)" required>
-              <div className="flex items-center gap-4">
-                <div className="h-24 w-24 rounded-md bg-muted overflow-hidden flex items-center justify-center border">
-                  {coverPreview ? (
-                    <img src={coverPreview} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <Upload className="h-6 w-6 text-muted-foreground" />
-                  )}
-                </div>
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) void handleCover(f);
-                      e.target.value = "";
-                    }}
-                  />
-                  <Button type="button" variant="outline" size="sm" disabled={uploadingCover} asChild>
-                    <span>
-                      {uploadingCover ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                      {coverPath ? "Trocar capa" : "Enviar capa"}
-                    </span>
-                  </Button>
-                </label>
-              </div>
+            <Field label="Link do Google Drive da capa" required>
+              <Input
+                required
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={coverDriveUrl}
+                onChange={(e) => setCoverDriveUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Cole o link da arte de capa no Drive (JPG/PNG/WEBP). Marque como{" "}
+                <strong>“Qualquer pessoa com o link pode visualizar”</strong>.
+              </p>
             </Field>
 
-            <Field label={`Fotos de divulgação (até ${MAX_PROMO_PHOTOS}, 10MB cada)`}>
-              <label className="cursor-pointer inline-block">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    const fs = e.target.files;
-                    if (fs && fs.length) void handlePhotos(fs);
-                    e.target.value = "";
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={uploadingPhotos || photos.length >= MAX_PROMO_PHOTOS}
-                  asChild
-                >
-                  <span>
-                    {uploadingPhotos ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                    Adicionar fotos
-                  </span>
-                </Button>
-              </label>
-              {photos.length > 0 && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {photos.length} foto(s) enviada(s).{" "}
-                  <button
-                    type="button"
-                    className="underline"
-                    onClick={() => setPhotos([])}
-                  >
-                    Limpar
-                  </button>
-                </p>
-              )}
+            <Field label="Link do Google Drive das fotos de divulgação (opcional)">
+              <Input
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={photosDriveUrl}
+                onChange={(e) => setPhotosDriveUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Pasta do Drive com as fotos de divulgação. Deixe em branco se não tiver.
+              </p>
             </Field>
           </Section>
 
