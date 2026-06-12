@@ -139,6 +139,35 @@ function DashboardPage() {
               />
             </div>
           </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-xl">Compras</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin/compras">
+                  Ver compras <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Compras solicitadas" value={p?.total ?? 0} icon={ShoppingCart} />
+              <MetricCard
+                label="Comprovantes pendentes"
+                value={p?.aguardando_pagamento ?? 0}
+                icon={FileText}
+              />
+              <MetricCard
+                label="Pagamentos confirmados"
+                value={p?.pagamento_confirmado ?? 0}
+                icon={CreditCard}
+              />
+              <MetricCard
+                label="Arquivos enviados"
+                value={p?.arquivos_enviados ?? 0}
+                icon={Send}
+              />
+            </div>
+          </section>
         </>
       ) : null}
     </div>
