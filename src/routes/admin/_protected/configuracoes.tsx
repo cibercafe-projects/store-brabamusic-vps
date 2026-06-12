@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, KeyRound, Link as LinkIcon, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,20 +25,30 @@ function SettingsPage() {
     staleTime: 30_000,
   });
 
-  const [whatsapp, setWhatsapp] = useState("");
+  const [form, setForm] = useState({
+    whatsapp_number: "",
+    pix_key: "",
+    payment_link: "",
+    commercial_whatsapp: "",
+  });
 
   useEffect(() => {
-    if (query.data) setWhatsapp(query.data.whatsapp_number ?? "");
+    if (query.data) setForm(query.data);
   }, [query.data]);
 
   const mutation = useMutation({
-    mutationFn: (value: string) => saveFn({ data: { whatsapp_number: value } }),
+    mutationFn: () => saveFn({ data: form }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+      queryClient.invalidateQueries({ queryKey: ["purchase-settings"] });
       toast.success("Configurações salvas");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao salvar"),
   });
+
+  function update<K extends keyof typeof form>(k: K, v: string) {
+    setForm((f) => ({ ...f, [k]: v }));
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -49,50 +59,124 @@ function SettingsPage() {
         </p>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <MessageCircle className="h-4 w-4 text-accent" /> WhatsApp comercial
-          </CardTitle>
-          <CardDescription>
-            Número usado para abrir conversas a partir do formulário "Tenho interesse" do
-            catálogo. Use o formato internacional (ex: <code>5511999998888</code>). Deixe vazio
-            para que o WhatsApp peça o número manualmente.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {query.isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
-            </div>
-          ) : (
-            <>
+      {query.isLoading ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
+        </div>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <MessageCircle className="h-4 w-4 text-accent" /> WhatsApp do formulário de interesse
+              </CardTitle>
+              <CardDescription>
+                Número usado nos botões "Tenho interesse". Formato internacional (ex: 5511999998888).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="whatsapp">Número (com DDI)</Label>
                 <Input
                   id="whatsapp"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d+\s()-]/g, ""))}
+                  value={form.whatsapp_number}
+                  onChange={(e) =>
+                    update("whatsapp_number", e.target.value.replace(/[^\d+\s()-]/g, ""))
+                  }
                   placeholder="+55 11 99999-8888"
                   maxLength={30}
                 />
               </div>
-              <Button
-                onClick={() => mutation.mutate(whatsapp)}
-                disabled={mutation.isPending}
-              >
-                {mutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Salvando...
-                  </>
-                ) : (
-                  "Salvar"
-                )}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Phone className="h-4 w-4 text-accent" /> WhatsApp Comercial (fluxo de compra)
+              </CardTitle>
+              <CardDescription>
+                Número exibido no modal de compra e usado no botão "Falar com a Braba".
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="comm">Número (com DDI)</Label>
+                <Input
+                  id="comm"
+                  value={form.commercial_whatsapp}
+                  onChange={(e) =>
+                    update("commercial_whatsapp", e.target.value.replace(/[^\d+\s()-]/g, ""))
+                  }
+                  placeholder="+5511913401000"
+                  maxLength={30}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <KeyRound className="h-4 w-4 text-accent" /> Chave PIX
+              </CardTitle>
+              <CardDescription>
+                Exibida ao cliente no modal de compra quando ele escolhe PIX.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="pix">Chave</Label>
+                <Input
+                  id="pix"
+                  value={form.pix_key}
+                  onChange={(e) => update("pix_key", e.target.value)}
+                  placeholder="CPF, e-mail, telefone ou aleatória"
+                  maxLength={160}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <LinkIcon className="h-4 w-4 text-accent" /> Link de pagamento
+              </CardTitle>
+              <CardDescription>
+                Link externo (ex: cobrança bancária, Pix Copia&Cola, etc.) exibido como alternativa ao PIX.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="link">URL</Label>
+                <Input
+                  id="link"
+                  type="url"
+                  value={form.payment_link}
+                  onChange={(e) => update("payment_link", e.target.value)}
+                  placeholder="https://..."
+                  maxLength={500}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+            size="lg"
+          >
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Salvando...
+              </>
+            ) : (
+              "Salvar tudo"
+            )}
+          </Button>
+        </>
+      )}
     </div>
   );
 }

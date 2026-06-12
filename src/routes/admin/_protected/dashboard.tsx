@@ -14,10 +14,15 @@ import {
   MessageCircle,
   Handshake,
   Trophy,
+  ShoppingCart,
+  FileText,
+  CreditCard,
+  Send,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminMetrics } from "@/lib/beats.functions";
+import { getPurchaseDashboardCounts } from "@/lib/purchases.functions";
 
 
 export const Route = createFileRoute("/admin/_protected/dashboard")({
