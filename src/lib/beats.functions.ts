@@ -373,6 +373,75 @@ export const getBeatPreviewUploadUrl = createServerFn({ method: "POST" })
     return { path, token: signed.token };
   });
 
+// ===== Arquivos privados do beat (WAV / STEMS / Licença) =====
+const privateKindSchema = z.enum(["wav", "stems", "license"]);
+
+const PRIVATE_RULES: Record<
+  BeatPrivateKind,
+  { bucket: string; exts: readonly string[]; maxBytes: number }
+> = {
+  wav: { bucket: WAV_BUCKET, exts: ["wav"], maxBytes: 250 * 1024 * 1024 },
+  stems: { bucket: STEMS_BUCKET, exts: ["zip"], maxBytes: 500 * 1024 * 1024 },
+  license: { bucket: LICENSE_BUCKET, exts: ["pdf"], maxBytes: 20 * 1024 * 1024 },
+};
+
+export const getBeatPrivateUploadUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        kind: privateKindSchema,
+        ext: z.string().trim().toLowerCase().max(8),
+        beatId: z.string().uuid().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const rule = PRIVATE_RULES[data.kind];
+    if (!rule.exts.includes(data.ext)) {
+      throw new Error(`Extensão inválida. Use: ${rule.exts.join(", ")}`);
+    }
+    const folder = data.beatId ?? "new";
+    const path = `beats/${folder}/${data.kind}-${Date.now()}.${data.ext}`;
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from(rule.bucket)
+      .createSignedUploadUrl(path);
+    if (error) throw new Error(error.message);
+    return { path, token: signed.token, bucket: rule.bucket };
+  });
+
+export const removeBeatPrivateFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        beatId: z.string().uuid(),
+        kind: privateKindSchema,
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const col = `${data.kind}_path` as const;
+    const { data: row } = await supabaseAdmin
+      .from("beats")
+      .select(col)
+      .eq("id", data.beatId)
+      .maybeSingle();
+    const oldPath = (row as Record<string, string | null> | null)?.[col] ?? null;
+    if (oldPath) {
+      await supabaseAdmin.storage.from(PRIVATE_RULES[data.kind].bucket).remove([oldPath]);
+    }
+    const { error } = await supabaseAdmin
+      .from("beats")
+      .update({ [col]: null })
+      .eq("id", data.beatId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 export const signBeatMedia = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
