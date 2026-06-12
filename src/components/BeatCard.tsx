@@ -88,15 +88,15 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
             <Link
               to="/beat/$slug"
               params={{ slug: beat.slug }}
-              className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"
+              className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10"
             >
               Ver
             </Link>
             <button
               onClick={() => setInterestOpen(true)}
-              className="inline-flex items-center gap-1 rounded-full bg-accent text-accent-foreground px-3 py-1.5 text-xs font-bold hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-bold hover:opacity-90"
             >
-              <MessageCircle className="h-3 w-3" /> Interesse
+              <MessageCircle className="h-4 w-4" /> Interesse
             </button>
           </div>
         </div>
