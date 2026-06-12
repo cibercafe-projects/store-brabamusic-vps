@@ -152,10 +152,22 @@ function LancamentoDetail() {
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Letra</CardTitle>
+            <CardTitle className="text-base">Letra(s)</CardTitle>
           </CardHeader>
-          <CardContent>
-            <pre className="whitespace-pre-wrap text-sm font-sans">{r.lyrics}</pre>
+          <CardContent className="space-y-3">
+            {r.lyrics_drive_url && (
+              <Button asChild size="sm" variant="outline">
+                <a href={r.lyrics_drive_url} target="_blank" rel="noopener noreferrer">
+                  Baixar .zip no Drive
+                </a>
+              </Button>
+            )}
+            {r.lyrics && (
+              <pre className="whitespace-pre-wrap text-sm font-sans">{r.lyrics}</pre>
+            )}
+            {!r.lyrics_drive_url && !r.lyrics && (
+              <p className="text-sm text-muted-foreground">Nenhuma letra enviada.</p>
+            )}
           </CardContent>
         </Card>
 
