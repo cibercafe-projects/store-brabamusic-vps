@@ -46,7 +46,7 @@ function SubmitReleasePage() {
   const [releaseType, setReleaseType] = useState<ReleaseType>("single");
   const [releaseName, setReleaseName] = useState("");
   const [tracklist, setTracklist] = useState("");
-  const [lyrics, setLyrics] = useState("");
+  const [lyricsDriveUrl, setLyricsDriveUrl] = useState("");
   const [isrc, setIsrc] = useState("");
   const [audioDriveUrl, setAudioDriveUrl] = useState("");
   const [coverDriveUrl, setCoverDriveUrl] = useState("");
@@ -82,7 +82,8 @@ function SubmitReleasePage() {
           release_type: releaseType,
           release_name: releaseName,
           tracklist: isMulti ? tracklist : "",
-          lyrics,
+          lyrics: "",
+          lyrics_drive_url: lyricsDriveUrl.trim(),
           isrc,
           audio_drive_url: audioDriveUrl.trim(),
           cover_drive_url: coverDriveUrl.trim(),
@@ -109,11 +110,12 @@ function SubmitReleasePage() {
   const canSubmit = useMemo(() => {
     if (!DRIVE_RE.test(coverDriveUrl.trim())) return false;
     if (!DRIVE_RE.test(audioDriveUrl.trim())) return false;
+    if (!DRIVE_RE.test(lyricsDriveUrl.trim())) return false;
     if (photosDriveUrl.trim() && !DRIVE_RE.test(photosDriveUrl.trim())) return false;
     if (genres.length === 0 || moods.length === 0) return false;
     if (isMulti && tracklist.trim().length === 0) return false;
     return true;
-  }, [coverDriveUrl, audioDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist]);
+  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist]);
 
   if (submitted) {
     return (
@@ -259,18 +261,27 @@ function SubmitReleasePage() {
               </p>
             </Field>
 
-            <Field label={isMulti ? `Letras das músicas` : "Letra da música"} required>
-              <Textarea
+            <Field
+              label={
+                isMulti
+                  ? "Link do Google Drive (.zip com as letras)"
+                  : "Link do Google Drive (.zip com a letra)"
+              }
+              required
+            >
+              <Input
                 required
-                rows={isMulti ? 10 : 6}
-                value={lyrics}
-                onChange={(e) => setLyrics(e.target.value)}
-                placeholder={
-                  isMulti
-                    ? "Cole as letras separando por faixa. Ex:\n\n## 1. Nome da faixa\n<letra>\n\n## 2. Outra faixa\n<letra>"
-                    : "Cole a letra completa da música."
-                }
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={lyricsDriveUrl}
+                onChange={(e) => setLyricsDriveUrl(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                {isMulti
+                  ? "Envie um arquivo .zip contendo um documento por faixa (PDF, DOC, DOCX ou TXT)."
+                  : "Envie um arquivo .zip contendo o documento com a letra (PDF, DOC, DOCX ou TXT)."}{" "}
+                Marque o link como <strong>“Qualquer pessoa com o link pode visualizar”</strong>.
+              </p>
             </Field>
 
             <Field label={isMulti ? "ISRCs (opcional)" : "ISRC (opcional)"}>

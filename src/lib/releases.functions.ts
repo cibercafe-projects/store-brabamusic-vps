@@ -110,7 +110,13 @@ const submitSchema = z
     release_type: z.enum(["single", "ep", "album"]),
     release_name: z.string().trim().min(1).max(200),
     tracklist: z.string().trim().max(5000).optional().default(""),
-    lyrics: z.string().trim().min(1).max(20000),
+    lyrics: z.string().trim().max(20000).optional().default(""),
+    lyrics_drive_url: z
+      .string()
+      .trim()
+      .url("Informe uma URL válida")
+      .max(500)
+      .regex(driveUrlRegex, "Use um link do Google Drive"),
     isrc: z.string().trim().max(2000).optional().default(""),
     audio_drive_url: z
       .string()
@@ -170,7 +176,8 @@ export const submitRelease = createServerFn({ method: "POST" })
         release_type: data.release_type,
         release_name: data.release_name,
         tracklist: data.tracklist || null,
-        lyrics: data.lyrics,
+        lyrics: data.lyrics || null,
+        lyrics_drive_url: data.lyrics_drive_url,
         isrc: data.isrc ? data.isrc.toUpperCase() : null,
         audio_drive_url: data.audio_drive_url,
         cover_drive_url: data.cover_drive_url,
