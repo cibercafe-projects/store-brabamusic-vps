@@ -107,12 +107,13 @@ function SubmitReleasePage() {
   });
 
   const canSubmit = useMemo(() => {
-    if (!coverPath) return false;
+    if (!DRIVE_RE.test(coverDriveUrl.trim())) return false;
     if (!DRIVE_RE.test(audioDriveUrl.trim())) return false;
+    if (photosDriveUrl.trim() && !DRIVE_RE.test(photosDriveUrl.trim())) return false;
     if (genres.length === 0 || moods.length === 0) return false;
     if (isMulti && tracklist.trim().length === 0) return false;
     return true;
-  }, [coverPath, audioDriveUrl, genres, moods, isMulti, tracklist]);
+  }, [coverDriveUrl, audioDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist]);
 
   if (submitted) {
     return (
