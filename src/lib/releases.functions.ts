@@ -161,8 +161,10 @@ export const submitRelease = createServerFn({ method: "POST" })
         artist_name: data.artist_name,
         release_type: data.release_type,
         release_name: data.release_name,
+        tracklist: data.tracklist || null,
         lyrics: data.lyrics,
-        isrc: data.isrc.toUpperCase(),
+        isrc: data.isrc ? data.isrc.toUpperCase() : null,
+        audio_drive_url: data.audio_drive_url,
         cover_path: data.cover_path,
         genres: data.genres,
         moods: data.moods,
@@ -182,20 +184,6 @@ export const submitRelease = createServerFn({ method: "POST" })
     }
 
     const releaseId = inserted.id;
-
-    if (data.audio_files.length) {
-      const { error: aErr } = await admin.from("release_audio_files").insert(
-        data.audio_files.map((f, i) => ({
-          release_id: releaseId,
-          path: f.path,
-          original_name: f.original_name,
-          size_bytes: f.size_bytes,
-          format: f.format,
-          order_index: i,
-        })),
-      );
-      if (aErr) console.error("[releases.audio]", aErr);
-    }
 
     if (data.promo_photos.length) {
       const { error: pErr } = await admin.from("release_promo_photos").insert(
