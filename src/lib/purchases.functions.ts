@@ -261,7 +261,7 @@ export const getPurchase = createServerFn({ method: "GET" })
     const { data: row, error } = await admin
       .from("purchase_requests")
       .select(
-        "*, beat:beats(id, nome, slug, capa_url, preco, produtora:producers(id, nome_artistico, slug))",
+        "*, beat:beats(id, nome, slug, capa_url, preco, wav_path, stems_path, license_path, produtora:producers(id, nome_artistico, slug))",
       )
       .eq("id", data.id)
       .maybeSingle();
