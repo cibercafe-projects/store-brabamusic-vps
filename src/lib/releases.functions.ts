@@ -110,7 +110,13 @@ const submitSchema = z
     release_type: z.enum(["single", "ep", "album"]),
     release_name: z.string().trim().min(1).max(200),
     tracklist: z.string().trim().max(5000).optional().default(""),
-    lyrics: z.string().trim().min(1).max(20000),
+    lyrics: z.string().trim().max(20000).optional().default(""),
+    lyrics_drive_url: z
+      .string()
+      .trim()
+      .url("Informe uma URL válida")
+      .max(500)
+      .regex(driveUrlRegex, "Use um link do Google Drive"),
     isrc: z.string().trim().max(2000).optional().default(""),
     audio_drive_url: z
       .string()
