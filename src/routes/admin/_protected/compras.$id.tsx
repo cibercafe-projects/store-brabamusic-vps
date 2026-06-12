@@ -67,6 +67,7 @@ function PurchaseDetailPage() {
   const [status, setStatus] = useState<PurchaseStatus>("aguardando_pagamento");
   const [notes, setNotes] = useState("");
   const [loadingReceipt, setLoadingReceipt] = useState(false);
+  const [deliveryOpen, setDeliveryOpen] = useState(false);
 
   useEffect(() => {
     if (query.data) {
