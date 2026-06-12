@@ -56,13 +56,20 @@ function MetricCard({
 
 function DashboardPage() {
   const getMetrics = useServerFn(getAdminMetrics);
+  const getPurchaseCounts = useServerFn(getPurchaseDashboardCounts);
   const query = useQuery({
     queryKey: ["admin", "metrics"],
     queryFn: () => getMetrics(),
     staleTime: 30_000,
   });
+  const pQuery = useQuery({
+    queryKey: ["admin", "purchase-counts"],
+    queryFn: () => getPurchaseCounts(),
+    staleTime: 30_000,
+  });
 
   const m = query.data;
+  const p = pQuery.data;
 
   return (
     <div className="space-y-6">
