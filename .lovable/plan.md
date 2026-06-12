@@ -1,64 +1,87 @@
-## Ajustes no formulário `/enviar-lancamento`
+## Sprint 9 — Fluxo de Compra Assistida
 
-### 1. ISRC — opcional
-- Remover obrigatoriedade no Zod (`isrc: z.string().trim().regex(isrcRegex).max(20).optional().or(z.literal(""))`).
-- Label muda para "ISRC (opcional)" e remove asterisco.
-- Texto auxiliar: "Se ainda não tiver, deixe em branco — geramos/atribuímos depois."
-- Para EP/Álbum, vira "ISRCs (opcional)" — textarea livre, 1 por linha.
+Implementação completa do fluxo comercial de compra de beats, **sem gateway de pagamento**. Tudo é confirmado manualmente pela equipe Braba.
 
-### 2. Upload de áudio → URL do Google Drive
-- Remover totalmente os componentes de upload de áudio, o bucket `release-audio` deixa de ser usado pelo form (mantido no storage, sem mudança).
-- Novo campo único: **"Link do Google Drive com a(s) música(s) *"** — `audio_drive_url`, tipo URL.
-  - Validação: precisa ser uma URL `drive.google.com` ou `docs.google.com`.
-  - Texto auxiliar: "Pode ser uma pasta com 1 ou várias faixas. Garanta que o link esteja como 'Qualquer pessoa com o link pode visualizar'."
-- Server function: remover `audio_files[]` do schema; adicionar `audio_drive_url` em `releases` (nova coluna `audio_drive_url text`).
-- `release_audio_files` deixa de ser populada pelo form (tabela permanece para histórico, sem alteração de schema).
+### Decisões
 
-### 3. Lógica Single vs EP/Álbum (campos adaptativos)
-Renderização condicional baseada em `release_type`:
+- Sem login para o comprador (público), igual ao envio de lançamento.
+- Token único (`continuation_token` UUID) para envio posterior do comprovante via link.
+- Comprovante salvo em bucket privado `purchase-receipts`, acessado por server functions com `supabaseAdmin` (signed URLs).
+- Notificações por e-mail via Lovable Emails (app email transacional) — exigirá configurar domínio de e-mail. WhatsApp via `wa.me` link aberto no navegador.
+- Configurações (chave PIX, link de pagamento, WhatsApp comercial) gerenciadas em `app_settings` (já existente), com novas chaves.
 
-**Single (1 música):**
-- "Nome da música *" (`release_name`)
-- "Letra da música *" (`lyrics`) — textarea
-- "ISRC (opcional)" — input único
-- "Sobre a música *" (`about_release`)
-- "Ficha técnica *" (`technical_sheet`) — "Quem produziu, mixou, masterizou esta música"
+### Banco de dados (migração)
 
-**EP / Álbum (várias músicas):**
-- "Nome do EP/Álbum *" (`release_name`) — nome do projeto
-- "Lista de músicas *" (`tracklist`) — textarea grande, placeholder "Uma música por linha, na ordem do projeto. Ex:\n1. Intro\n2. Faixa título\n3. ..."
-  - Helper: "Liste todas as faixas que estão no link do Drive, na ordem oficial."
-- "Letras *" (`lyrics`) — textarea grande, helper: "Cole as letras separando por faixa (ex: '## Faixa 1 - Nome' antes de cada letra)."
-- "ISRCs (opcional)" — textarea, 1 por linha.
-- "Sobre o EP/Álbum *" (`about_release`)
-- "Ficha técnica *" — "Produção, mix e master de todas as faixas."
+Tabela `public.purchase_requests`:
+- `id uuid pk`
+- `beat_id uuid → beats`
+- `nome_cliente`, `email`, `whatsapp`, `instagram` (nullable)
+- `forma_pagamento` enum `pix | link`
+- `termos_aceitos boolean`
+- `valor numeric(10,2)` (snapshot do preço)
+- `status` enum `aguardando_pagamento | comprovante_recebido | pagamento_confirmado | arquivos_enviados | cancelado`
+- `receipt_path text` (nullable)
+- `continuation_token uuid unique`
+- `admin_notes text`
+- `created_at`, `updated_at`
 
-Os labels/legendas dos demais campos comuns (gêneros, moods, instrumentos, royalties, sobre o artista, fotos, capa) ficam iguais, mas com microcopy ajustada para refletir "projeto" em vez de "música" quando EP/Álbum.
+RLS: nenhuma policy pública. Toda escrita/leitura via server fn com `supabaseAdmin` (após validação). GRANT só `service_role`.
 
-### 4. Schema do banco (1 migração nova)
-- `ALTER TABLE public.releases ADD COLUMN audio_drive_url text;`
-- `ALTER TABLE public.releases ALTER COLUMN isrc DROP NOT NULL;` (se for NOT NULL hoje — confirmar; se já é nullable, pular).
-- Sem mudar `release_audio_files` / `release_promo_photos`.
+Novas chaves em `app_settings`: `pix_key`, `payment_link`, `commercial_whatsapp` (default `+5511913401000`).
 
-### 5. Server function `submitRelease`
-- Trocar `audio_files` por `audio_drive_url` no schema Zod e no insert.
-- ISRC: aceitar vazio/`null`.
-- Validar URL do Drive no servidor (mesma regex do client).
+Bucket privado `purchase-receipts`.
 
-### 6. Detalhe admin `/admin/lancamentos/$id`
-- Substituir bloco "Áudios" por "Link do Google Drive": botão "Abrir no Drive" (link externo, target=_blank, rel=noopener).
-- Mostrar tracklist (quando preenchida) em bloco separado para EP/Álbum.
-- Esconder "Áudios" antigos quando não houver `release_audio_files` (registros novos não terão).
+### Server functions
 
-### 7. Fora de escopo
-- Não baixar arquivos do Drive automaticamente.
-- Não validar permissão pública do link.
-- Não migrar releases antigos.
+`src/lib/purchases.functions.ts`:
+- `getPurchaseSettings` (pública) → retorna `pix_key`, `payment_link`, `commercial_whatsapp`.
+- `createPurchaseRequest` (pública) → valida Zod, insere registro, gera token, dispara e-mail, retorna `{ id, continuation_token }`.
+- `uploadReceipt` (pública, recebe token + base64) → valida tipo/tamanho, sobe no bucket via admin, marca status `comprovante_recebido`.
+- `getPurchaseByToken` (pública) → resumo para a página `/enviar-comprovante/:token`.
+- Admin: `listPurchases`, `getPurchase`, `updatePurchaseStatus`, `getReceiptSignedUrl` (com `requireSupabaseAuth` + check admin).
+- `getPurchaseDashboardCounts` para dashboard.
 
-### Arquivos
-- Migração SQL nova.
-- `src/lib/releases.functions.ts` — schema + insert.
-- `src/lib/releases.constants.ts` — helper de regex Drive.
-- `src/routes/enviar-lancamento.tsx` — UI condicional, novo campo, novo tracklist.
-- `src/routes/admin/_protected/lancamentos.$id.tsx` — mostrar link Drive + tracklist.
-- `CHANGELOG.md`.
+### Frontend público
+
+- **Botão COMPRAR** em `BeatCard.tsx` e `src/routes/beat.$slug.tsx`.
+- **`PurchaseDialog`** (novo componente) com etapas:
+  1. Resumo (nome, produtora, valor) + escolha PIX/Link + dados do PIX/link + WhatsApp comercial.
+  2. Form comprador + checkbox termos (link para `/termos-uso`).
+  3. Submit → recebe token, abre etapa "Envio do Comprovante" com upload imediato OU "Enviar depois".
+  4. Após submeter, abre `wa.me/5511913401000?text=...` em nova aba.
+- **Página `/enviar-comprovante/$token`**: mostra resumo + upload (reaproveita componente).
+
+### E-mail
+
+- Verificar se há domínio de e-mail configurado. Se não houver, mostrar o setup dialog e parar. (O remetente real será o domínio verificado; usaremos "Braba Music" como display name e mencionaremos `braba.ent@gmail.com` como contato no corpo do e-mail, já que envios diretos por essa conta Gmail não são suportados pelo Lovable Emails.)
+- Após domínio + infra prontos, scaffold de app email + template `purchase-confirmation` com beat, valor, link `/enviar-comprovante/:token`.
+
+### Backoffice
+
+- Item "Compras" na sidebar (ícone `ShoppingCart`).
+- `/admin/compras` (lista com filtros por status, busca por cliente/beat).
+- `/admin/compras/$id` (detalhe): visualizar/baixar comprovante (signed URL), trocar status, botões WhatsApp (`wa.me`) e e-mail (`mailto:`).
+- `/admin/configuracoes`: adicionar campos PIX, link de pagamento, WhatsApp comercial.
+- Dashboard: 4 cards novos (solicitadas, comprovantes pendentes, pagamentos confirmados, arquivos enviados).
+
+### Arquivos a criar/editar
+
+**Criar**
+- `supabase/migrations/<ts>_purchase_requests.sql`
+- `src/lib/purchases.functions.ts`
+- `src/components/purchase/PurchaseDialog.tsx`
+- `src/components/purchase/ReceiptUploader.tsx`
+- `src/routes/enviar-comprovante.$token.tsx`
+- `src/routes/admin/_protected/compras.index.tsx`
+- `src/routes/admin/_protected/compras.$id.tsx`
+
+**Editar**
+- `src/components/BeatCard.tsx`, `src/routes/beat.$slug.tsx` — botão Comprar
+- `src/components/admin/AppSidebar.tsx` — item Compras
+- `src/lib/settings.functions.ts` — novos campos
+- `src/routes/admin/_protected/configuracoes.tsx` — novos inputs
+- `src/routes/admin/_protected/dashboard.tsx` — novos cards
+
+### Observação sobre o remetente
+
+`braba.ent@gmail.com` é Gmail e não pode ser usado como `From:` no Lovable Emails. Os e-mails sairão do domínio verificado (`notify.<seu-domínio>`) com "Braba Music" no nome do remetente, e mencionaremos `braba.ent@gmail.com` como contato dentro do conteúdo. Se preferir manter Gmail literal, precisaríamos do conector Gmail (compras enviadas a partir da sua caixa) — me avise.
