@@ -279,6 +279,7 @@ export type Database = {
           about_artist: string
           about_release: string
           artist_name: string
+          audio_drive_url: string | null
           cover_path: string
           cpf: string
           created_at: string
@@ -288,7 +289,7 @@ export type Database = {
           has_videoclip: boolean
           id: string
           instruments: string[]
-          isrc: string
+          isrc: string | null
           lyrics: string
           moods: string[]
           release_name: string
@@ -296,12 +297,14 @@ export type Database = {
           royalties: string
           status: Database["public"]["Enums"]["release_status"]
           technical_sheet: string
+          tracklist: string | null
           updated_at: string
         }
         Insert: {
           about_artist: string
           about_release: string
           artist_name: string
+          audio_drive_url?: string | null
           cover_path: string
           cpf: string
           created_at?: string
@@ -311,7 +314,7 @@ export type Database = {
           has_videoclip?: boolean
           id?: string
           instruments?: string[]
-          isrc: string
+          isrc?: string | null
           lyrics: string
           moods?: string[]
           release_name: string
@@ -319,12 +322,14 @@ export type Database = {
           royalties: string
           status?: Database["public"]["Enums"]["release_status"]
           technical_sheet: string
+          tracklist?: string | null
           updated_at?: string
         }
         Update: {
           about_artist?: string
           about_release?: string
           artist_name?: string
+          audio_drive_url?: string | null
           cover_path?: string
           cpf?: string
           created_at?: string
@@ -334,7 +339,7 @@ export type Database = {
           has_videoclip?: boolean
           id?: string
           instruments?: string[]
-          isrc?: string
+          isrc?: string | null
           lyrics?: string
           moods?: string[]
           release_name?: string
@@ -342,6 +347,7 @@ export type Database = {
           royalties?: string
           status?: Database["public"]["Enums"]["release_status"]
           technical_sheet?: string
+          tracklist?: string | null
           updated_at?: string
         }
         Relationships: []
