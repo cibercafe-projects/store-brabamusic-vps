@@ -90,17 +90,23 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
             <Link
               to="/beat/$slug"
               params={{ slug: beat.slug }}
-              className="flex-1 text-center rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10"
+              className="flex-1 text-center rounded-full border border-white/15 px-3 py-2 text-xs font-semibold hover:bg-white/10"
             >
               Ver
             </Link>
             <button
               onClick={() => setInterestOpen(true)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-bold hover:opacity-90"
+              className="flex-1 inline-flex items-center justify-center gap-1 rounded-full border border-white/15 px-3 py-2 text-xs font-semibold hover:bg-white/10"
             >
-              <MessageCircle className="h-4 w-4" /> Interesse
+              <MessageCircle className="h-3.5 w-3.5" /> Interesse
             </button>
           </div>
+          <button
+            onClick={() => setPurchaseOpen(true)}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-bold hover:opacity-90"
+          >
+            <ShoppingCart className="h-4 w-4" /> COMPRAR
+          </button>
         </div>
       </div>
       <InterestForm
@@ -109,6 +115,14 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
         produtora={beat.produtora_nome}
         open={interestOpen}
         onOpenChange={setInterestOpen}
+      />
+      <PurchaseDialog
+        open={purchaseOpen}
+        onOpenChange={setPurchaseOpen}
+        beatId={beat.id}
+        beatName={beat.nome}
+        produtora={beat.produtora_nome}
+        preco={beat.preco}
       />
     </article>
   );
