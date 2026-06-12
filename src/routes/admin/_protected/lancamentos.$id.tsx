@@ -152,17 +152,15 @@ function LancamentoDetail() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">
-              Arquivos de áudio ({r.audio_files.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {r.audio_files.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum arquivo.</p>
-            ) : (
-              r.audio_files.map((a) => (
+        {r.audio_files.length > 0 && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base">
+                Arquivos de áudio antigos ({r.audio_files.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {r.audio_files.map((a) => (
                 <div
                   key={a.id}
                   className="flex items-center justify-between gap-3 rounded border border-white/10 p-3"
@@ -182,10 +180,10 @@ function LancamentoDetail() {
                     </Button>
                   )}
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {r.promo_photos.length > 0 && (
           <Card className="md:col-span-2">
