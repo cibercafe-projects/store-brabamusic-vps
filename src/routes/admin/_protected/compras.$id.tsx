@@ -311,6 +311,21 @@ function PurchaseDetailPage() {
           </CardContent>
         </Card>
 
+        {(p.status === "aguardando_pagamento" || p.status === "comprovante_recebido") && (
+          <ResendInstructionsCard
+            purchase={{
+              id: p.id,
+              nome_cliente: p.nome_cliente,
+              email: p.email,
+              whatsapp: p.whatsapp,
+              valor: p.valor as number | string | null,
+              continuation_token: p.continuation_token as string,
+              forma_pagamento: p.forma_pagamento,
+              beat: beat ? { nome: beat.nome } : null,
+            }}
+          />
+        )}
+
         <Card className="md:col-span-2 border-accent/30">
           <CardHeader>
             <CardTitle className="text-base inline-flex items-center gap-2">
