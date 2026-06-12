@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProdutoraSlugRouteImport } from './routes/produtora.$slug'
 import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
+import { Route as EnviarComprovanteTokenRouteImport } from './routes/enviar-comprovante.$token'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
@@ -31,7 +32,9 @@ import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_pro
 import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/_protected/configuracoes'
 import { Route as AdminProtectedBeatsRouteImport } from './routes/admin/_protected/beats'
 import { Route as AdminProtectedLancamentosIndexRouteImport } from './routes/admin/_protected/lancamentos.index'
+import { Route as AdminProtectedComprasIndexRouteImport } from './routes/admin/_protected/compras.index'
 import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
+import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
 
 const TermosUsoRoute = TermosUsoRouteImport.update({
   id: '/termos-uso',
@@ -93,6 +96,11 @@ const ProdutorSlugRoute = ProdutorSlugRouteImport.update({
   path: '/produtor/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnviarComprovanteTokenRoute = EnviarComprovanteTokenRouteImport.update({
+  id: '/enviar-comprovante/$token',
+  path: '/enviar-comprovante/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BeatSlugRoute = BeatSlugRouteImport.update({
   id: '/beat/$slug',
   path: '/beat/$slug',
@@ -145,12 +153,23 @@ const AdminProtectedLancamentosIndexRoute =
     path: '/lancamentos/',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedComprasIndexRoute =
+  AdminProtectedComprasIndexRouteImport.update({
+    id: '/compras/',
+    path: '/compras/',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
 const AdminProtectedLancamentosIdRoute =
   AdminProtectedLancamentosIdRouteImport.update({
     id: '/lancamentos/$id',
     path: '/lancamentos/$id',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedComprasIdRoute = AdminProtectedComprasIdRouteImport.update({
+  id: '/compras/$id',
+  path: '/compras/$id',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -164,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/termos-uso': typeof TermosUsoRoute
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
+  '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -173,7 +193,9 @@ export interface FileRoutesByFullPath {
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
+  '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/admin/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -188,6 +210,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
+  '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/beats': typeof AdminProtectedBeatsRoute
@@ -196,7 +219,9 @@ export interface FileRoutesByTo {
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
+  '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/admin/compras': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos': typeof AdminProtectedLancamentosIndexRoute
 }
 export interface FileRoutesById {
@@ -213,6 +238,7 @@ export interface FileRoutesById {
   '/admin/_protected': typeof AdminProtectedRouteRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
+  '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -222,7 +248,9 @@ export interface FileRoutesById {
   '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
+  '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/_protected/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/admin/_protected/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/_protected/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
 export interface FileRouteTypes {
@@ -239,6 +267,7 @@ export interface FileRouteTypes {
     | '/termos-uso'
     | '/admin/login'
     | '/beat/$slug'
+    | '/enviar-comprovante/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
     | '/admin/'
@@ -248,7 +277,9 @@ export interface FileRouteTypes {
     | '/admin/leads'
     | '/admin/produtoras'
     | '/admin/usuarios'
+    | '/admin/compras/$id'
     | '/admin/lancamentos/$id'
+    | '/admin/compras/'
     | '/admin/lancamentos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -263,6 +294,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/login'
     | '/beat/$slug'
+    | '/enviar-comprovante/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
     | '/admin/beats'
@@ -271,7 +303,9 @@ export interface FileRouteTypes {
     | '/admin/leads'
     | '/admin/produtoras'
     | '/admin/usuarios'
+    | '/admin/compras/$id'
     | '/admin/lancamentos/$id'
+    | '/admin/compras'
     | '/admin/lancamentos'
   id:
     | '__root__'
@@ -287,6 +321,7 @@ export interface FileRouteTypes {
     | '/admin/_protected'
     | '/admin/login'
     | '/beat/$slug'
+    | '/enviar-comprovante/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
     | '/admin/'
@@ -296,7 +331,9 @@ export interface FileRouteTypes {
     | '/admin/_protected/leads'
     | '/admin/_protected/produtoras'
     | '/admin/_protected/usuarios'
+    | '/admin/_protected/compras/$id'
     | '/admin/_protected/lancamentos/$id'
+    | '/admin/_protected/compras/'
     | '/admin/_protected/lancamentos/'
   fileRoutesById: FileRoutesById
 }
@@ -311,6 +348,7 @@ export interface RootRouteChildren {
   ProdutoresRoute: typeof ProdutoresRoute
   TermosUsoRoute: typeof TermosUsoRoute
   BeatSlugRoute: typeof BeatSlugRoute
+  EnviarComprovanteTokenRoute: typeof EnviarComprovanteTokenRoute
   ProdutorSlugRoute: typeof ProdutorSlugRoute
   ProdutoraSlugRoute: typeof ProdutoraSlugRoute
 }
@@ -401,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdutorSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/enviar-comprovante/$token': {
+      id: '/enviar-comprovante/$token'
+      path: '/enviar-comprovante/$token'
+      fullPath: '/enviar-comprovante/$token'
+      preLoaderRoute: typeof EnviarComprovanteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/beat/$slug': {
       id: '/beat/$slug'
       path: '/beat/$slug'
@@ -471,11 +516,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedLancamentosIndexRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/compras/': {
+      id: '/admin/_protected/compras/'
+      path: '/compras'
+      fullPath: '/admin/compras/'
+      preLoaderRoute: typeof AdminProtectedComprasIndexRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/lancamentos/$id': {
       id: '/admin/_protected/lancamentos/$id'
       path: '/lancamentos/$id'
       fullPath: '/admin/lancamentos/$id'
       preLoaderRoute: typeof AdminProtectedLancamentosIdRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/compras/$id': {
+      id: '/admin/_protected/compras/$id'
+      path: '/compras/$id'
+      fullPath: '/admin/compras/$id'
+      preLoaderRoute: typeof AdminProtectedComprasIdRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
   }
@@ -488,7 +547,9 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
   AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
+  AdminProtectedComprasIdRoute: typeof AdminProtectedComprasIdRoute
   AdminProtectedLancamentosIdRoute: typeof AdminProtectedLancamentosIdRoute
+  AdminProtectedComprasIndexRoute: typeof AdminProtectedComprasIndexRoute
   AdminProtectedLancamentosIndexRoute: typeof AdminProtectedLancamentosIndexRoute
 }
 
@@ -499,7 +560,9 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
   AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
+  AdminProtectedComprasIdRoute: AdminProtectedComprasIdRoute,
   AdminProtectedLancamentosIdRoute: AdminProtectedLancamentosIdRoute,
+  AdminProtectedComprasIndexRoute: AdminProtectedComprasIndexRoute,
   AdminProtectedLancamentosIndexRoute: AdminProtectedLancamentosIndexRoute,
 }
 
@@ -533,6 +596,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProdutoresRoute: ProdutoresRoute,
   TermosUsoRoute: TermosUsoRoute,
   BeatSlugRoute: BeatSlugRoute,
+  EnviarComprovanteTokenRoute: EnviarComprovanteTokenRoute,
   ProdutorSlugRoute: ProdutorSlugRoute,
   ProdutoraSlugRoute: ProdutoraSlugRoute,
 }

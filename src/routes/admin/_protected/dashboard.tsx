@@ -14,10 +14,15 @@ import {
   MessageCircle,
   Handshake,
   Trophy,
+  ShoppingCart,
+  FileText,
+  CreditCard,
+  Send,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminMetrics } from "@/lib/beats.functions";
+import { getPurchaseDashboardCounts } from "@/lib/purchases.functions";
 
 
 export const Route = createFileRoute("/admin/_protected/dashboard")({
@@ -51,13 +56,20 @@ function MetricCard({
 
 function DashboardPage() {
   const getMetrics = useServerFn(getAdminMetrics);
+  const getPurchaseCounts = useServerFn(getPurchaseDashboardCounts);
   const query = useQuery({
     queryKey: ["admin", "metrics"],
     queryFn: () => getMetrics(),
     staleTime: 30_000,
   });
+  const pQuery = useQuery({
+    queryKey: ["admin", "purchase-counts"],
+    queryFn: () => getPurchaseCounts(),
+    staleTime: 30_000,
+  });
 
   const m = query.data;
+  const p = pQuery.data;
 
   return (
     <div className="space-y-6">
@@ -124,6 +136,35 @@ function DashboardPage() {
                 value={m.leadsConvertidos}
                 icon={Trophy}
                 hint="Pagos + entregues"
+              />
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-xl">Compras</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin/compras">
+                  Ver compras <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Compras solicitadas" value={p?.total ?? 0} icon={ShoppingCart} />
+              <MetricCard
+                label="Comprovantes pendentes"
+                value={p?.aguardando_pagamento ?? 0}
+                icon={FileText}
+              />
+              <MetricCard
+                label="Pagamentos confirmados"
+                value={p?.pagamento_confirmado ?? 0}
+                icon={CreditCard}
+              />
+              <MetricCard
+                label="Arquivos enviados"
+                value={p?.arquivos_enviados ?? 0}
+                icon={Send}
               />
             </div>
           </section>
