@@ -280,7 +280,8 @@ export type Database = {
           about_release: string
           artist_name: string
           audio_drive_url: string | null
-          cover_path: string
+          cover_drive_url: string | null
+          cover_path: string | null
           cpf: string
           created_at: string
           email: string
@@ -292,6 +293,7 @@ export type Database = {
           isrc: string | null
           lyrics: string
           moods: string[]
+          photos_drive_url: string | null
           release_name: string
           release_type: Database["public"]["Enums"]["release_type"]
           royalties: string
@@ -305,7 +307,8 @@ export type Database = {
           about_release: string
           artist_name: string
           audio_drive_url?: string | null
-          cover_path: string
+          cover_drive_url?: string | null
+          cover_path?: string | null
           cpf: string
           created_at?: string
           email: string
@@ -317,6 +320,7 @@ export type Database = {
           isrc?: string | null
           lyrics: string
           moods?: string[]
+          photos_drive_url?: string | null
           release_name: string
           release_type: Database["public"]["Enums"]["release_type"]
           royalties: string
@@ -330,7 +334,8 @@ export type Database = {
           about_release?: string
           artist_name?: string
           audio_drive_url?: string | null
-          cover_path?: string
+          cover_drive_url?: string | null
+          cover_path?: string | null
           cpf?: string
           created_at?: string
           email?: string
@@ -342,6 +347,7 @@ export type Database = {
           isrc?: string | null
           lyrics?: string
           moods?: string[]
+          photos_drive_url?: string | null
           release_name?: string
           release_type?: Database["public"]["Enums"]["release_type"]
           royalties?: string

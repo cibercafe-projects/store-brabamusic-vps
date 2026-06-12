@@ -102,6 +102,13 @@ function LancamentoDetail() {
           <p className="text-xs text-muted-foreground mt-1">
             Enviado em {new Date(r.created_at).toLocaleString("pt-BR")}
           </p>
+          {r.cover_drive_url && (
+            <Button asChild size="sm" variant="outline" className="mt-3">
+              <a href={r.cover_drive_url} target="_blank" rel="noopener noreferrer">
+                Abrir capa no Drive
+              </a>
+            </Button>
+          )}
         </div>
       </header>
 
@@ -185,11 +192,26 @@ function LancamentoDetail() {
           </Card>
         )}
 
+        {r.photos_drive_url && (
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base">Fotos de divulgação</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button asChild size="sm" variant="outline">
+                <a href={r.photos_drive_url} target="_blank" rel="noopener noreferrer">
+                  Abrir fotos no Drive
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {r.promo_photos.length > 0 && (
           <Card className="md:col-span-2">
             <CardHeader>
               <CardTitle className="text-base">
-                Fotos de divulgação ({r.promo_photos.length})
+                Fotos antigas ({r.promo_photos.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
