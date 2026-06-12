@@ -118,7 +118,19 @@ const submitSchema = z
       .url("Informe uma URL válida")
       .max(500)
       .regex(driveUrlRegex, "Use um link do Google Drive"),
-    cover_path: z.string().min(3).max(300),
+    cover_drive_url: z
+      .string()
+      .trim()
+      .url("Informe uma URL válida")
+      .max(500)
+      .regex(driveUrlRegex, "Use um link do Google Drive"),
+    photos_drive_url: z
+      .string()
+      .trim()
+      .max(500)
+      .optional()
+      .default("")
+      .refine((v) => !v || driveUrlRegex.test(v), "Use um link do Google Drive"),
     genres: z.array(z.string().max(60)).min(1, "Selecione ao menos 1 gênero").max(10),
     moods: z.array(z.string().max(60)).min(1, "Selecione ao menos 1 mood").max(10),
     instruments: z.array(z.string().max(60)).max(20).default([]),
@@ -127,10 +139,6 @@ const submitSchema = z
     about_artist: z.string().trim().min(1).max(5000),
     about_release: z.string().trim().min(1).max(5000),
     has_videoclip: z.boolean(),
-    promo_photos: z
-      .array(z.object({ path: z.string().min(3).max(300) }))
-      .max(MAX_PROMO_PHOTOS)
-      .default([]),
     // anti-spam
     website: z.string().max(0, "Bot").optional().default(""),
     started_at: z.number().int().positive(),
