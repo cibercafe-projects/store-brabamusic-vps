@@ -33,6 +33,7 @@ import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/
 import { Route as AdminProtectedBeatsRouteImport } from './routes/admin/_protected/beats'
 import { Route as AdminProtectedLancamentosIndexRouteImport } from './routes/admin/_protected/lancamentos.index'
 import { Route as AdminProtectedComprasIndexRouteImport } from './routes/admin/_protected/compras.index'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
 import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
 
@@ -159,6 +160,12 @@ const AdminProtectedComprasIndexRoute =
     path: '/compras/',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminProtectedLancamentosIdRoute =
   AdminProtectedLancamentosIdRouteImport.update({
     id: '/lancamentos/$id',
@@ -195,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/admin/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
@@ -221,6 +229,7 @@ export interface FileRoutesByTo {
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/admin/compras': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos': typeof AdminProtectedLancamentosIndexRoute
 }
@@ -250,6 +259,7 @@ export interface FileRoutesById {
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
   '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/_protected/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/admin/_protected/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/_protected/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/admin/compras/$id'
     | '/admin/lancamentos/$id'
+    | '/lovable/email/queue/process'
     | '/admin/compras/'
     | '/admin/lancamentos/'
   fileRoutesByTo: FileRoutesByTo
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/admin/compras/$id'
     | '/admin/lancamentos/$id'
+    | '/lovable/email/queue/process'
     | '/admin/compras'
     | '/admin/lancamentos'
   id:
@@ -333,6 +345,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/usuarios'
     | '/admin/_protected/compras/$id'
     | '/admin/_protected/lancamentos/$id'
+    | '/lovable/email/queue/process'
     | '/admin/_protected/compras/'
     | '/admin/_protected/lancamentos/'
   fileRoutesById: FileRoutesById
@@ -351,6 +364,7 @@ export interface RootRouteChildren {
   EnviarComprovanteTokenRoute: typeof EnviarComprovanteTokenRoute
   ProdutorSlugRoute: typeof ProdutorSlugRoute
   ProdutoraSlugRoute: typeof ProdutoraSlugRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -523,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedComprasIndexRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/_protected/lancamentos/$id': {
       id: '/admin/_protected/lancamentos/$id'
       path: '/lancamentos/$id'
@@ -599,17 +620,8 @@ const rootRouteChildren: RootRouteChildren = {
   EnviarComprovanteTokenRoute: EnviarComprovanteTokenRoute,
   ProdutorSlugRoute: ProdutorSlugRoute,
   ProdutoraSlugRoute: ProdutoraSlugRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
