@@ -221,7 +221,9 @@ export const uploadReceiptByToken = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error: lookupErr } = await supabaseAdmin
       .from("purchase_requests")
-      .select("id, status, receipt_path")
+      .select(
+        "id, status, receipt_path, nome_cliente, email, beat:beats(nome)",
+      )
       .eq("continuation_token", data.token)
       .maybeSingle();
     if (lookupErr) {
@@ -270,6 +272,34 @@ export const uploadReceiptByToken = createServerFn({ method: "POST" })
     if (updateErr) {
       console.error("[purchases.upload] update", updateErr);
       throw new Error("Erro ao salvar comprovante.");
+    }
+
+    // Notificações ---------------------------------------------------------
+    try {
+      const beatNome = (row.beat as { nome?: string } | null)?.nome ?? "—";
+      if (row.email) {
+        await sendAppEmailSafe({
+          templateName: "receipt-received",
+          recipientEmail: row.email,
+          idempotencyKey: `receipt-received-${row.id}-${path}`,
+          templateData: { nome: row.nome_cliente, beatNome },
+        });
+      }
+      const adminEmail = await getAdminNotificationEmail();
+      if (adminEmail) {
+        await sendAppEmailSafe({
+          templateName: "admin-new-receipt",
+          recipientEmail: adminEmail,
+          idempotencyKey: `admin-new-receipt-${row.id}-${path}`,
+          templateData: {
+            nomeCliente: row.nome_cliente,
+            beatNome,
+            adminUrl: `${PUBLIC_SITE_URL}/admin/compras/${row.id}`,
+          },
+        });
+      }
+    } catch (e) {
+      console.error("[purchases.upload] notify", e);
     }
 
     return { ok: true };
