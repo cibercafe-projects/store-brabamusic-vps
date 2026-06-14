@@ -1,62 +1,76 @@
-## Objetivo
+# Verificação do estado atual
 
-Na tela de detalhe de uma compra (`/admin/compras/$id`), adicionar a opção de reenviar para o cliente as informações de pagamento (PIX/dados) + o link de envio de comprovante (`/enviar-comprovante/{token}`), via WhatsApp e/ou E-mail. Útil quando o cliente se perde no fluxo após criar o pedido.
+| Notificação | Status |
+|---|---|
+| Cliente: confirmação de compra + link de comprovante | ❌ Não implementado |
+| Cliente: confirmação de entrega dos arquivos | ⚠️ Parcial — `deliverPurchase` tem `TODO: enviar quando domínio estiver configurado` (e-mail nunca é enviado; WhatsApp só abre `wa.me` em nova aba) |
+| Admin Braba: nova compra | ❌ Não implementado |
+| Admin Braba: novo comprovante | ❌ Não implementado |
+| Admin Braba: novo lançamento | ❌ Não implementado |
+| Artista: confirmação de recebimento do lançamento | ❌ Não implementado |
+| Artista: mudança de status do lançamento | ❌ Não implementado |
+| Reenvio de instruções (`ResendInstructionsCard`) | ⚠️ Só registra no banco, não envia |
+| WhatsApp automático (Twilio) | ❌ Não conectado |
+| Domínio `notify.brababeats.app` | ✅ Verificado |
+| Infra de fila de e-mail (pgmq + cron) | ✅ Pronta |
 
-## Onde aparece
+Resumo: **a infraestrutura está pronta, mas nenhum envio automático está ativo.** Falta scaffolding transacional, templates, gatilhos e Twilio.
 
-Novo card "Reenviar instruções" no detalhe da compra, visível enquanto o status for `aguardando_pagamento` ou `comprovante_enviado` (ou seja, antes da confirmação). Fica próximo ao card "Comprovante".
+# Plano
 
-Conteúdo do card:
-- Resumo: nome do cliente, e-mail, WhatsApp.
-- Pré-visualização da mensagem que será enviada (beat, valor, chave PIX vinda de `app_settings`, link de continuação).
-- Checkboxes: "Enviar por WhatsApp" (marcado se houver `whatsapp`), "Enviar por E-mail" (marcado se houver `email` — desabilitado com aviso "pendente de configuração de domínio" enquanto não houver domínio verificado, mesmo padrão da entrega de arquivos).
-- Botão "Reenviar instruções".
+## 1. Configuração (pré-requisitos)
+- Rodar scaffold de e-mail transacional (cria rotas `/lovable/email/transactional/send` + preview + suppression + unsubscribe + página de unsubscribe).
+- Adicionar setting `admin_notification_email` em `app_settings` (e campo na tela de Configurações) para definir o destinatário das notificações administrativas.
+- Conectar Twilio (connector) — necessário para WhatsApp automático ao cliente. Se o usuário preferir adiar, mantemos WhatsApp manual via `wa.me` e implementamos só e-mail agora.
 
-## Comportamento
+## 2. Templates de e-mail (em `src/lib/email-templates/`)
+Branding consistente com o site (cores, tipografia atuais), sem promoções:
 
-- WhatsApp: gera `https://wa.me/<num>?text=<mensagem pré-preenchida>` e abre em nova aba (mesmo padrão do `DeliveryDialog` — não envia automático, abre o WhatsApp Web do admin com o número do cliente já preenchido).
-- E-mail: por ora, abre `mailto:` com assunto e corpo pré-preenchidos (consistente com o estado atual de "domínio pendente"). Quando o domínio for verificado depois, trocamos por envio transacional real sem mudar a UI.
-- Registrar histórico: gravar uma linha na tabela `purchase_deliveries` reaproveitando-a como log genérico (tipo `instrucoes_pagamento`), OU criar `purchase_reminders` (ver Detalhes técnicos). Mostrar no card "Última instrução enviada em ...".
+**Cliente (compras)**
+- `purchase-created` — "Recebemos seu pedido" com instruções de pagamento (PIX/link) + botão "Enviar comprovante" (link `/enviar-comprovante/{token}`).
+- `receipt-received` — "Comprovante recebido, em análise".
+- `purchase-delivered` — "Seus arquivos estão prontos" com links assinados (já gerados em `deliverPurchase`).
 
-## Mensagem padrão
+**Cliente (lançamentos)**
+- `release-received` — "Recebemos seu lançamento".
+- `release-status-changed` — status legível + observação do admin.
 
-```
-Olá {nome_cliente}! Aqui é a Braba Music.
-Seu pedido do beat "{beat_nome}" está aguardando pagamento.
+**Admin**
+- `admin-new-purchase` — dados do cliente, beat e valor + link para `/admin/compras/{id}`.
+- `admin-new-receipt` — aviso de comprovante recebido + link.
+- `admin-new-release` — novo lançamento recebido + link.
 
-Valor: R$ {valor}
-PIX: {pix_key} ({pix_owner})
+## 3. Helper de envio
+`src/lib/email/send.ts` — wrapper que faz POST para `/lovable/email/transactional/send` com `idempotencyKey` derivada do evento (`purchase-created-{id}`, `release-status-{id}-{status}` etc.) para evitar duplicação em retry.
 
-Após pagar, envie o comprovante neste link:
-{site}/enviar-comprovante/{token}
+## 4. WhatsApp (Twilio, se aprovado)
+`src/lib/whatsapp/send.server.ts` — POST para gateway Twilio (`/Messages.json`) usando template do conteúdo WhatsApp Business. Apenas notificações ao cliente:
+- Confirmação de compra com link do comprovante.
+- Aviso quando entrega for feita (links de arquivo).
+Admin recebe só por e-mail (já tem painel).
 
-Qualquer dúvida, é só responder por aqui.
-```
+## 5. Gatilhos (server fns existentes)
+| Server fn | Adicionar |
+|---|---|
+| `createPurchaseRequest` | enviar `purchase-created` ao cliente + `admin-new-purchase` ao admin + WhatsApp ao cliente |
+| `uploadReceiptByToken` | enviar `receipt-received` ao cliente + `admin-new-receipt` ao admin |
+| `deliverPurchase` | enviar `purchase-delivered` (remover TODO) + WhatsApp ao cliente |
+| `logResendInstructions` → renomear para `resendPaymentInstructions` | reenviar `purchase-created` por e-mail e/ou WhatsApp de fato |
+| `createRelease` (em `releases.functions.ts`) | enviar `release-received` ao artista + `admin-new-release` ao admin |
+| `updateReleaseStatus` | enviar `release-status-changed` ao artista |
+
+Cada envio é envolvido em `try/catch` e logado, sem bloquear a operação principal (o registro no banco é a fonte de verdade).
+
+## 6. UI
+- Em `Configurações`: campo "E-mail para notificações administrativas".
+- `ResendInstructionsCard`: feedback real ("E-mail enviado" / "WhatsApp enviado").
+- `DeliveryDialog`: remover aviso "aguardando configuração de domínio".
 
 ## Detalhes técnicos
+- Todos os envios via fila pgmq (não bloqueiam request).
+- `from`: `Braba Beats <noreply@notify.brababeats.app>` (display from root quando habilitado).
+- Página `/email/unsubscribe` será criada pelo scaffold.
+- Sem anexos: arquivos entregues são links assinados de 7 dias (já implementado).
 
-- Novo server fn `resendPurchaseInstructions` em `src/lib/purchases.functions.ts`:
-  - input: `{ id, channels: { whatsapp: boolean, email: boolean } }`.
-  - `requireSupabaseAuth` + checagem `has_role('admin')`.
-  - Carrega purchase + beat + `app_settings` (pix, site_url, commercial_whatsapp).
-  - Monta mensagem, retorna `{ whatsapp_url, mailto_url, message }` para o client abrir.
-  - Insere log em `purchase_deliveries` com novo campo `tipo` (`entrega_arquivos` | `instrucoes_pagamento`) — migration adiciona coluna `tipo text not null default 'entrega_arquivos'` e índice por `purchase_id, tipo`.
-- Novo componente `ResendInstructionsCard.tsx` em `src/components/purchase/` consumido por `compras.$id.tsx`.
-- Sem dependência de domínio de e-mail nesta sprint — `mailto:` é suficiente e não exige infra.
-- Sem alteração no fluxo de cliente nem na tela pública `/enviar-comprovante/$token`.
-
-## Arquivos
-
-Criar:
-- `src/components/purchase/ResendInstructionsCard.tsx`
-- `supabase/migrations/<ts>_purchase_deliveries_tipo.sql` (add coluna `tipo`)
-
-Editar:
-- `src/lib/purchases.functions.ts` (nova fn + leitura do histórico já filtrando por tipo se necessário)
-- `src/routes/admin/_protected/compras.$id.tsx` (montar o novo card)
-
-## Fora do escopo
-
-- Envio transacional real de e-mail (depende de domínio verificado).
-- Envio automático de WhatsApp (sempre via wa.me, manual).
-- Lembretes automáticos por cron.
+## Pergunta antes de implementar
+Twilio para WhatsApp automático: **conectar agora** (você precisa de uma conta Twilio com WhatsApp habilitado) ou **adiar** e manter só WhatsApp manual (`wa.me`) por enquanto e implementar todos os e-mails agora?
