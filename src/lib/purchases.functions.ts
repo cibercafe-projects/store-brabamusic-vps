@@ -118,6 +118,58 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
       throw new Error("Erro ao registrar pedido.");
     }
 
+    // Notificações (não bloqueiam a resposta) -----------------------------------
+    try {
+      const [settingsRows, adminEmail] = await Promise.all([
+        supabaseAdmin
+          .from("app_settings")
+          .select("key, value")
+          .in("key", ["pix_key", "payment_link"]),
+        getAdminNotificationEmail(),
+      ]);
+      const settingsMap: Record<string, string> = {};
+      (settingsRows.data ?? []).forEach((r) => {
+        settingsMap[r.key] = r.value ?? "";
+      });
+      const receiptUrl = `${PUBLIC_SITE_URL}/enviar-comprovante/${inserted.continuation_token}`;
+
+      // Cliente
+      await sendAppEmailSafe({
+        templateName: "purchase-created",
+        recipientEmail: data.email,
+        idempotencyKey: `purchase-created-${inserted.id}`,
+        templateData: {
+          nome: data.nome_cliente,
+          beatNome: beat.nome,
+          valor: beat.preco,
+          formaPagamento: data.forma_pagamento,
+          pixKey: settingsMap.pix_key ?? "",
+          paymentLink: settingsMap.payment_link ?? "",
+          receiptUrl,
+        },
+      });
+
+      // Admin
+      if (adminEmail) {
+        await sendAppEmailSafe({
+          templateName: "admin-new-purchase",
+          recipientEmail: adminEmail,
+          idempotencyKey: `admin-new-purchase-${inserted.id}`,
+          templateData: {
+            nomeCliente: data.nome_cliente,
+            email: data.email,
+            whatsapp: data.whatsapp,
+            beatNome: beat.nome,
+            valor: beat.preco,
+            formaPagamento: data.forma_pagamento,
+            adminUrl: `${PUBLIC_SITE_URL}/admin/compras/${inserted.id}`,
+          },
+        });
+      }
+    } catch (e) {
+      console.error("[purchases.create] notify", e);
+    }
+
     return {
       id: inserted.id,
       continuation_token: inserted.continuation_token as string,
