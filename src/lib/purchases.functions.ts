@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sendAppEmailSafe, getAdminNotificationEmail } from "@/lib/email/send.server";
+
+const PUBLIC_SITE_URL = "https://brababeats.app";
 
 const PURCHASE_STATUSES = [
   "aguardando_pagamento",
