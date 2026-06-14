@@ -94,18 +94,19 @@ export function ResendInstructionsCard({ purchase }: Props) {
       logFn({
         data: { id: purchase.id, canal_email: email, canal_whatsapp: whatsapp },
       }),
-    onSuccess: () => {
+    onSuccess: (res) => {
       if (whatsapp && purchase.whatsapp) {
         const wa = purchase.whatsapp.replace(/\D/g, "");
         const url = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
         window.open(url, "_blank", "noopener,noreferrer");
       }
-      if (email && purchase.email) {
-        const subject = `Braba Music — pedido do beat ${beatName}`;
-        const mailto = `mailto:${purchase.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-        window.location.href = mailto;
+      if (email && (res as { email_sent?: boolean })?.email_sent) {
+        toast.success("E-mail reenviado ao cliente.");
+      } else if (email) {
+        toast.warning("E-mail não foi enviado (cliente sem e-mail ou suprimido).");
+      } else {
+        toast.success("Reenvio registrado.");
       }
-      toast.success("Reenvio registrado.");
       qc.invalidateQueries({ queryKey: ["admin", "resend-instructions", purchase.id] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao registrar."),

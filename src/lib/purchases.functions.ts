@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { sendAppEmailSafe, getAdminNotificationEmail } from "@/lib/email/send.server";
+
+const PUBLIC_SITE_URL = "https://brababeats.app";
 
 const PURCHASE_STATUSES = [
   "aguardando_pagamento",
@@ -115,6 +118,58 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
       throw new Error("Erro ao registrar pedido.");
     }
 
+    // Notificações (não bloqueiam a resposta) -----------------------------------
+    try {
+      const [settingsRows, adminEmail] = await Promise.all([
+        supabaseAdmin
+          .from("app_settings")
+          .select("key, value")
+          .in("key", ["pix_key", "payment_link"]),
+        getAdminNotificationEmail(),
+      ]);
+      const settingsMap: Record<string, string> = {};
+      (settingsRows.data ?? []).forEach((r) => {
+        settingsMap[r.key] = r.value ?? "";
+      });
+      const receiptUrl = `${PUBLIC_SITE_URL}/enviar-comprovante/${inserted.continuation_token}`;
+
+      // Cliente
+      await sendAppEmailSafe({
+        templateName: "purchase-created",
+        recipientEmail: data.email,
+        idempotencyKey: `purchase-created-${inserted.id}`,
+        templateData: {
+          nome: data.nome_cliente,
+          beatNome: beat.nome,
+          valor: beat.preco,
+          formaPagamento: data.forma_pagamento,
+          pixKey: settingsMap.pix_key ?? "",
+          paymentLink: settingsMap.payment_link ?? "",
+          receiptUrl,
+        },
+      });
+
+      // Admin
+      if (adminEmail) {
+        await sendAppEmailSafe({
+          templateName: "admin-new-purchase",
+          recipientEmail: adminEmail,
+          idempotencyKey: `admin-new-purchase-${inserted.id}`,
+          templateData: {
+            nomeCliente: data.nome_cliente,
+            email: data.email,
+            whatsapp: data.whatsapp,
+            beatNome: beat.nome,
+            valor: beat.preco,
+            formaPagamento: data.forma_pagamento,
+            adminUrl: `${PUBLIC_SITE_URL}/admin/compras/${inserted.id}`,
+          },
+        });
+      }
+    } catch (e) {
+      console.error("[purchases.create] notify", e);
+    }
+
     return {
       id: inserted.id,
       continuation_token: inserted.continuation_token as string,
@@ -166,7 +221,9 @@ export const uploadReceiptByToken = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row, error: lookupErr } = await supabaseAdmin
       .from("purchase_requests")
-      .select("id, status, receipt_path")
+      .select(
+        "id, status, receipt_path, nome_cliente, email, beat:beats(nome)",
+      )
       .eq("continuation_token", data.token)
       .maybeSingle();
     if (lookupErr) {
@@ -215,6 +272,34 @@ export const uploadReceiptByToken = createServerFn({ method: "POST" })
     if (updateErr) {
       console.error("[purchases.upload] update", updateErr);
       throw new Error("Erro ao salvar comprovante.");
+    }
+
+    // Notificações ---------------------------------------------------------
+    try {
+      const beatNome = (row.beat as { nome?: string } | null)?.nome ?? "—";
+      if (row.email) {
+        await sendAppEmailSafe({
+          templateName: "receipt-received",
+          recipientEmail: row.email,
+          idempotencyKey: `receipt-received-${row.id}-${path}`,
+          templateData: { nome: row.nome_cliente, beatNome },
+        });
+      }
+      const adminEmail = await getAdminNotificationEmail();
+      if (adminEmail) {
+        await sendAppEmailSafe({
+          templateName: "admin-new-receipt",
+          recipientEmail: adminEmail,
+          idempotencyKey: `admin-new-receipt-${row.id}-${path}`,
+          templateData: {
+            nomeCliente: row.nome_cliente,
+            beatNome,
+            adminUrl: `${PUBLIC_SITE_URL}/admin/compras/${row.id}`,
+          },
+        });
+      }
+    } catch (e) {
+      console.error("[purchases.upload] notify", e);
     }
 
     return { ok: true };
@@ -364,11 +449,50 @@ export const logResendInstructions = createServerFn({ method: "POST" })
       throw new Error("Selecione ao menos um canal.");
     }
     const admin = await assertAdmin(context.userId);
+
+    // Reenvio real do e-mail de instruções (WhatsApp continua manual via wa.me no cliente).
+    let emailSent = false;
+    if (data.canal_email) {
+      const { data: row } = await admin
+        .from("purchase_requests")
+        .select(
+          "id, email, nome_cliente, valor, forma_pagamento, continuation_token, beat:beats(nome)",
+        )
+        .eq("id", data.id)
+        .maybeSingle();
+      if (row?.email) {
+        const { data: settingsRows } = await admin
+          .from("app_settings")
+          .select("key, value")
+          .in("key", ["pix_key", "payment_link"]);
+        const map: Record<string, string> = {};
+        (settingsRows ?? []).forEach((r) => {
+          map[r.key] = r.value ?? "";
+        });
+        const result = await sendAppEmailSafe({
+          templateName: "purchase-created",
+          recipientEmail: row.email,
+          idempotencyKey: `purchase-created-resend-${row.id}-${Date.now()}`,
+          templateData: {
+            nome: row.nome_cliente,
+            beatNome: (row.beat as { nome?: string } | null)?.nome ?? "—",
+            valor: row.valor,
+            formaPagamento: row.forma_pagamento,
+            pixKey: map.pix_key ?? "",
+            paymentLink: map.payment_link ?? "",
+            receiptUrl: `${PUBLIC_SITE_URL}/enviar-comprovante/${row.continuation_token}`,
+          },
+        });
+        emailSent = true;
+        void result;
+      }
+    }
+
     const { error } = await admin.from("purchase_deliveries").insert({
       purchase_id: data.id,
       tipo: "instrucoes_pagamento",
       arquivos: [],
-      enviado_email: data.canal_email,
+      enviado_email: data.canal_email && emailSent,
       enviado_whatsapp: data.canal_whatsapp,
       enviado_por: context.userId,
     });
@@ -376,7 +500,7 @@ export const logResendInstructions = createServerFn({ method: "POST" })
       console.error("[purchases.resend]", error);
       throw new Error("Erro ao registrar reenvio.");
     }
-    return { ok: true };
+    return { ok: true, email_sent: emailSent };
   });
 
 export const listResendInstructions = createServerFn({ method: "GET" })

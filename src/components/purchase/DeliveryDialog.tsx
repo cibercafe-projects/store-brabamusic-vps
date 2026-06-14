@@ -91,7 +91,9 @@ export function DeliveryDialog({ open, onOpenChange, purchase }: Props) {
         window.open(res.whatsapp_url, "_blank", "noopener,noreferrer");
       }
       if (res.email_pending) {
-        toast.info("E-mail aguardando configuração do domínio. Envio por WhatsApp registrado.");
+        toast.warning("E-mail não pôde ser enviado (cliente sem e-mail ou suprimido).");
+      } else if (email) {
+        toast.success("E-mail enviado.");
       }
       qc.invalidateQueries({ queryKey: ["admin", "purchase", purchase.id] });
       qc.invalidateQueries({ queryKey: ["admin", "purchases"] });
@@ -167,7 +169,7 @@ export function DeliveryDialog({ open, onOpenChange, purchase }: Props) {
                     <span className="block text-xs text-muted-foreground">
                       {noEmail
                         ? "Cliente não informou e-mail."
-                        : `Para ${purchase.email} (aguardando configuração de domínio — registro do envio será feito)`}
+                        : `E-mail automático será enviado para ${purchase.email} com os links assinados.`}
                     </span>
                   </span>
                 </label>

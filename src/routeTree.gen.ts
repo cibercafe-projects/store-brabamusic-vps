@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermosUsoRouteImport } from './routes/termos-uso'
 import { Route as ProdutoresRouteImport } from './routes/produtores'
 import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
@@ -22,9 +23,11 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProdutoraSlugRouteImport } from './routes/produtora.$slug'
 import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
 import { Route as EnviarComprovanteTokenRouteImport } from './routes/enviar-comprovante.$token'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AdminProtectedUsuariosRouteImport } from './routes/admin/_protected/usuarios'
 import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
 import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
@@ -33,10 +36,17 @@ import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/
 import { Route as AdminProtectedBeatsRouteImport } from './routes/admin/_protected/beats'
 import { Route as AdminProtectedLancamentosIndexRouteImport } from './routes/admin/_protected/lancamentos.index'
 import { Route as AdminProtectedComprasIndexRouteImport } from './routes/admin/_protected/compras.index'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
 import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermosUsoRoute = TermosUsoRouteImport.update({
   id: '/termos-uso',
   path: '/termos-uso',
@@ -102,6 +112,11 @@ const EnviarComprovanteTokenRoute = EnviarComprovanteTokenRouteImport.update({
   path: '/enviar-comprovante/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BeatSlugRoute = BeatSlugRouteImport.update({
   id: '/beat/$slug',
   path: '/beat/$slug',
@@ -115,6 +130,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 const AdminProtectedRouteRoute = AdminProtectedRouteRouteImport.update({
   id: '/_protected',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminProtectedUsuariosRoute = AdminProtectedUsuariosRouteImport.update({
   id: '/usuarios',
@@ -160,6 +180,18 @@ const AdminProtectedComprasIndexRoute =
     path: '/compras/',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -188,8 +220,10 @@ export interface FileRoutesByFullPath {
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
@@ -200,9 +234,12 @@ export interface FileRoutesByFullPath {
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
@@ -215,9 +252,11 @@ export interface FileRoutesByTo {
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
@@ -227,9 +266,12 @@ export interface FileRoutesByTo {
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/compras': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos': typeof AdminProtectedLancamentosIndexRoute
 }
@@ -244,9 +286,11 @@ export interface FileRoutesById {
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/_protected': typeof AdminProtectedRouteRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
@@ -257,9 +301,12 @@ export interface FileRoutesById {
   '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRoute
   '/admin/_protected/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/_protected/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/_protected/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
 }
@@ -275,8 +322,10 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/unsubscribe'
     | '/admin/login'
     | '/beat/$slug'
+    | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
@@ -287,9 +336,12 @@ export interface FileRouteTypes {
     | '/admin/leads'
     | '/admin/produtoras'
     | '/admin/usuarios'
+    | '/lovable/email/suppression'
     | '/admin/compras/$id'
     | '/admin/lancamentos/$id'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/admin/compras/'
     | '/admin/lancamentos/'
   fileRoutesByTo: FileRoutesByTo
@@ -302,9 +354,11 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/unsubscribe'
     | '/admin'
     | '/admin/login'
     | '/beat/$slug'
+    | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
@@ -314,9 +368,12 @@ export interface FileRouteTypes {
     | '/admin/leads'
     | '/admin/produtoras'
     | '/admin/usuarios'
+    | '/lovable/email/suppression'
     | '/admin/compras/$id'
     | '/admin/lancamentos/$id'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/admin/compras'
     | '/admin/lancamentos'
   id:
@@ -330,9 +387,11 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/unsubscribe'
     | '/admin/_protected'
     | '/admin/login'
     | '/beat/$slug'
+    | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
@@ -343,9 +402,12 @@ export interface FileRouteTypes {
     | '/admin/_protected/leads'
     | '/admin/_protected/produtoras'
     | '/admin/_protected/usuarios'
+    | '/lovable/email/suppression'
     | '/admin/_protected/compras/$id'
     | '/admin/_protected/lancamentos/$id'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/admin/_protected/compras/'
     | '/admin/_protected/lancamentos/'
   fileRoutesById: FileRoutesById
@@ -360,15 +422,27 @@ export interface RootRouteChildren {
   PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
   ProdutoresRoute: typeof ProdutoresRoute
   TermosUsoRoute: typeof TermosUsoRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   BeatSlugRoute: typeof BeatSlugRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EnviarComprovanteTokenRoute: typeof EnviarComprovanteTokenRoute
   ProdutorSlugRoute: typeof ProdutorSlugRoute
   ProdutoraSlugRoute: typeof ProdutoraSlugRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/termos-uso': {
       id: '/termos-uso'
       path: '/termos-uso'
@@ -460,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EnviarComprovanteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/beat/$slug': {
       id: '/beat/$slug'
       path: '/beat/$slug'
@@ -480,6 +561,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AdminProtectedRouteRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/_protected/usuarios': {
       id: '/admin/_protected/usuarios'
@@ -536,6 +624,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/compras/'
       preLoaderRoute: typeof AdminProtectedComprasIndexRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -616,22 +718,17 @@ const rootRouteChildren: RootRouteChildren = {
   PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
   ProdutoresRoute: ProdutoresRoute,
   TermosUsoRoute: TermosUsoRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   BeatSlugRoute: BeatSlugRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EnviarComprovanteTokenRoute: EnviarComprovanteTokenRoute,
   ProdutorSlugRoute: ProdutorSlugRoute,
   ProdutoraSlugRoute: ProdutoraSlugRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
