@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TermosUsoRouteImport } from './routes/termos-uso'
 import { Route as ProdutoresRouteImport } from './routes/produtores'
 import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
@@ -41,6 +42,11 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
 import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermosUsoRoute = TermosUsoRouteImport.update({
   id: '/termos-uso',
   path: '/termos-uso',
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -245,6 +252,7 @@ export interface FileRoutesByTo {
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
@@ -278,6 +286,7 @@ export interface FileRoutesById {
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
   '/termos-uso': typeof TermosUsoRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/_protected': typeof AdminProtectedRouteRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
   '/beat/$slug': typeof BeatSlugRoute
@@ -313,6 +322,7 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/unsubscribe'
     | '/admin/login'
     | '/beat/$slug'
     | '/email/unsubscribe'
@@ -344,6 +354,7 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/unsubscribe'
     | '/admin'
     | '/admin/login'
     | '/beat/$slug'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/politica-privacidade'
     | '/produtores'
     | '/termos-uso'
+    | '/unsubscribe'
     | '/admin/_protected'
     | '/admin/login'
     | '/beat/$slug'
@@ -410,6 +422,7 @@ export interface RootRouteChildren {
   PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
   ProdutoresRoute: typeof ProdutoresRoute
   TermosUsoRoute: typeof TermosUsoRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   BeatSlugRoute: typeof BeatSlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EnviarComprovanteTokenRoute: typeof EnviarComprovanteTokenRoute
@@ -423,6 +436,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/termos-uso': {
       id: '/termos-uso'
       path: '/termos-uso'
@@ -698,6 +718,7 @@ const rootRouteChildren: RootRouteChildren = {
   PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
   ProdutoresRoute: ProdutoresRoute,
   TermosUsoRoute: TermosUsoRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   BeatSlugRoute: BeatSlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EnviarComprovanteTokenRoute: EnviarComprovanteTokenRoute,
