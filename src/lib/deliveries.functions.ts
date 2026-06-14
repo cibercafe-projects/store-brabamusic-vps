@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { BEAT_PRIVATE_BUCKETS, type BeatPrivateKind } from "@/lib/beats.functions";
+import { sendAppEmail } from "@/lib/email/send.server";
 
 const FILE_KINDS = ["wav", "stems", "license"] as const;
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 dias
@@ -82,9 +83,22 @@ export const deliverPurchase = createServerFn({ method: "POST" })
       links.push({ kind, label: LABEL[kind], url: signed.signedUrl });
     }
 
-    // Email: por enquanto sem domínio configurado, sinalizamos pendente.
-    // Se no futuro o template estiver disponível, envia aqui.
-    const emailSent = false; // TODO: enviar quando domínio estiver configurado
+    // Email: envia se o cliente tiver e-mail e o canal estiver marcado.
+    let emailSent = false;
+    if (data.canal_email && purchase.email) {
+      const res = await sendAppEmail({
+        templateName: "purchase-delivered",
+        recipientEmail: purchase.email,
+        idempotencyKey: `purchase-delivered-${purchase.id}-${Date.now()}`,
+        templateData: {
+          nome: purchase.nome_cliente,
+          beatNome: beat.nome,
+          links: links.map((l) => ({ label: l.label, url: l.url })),
+          observacao: data.observacao ?? "",
+        },
+      });
+      emailSent = res.ok;
+    }
     const emailPending = data.canal_email && !emailSent;
 
     const whatsappText = data.canal_whatsapp

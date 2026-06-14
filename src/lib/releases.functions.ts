@@ -3,10 +3,14 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   RELEASE_STATUSES,
+  RELEASE_STATUS_LABEL,
   MAX_PROMO_PHOTOS,
   type ReleaseStatus,
   type ReleaseType,
 } from "@/lib/releases.constants";
+import { sendAppEmailSafe, getAdminNotificationEmail } from "@/lib/email/send.server";
+
+const PUBLIC_SITE_URL = "https://brababeats.app";
 
 const COVER_BUCKET = "release-covers";
 const AUDIO_BUCKET = "release-audio";
@@ -199,6 +203,37 @@ export const submitRelease = createServerFn({ method: "POST" })
       throw new Error("Não foi possível registrar o lançamento. Tente novamente.");
     }
 
+    // Notificações
+    try {
+      await sendAppEmailSafe({
+        templateName: "release-received",
+        recipientEmail: data.email.toLowerCase(),
+        idempotencyKey: `release-received-${inserted.id}`,
+        templateData: {
+          artistName: data.artist_name,
+          releaseName: data.release_name,
+          releaseType: data.release_type,
+        },
+      });
+      const adminEmail = await getAdminNotificationEmail();
+      if (adminEmail) {
+        await sendAppEmailSafe({
+          templateName: "admin-new-release",
+          recipientEmail: adminEmail,
+          idempotencyKey: `admin-new-release-${inserted.id}`,
+          templateData: {
+            artistName: data.artist_name,
+            releaseName: data.release_name,
+            releaseType: data.release_type,
+            email: data.email,
+            adminUrl: `${PUBLIC_SITE_URL}/admin/lancamentos/${inserted.id}`,
+          },
+        });
+      }
+    } catch (e) {
+      console.error("[releases.submit] notify", e);
+    }
+
     return { ok: true, releaseId: inserted.id };
   });
 
@@ -285,11 +320,34 @@ export const updateReleaseStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const admin = await assertAdmin(context.userId);
+    const { data: existing } = await admin
+      .from("releases")
+      .select("status, email, artist_name, release_name")
+      .eq("id", data.id)
+      .maybeSingle();
     const { error } = await admin
       .from("releases")
       .update({ status: data.status })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    if (existing && existing.status !== data.status && existing.email) {
+      try {
+        await sendAppEmailSafe({
+          templateName: "release-status-changed",
+          recipientEmail: existing.email,
+          idempotencyKey: `release-status-${data.id}-${data.status}`,
+          templateData: {
+            artistName: existing.artist_name,
+            releaseName: existing.release_name,
+            status: data.status,
+            statusLabel: RELEASE_STATUS_LABEL[data.status],
+          },
+        });
+      } catch (e) {
+        console.error("[releases.updateStatus] notify", e);
+      }
+    }
     return { ok: true };
   });
 

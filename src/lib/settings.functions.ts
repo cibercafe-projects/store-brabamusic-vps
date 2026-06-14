@@ -24,6 +24,7 @@ const KEYS = [
   "pix_key",
   "payment_link",
   "commercial_whatsapp",
+  "admin_notification_email",
 ] as const;
 
 export const getAppSettings = createServerFn({ method: "GET" })
@@ -47,6 +48,7 @@ export const getAppSettings = createServerFn({ method: "GET" })
       pix_key: map.pix_key ?? "",
       payment_link: map.payment_link ?? "",
       commercial_whatsapp: map.commercial_whatsapp ?? "",
+      admin_notification_email: map.admin_notification_email ?? "",
     };
   });
 
@@ -73,6 +75,16 @@ const settingsInput = z.object({
     .regex(/^[+0-9 ()-]*$/, "Apenas dígitos, +, espaços, () e -")
     .optional()
     .default(""),
+  admin_notification_email: z
+    .string()
+    .trim()
+    .max(255)
+    .optional()
+    .default("")
+    .refine(
+      (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      "Informe um e-mail válido",
+    ),
 });
 
 export const updateAppSettings = createServerFn({ method: "POST" })
@@ -87,6 +99,10 @@ export const updateAppSettings = createServerFn({ method: "POST" })
       { key: "pix_key", value: data.pix_key ?? "" },
       { key: "payment_link", value: data.payment_link ?? "" },
       { key: "commercial_whatsapp", value: cleanedCommercial },
+      {
+        key: "admin_notification_email",
+        value: (data.admin_notification_email ?? "").toLowerCase(),
+      },
     ];
     const { error } = await admin
       .from("app_settings")

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, MessageCircle, KeyRound, Link as LinkIcon, Phone } from "lucide-react";
+import { Loader2, MessageCircle, KeyRound, Link as LinkIcon, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ function SettingsPage() {
     pix_key: "",
     payment_link: "",
     commercial_whatsapp: "",
+    admin_notification_email: "",
   });
 
   useEffect(() => {
@@ -161,6 +162,31 @@ function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Mail className="h-4 w-4 text-accent" /> E-mail para notificações administrativas
+              </CardTitle>
+              <CardDescription>
+                Destinatário das notificações automáticas: novas compras, comprovantes recebidos e novos lançamentos.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="admin-email">E-mail</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  value={form.admin_notification_email}
+                  onChange={(e) => update("admin_notification_email", e.target.value)}
+                  placeholder="admin@brababeats.app"
+                  maxLength={255}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
 
           <Button
             onClick={() => mutation.mutate()}
