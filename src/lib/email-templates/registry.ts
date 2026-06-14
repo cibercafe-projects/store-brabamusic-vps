@@ -1,4 +1,12 @@
 import type { ComponentType } from 'react'
+import { template as purchaseCreated } from './purchase-created'
+import { template as receiptReceived } from './receipt-received'
+import { template as purchaseDelivered } from './purchase-delivered'
+import { template as releaseReceived } from './release-received'
+import { template as releaseStatusChanged } from './release-status-changed'
+import { template as adminNewPurchase } from './admin-new-purchase'
+import { template as adminNewReceipt } from './admin-new-receipt'
+import { template as adminNewRelease } from './admin-new-release'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -9,15 +17,13 @@ export interface TemplateEntry {
   to?: string
 }
 
-/**
- * Template registry — maps template names to their React Email components.
- * Import and register new templates here after creating them in this directory.
- *
- * Example:
- *   import { template as welcomeTemplate } from './welcome'
- *   // then add to TEMPLATES: 'welcome': welcomeTemplate
- */
 export const TEMPLATES: Record<string, TemplateEntry> = {
-  // Add templates here as they are created, e.g.:
-  // 'welcome': welcomeTemplate,
+  'purchase-created': purchaseCreated,
+  'receipt-received': receiptReceived,
+  'purchase-delivered': purchaseDelivered,
+  'release-received': releaseReceived,
+  'release-status-changed': releaseStatusChanged,
+  'admin-new-purchase': adminNewPurchase,
+  'admin-new-receipt': adminNewReceipt,
+  'admin-new-release': adminNewRelease,
 }
