@@ -67,7 +67,8 @@ export const template = {
   previewData: {
     artistName: "MC Exemplo",
     releaseName: "Madrugada",
-    releaseType: "single",
+    releaseType: "ep",
+    faixaFoco: "Madrugada",
     email: "mc@example.com",
     adminUrl: "https://brababeats.app/admin/lancamentos/abc-123",
   },
