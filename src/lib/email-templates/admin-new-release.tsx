@@ -7,6 +7,7 @@ interface Props {
   artistName?: string;
   releaseName?: string;
   releaseType?: string;
+  faixaFoco?: string;
   email?: string;
   adminUrl?: string;
 }
@@ -21,6 +22,7 @@ const AdminNewRelease = ({
   artistName = "—",
   releaseName = "—",
   releaseType = "single",
+  faixaFoco = "",
   email = "—",
   adminUrl = "https://brababeats.app/admin/lancamentos",
 }: Props) => (
@@ -39,6 +41,11 @@ const AdminNewRelease = ({
       <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
         <strong>Tipo:</strong> {TYPE_LABEL[releaseType] ?? releaseType}
       </Text>
+      {releaseType !== "single" && faixaFoco && (
+        <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
+          <strong>Faixa foco:</strong> {faixaFoco}
+        </Text>
+      )}
       <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
         <strong>E-mail:</strong> {email}
       </Text>
@@ -60,7 +67,8 @@ export const template = {
   previewData: {
     artistName: "MC Exemplo",
     releaseName: "Madrugada",
-    releaseType: "single",
+    releaseType: "ep",
+    faixaFoco: "Madrugada",
     email: "mc@example.com",
     adminUrl: "https://brababeats.app/admin/lancamentos/abc-123",
   },

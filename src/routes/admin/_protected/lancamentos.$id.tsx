@@ -168,6 +168,9 @@ function LancamentoDetail() {
             </div>
           )}
           {r.tracklist && <Block label="Lista de músicas" value={r.tracklist} />}
+          {(r as { faixa_foco?: string | null }).faixa_foco && (
+            <Info label="Faixa foco" value={(r as { faixa_foco?: string | null }).faixa_foco!} />
+          )}
           <Block label="Sobre o lançamento" value={r.about_release} />
         </InfoCard>
 

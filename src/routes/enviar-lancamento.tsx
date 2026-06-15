@@ -50,6 +50,7 @@ function SubmitReleasePage() {
   const [releaseType, setReleaseType] = useState<ReleaseType>("single");
   const [releaseName, setReleaseName] = useState("");
   const [tracklist, setTracklist] = useState("");
+  const [faixaFoco, setFaixaFoco] = useState("");
   const [lyricsDriveUrl, setLyricsDriveUrl] = useState("");
   const [isrc, setIsrc] = useState("");
   const [audioDriveUrl, setAudioDriveUrl] = useState("");
@@ -101,6 +102,7 @@ function SubmitReleasePage() {
           about_artist: aboutArtist,
           about_release: aboutRelease,
           has_videoclip: hasVideoclip === "sim",
+          faixa_foco: isMulti ? faixaFoco.trim() : "",
           website,
           started_at: startedAt,
         },
@@ -119,9 +121,10 @@ function SubmitReleasePage() {
     if (photosDriveUrl.trim() && !DRIVE_RE.test(photosDriveUrl.trim())) return false;
     if (genres.length === 0 || moods.length === 0) return false;
     if (isMulti && tracklist.trim().length === 0) return false;
+    if (isMulti && faixaFoco.trim().length === 0) return false;
     if (whatsapp.replace(/\D/g, "").length < 8) return false;
     return true;
-  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist, whatsapp]);
+  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist, faixaFoco, whatsapp]);
 
   const settings = useQuery({
     queryKey: ["purchase-settings"],
@@ -284,6 +287,20 @@ function SubmitReleasePage() {
               </Field>
             )}
 
+            {isMulti && (
+              <Field label="Faixa Foco" required>
+                <Input
+                  required
+                  value={faixaFoco}
+                  onChange={(e) => setFaixaFoco(e.target.value)}
+                  placeholder="Nome exato da faixa principal"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Música principal para divulgação e distribuição.
+                </p>
+              </Field>
+            )}
+
             <Field
               label={isMulti ? "Link do Google Drive (pasta com as músicas)" : "Link do Google Drive da música"}
               required
@@ -297,8 +314,8 @@ function SubmitReleasePage() {
               />
               <p className="text-xs text-muted-foreground">
                 {isMulti
-                  ? "Cole o link de uma pasta do Drive com todas as faixas (WAV ou MP3). "
-                  : "Cole o link do arquivo no Drive (WAV ou MP3). "}
+                  ? "Cole o link de uma pasta do Drive com todas as faixas (apenas WAV). "
+                  : "Cole o link do arquivo no Drive (apenas WAV). "}
                 Garanta que o link esteja como <strong>“Qualquer pessoa com o link pode visualizar”</strong>.
               </p>
             </Field>

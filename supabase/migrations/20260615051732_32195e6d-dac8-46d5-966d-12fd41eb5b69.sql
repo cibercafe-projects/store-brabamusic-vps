@@ -1,0 +1,1 @@
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS faixa_foco text;

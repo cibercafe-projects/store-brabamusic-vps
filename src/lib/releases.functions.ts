@@ -58,8 +58,6 @@ const uploadKinds = z.enum(["cover", "audio", "photo"]);
 
 const IMAGE_CT = ["image/jpeg", "image/png", "image/webp"] as const;
 const AUDIO_CT = [
-  "audio/mpeg",
-  "audio/mp3",
   "audio/wav",
   "audio/x-wav",
   "audio/wave",
@@ -71,7 +69,7 @@ export const getReleaseUploadUrl = createServerFn({ method: "POST" })
     z
       .object({
         kind: uploadKinds,
-        ext: z.enum(["jpg", "jpeg", "png", "webp", "wav", "mp3"]),
+        ext: z.enum(["jpg", "jpeg", "png", "webp", "wav"]),
         contentType: z.string().min(3).max(80),
       })
       .parse(input),
@@ -87,7 +85,7 @@ export const getReleaseUploadUrl = createServerFn({ method: "POST" })
     } else {
       if (!AUDIO_CT.includes(data.contentType as (typeof AUDIO_CT)[number]))
         throw new Error("Tipo de áudio inválido.");
-      if (!["wav", "mp3"].includes(data.ext)) throw new Error("Use WAV ou MP3.");
+      if (data.ext !== "wav") throw new Error("Use WAV.");
       bucket = AUDIO_BUCKET;
     }
     const admin = await getAdmin();
@@ -154,6 +152,7 @@ const submitSchema = z
     about_artist: z.string().trim().min(1).max(5000),
     about_release: z.string().trim().min(1).max(5000),
     has_videoclip: z.boolean(),
+    faixa_foco: z.string().trim().max(200).optional().default(""),
     // anti-spam
     website: z.string().max(0, "Bot").optional().default(""),
     started_at: z.number().int().positive(),
@@ -161,6 +160,10 @@ const submitSchema = z
   .refine(
     (v) => (v.release_type === "single" ? true : v.tracklist.length > 0),
     { message: "Liste as músicas do EP/Álbum.", path: ["tracklist"] },
+  )
+  .refine(
+    (v) => (v.release_type === "single" ? true : v.faixa_foco.length > 0),
+    { message: "Informe a faixa foco do EP/Álbum.", path: ["faixa_foco"] },
   );
 
 export const submitRelease = createServerFn({ method: "POST" })
@@ -200,6 +203,7 @@ export const submitRelease = createServerFn({ method: "POST" })
         about_artist: data.about_artist,
         about_release: data.about_release,
         has_videoclip: data.has_videoclip,
+        faixa_foco: data.faixa_foco || null,
       })
       .select("id")
       .single();
@@ -219,6 +223,7 @@ export const submitRelease = createServerFn({ method: "POST" })
           artistName: data.artist_name,
           releaseName: data.release_name,
           releaseType: data.release_type,
+          faixaFoco: data.faixa_foco || "",
         },
       });
       const adminEmail = await getAdminNotificationEmail();
@@ -231,6 +236,7 @@ export const submitRelease = createServerFn({ method: "POST" })
             artistName: data.artist_name,
             releaseName: data.release_name,
             releaseType: data.release_type,
+            faixaFoco: data.faixa_foco || "",
             email: data.email,
             adminUrl: `${PUBLIC_SITE_URL}/admin/lancamentos/${inserted.id}`,
           },
