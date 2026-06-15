@@ -11,7 +11,7 @@ export function Header() {
 
   const navLinks = [
     { to: "/", label: "Beats", exact: true },
-    { to: "/produtores", label: "Produtores" },
+    { to: "/produtores", label: "Produtoras" },
     { to: "/como-funciona", label: "Como funciona" },
   ];
 
