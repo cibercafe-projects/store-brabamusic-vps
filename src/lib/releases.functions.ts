@@ -110,6 +110,11 @@ const submitSchema = z
     email: z.string().trim().email("E-mail inválido").max(255),
     full_name: z.string().trim().min(3).max(160),
     cpf: z.string().trim().regex(cpfRegex, "CPF inválido"),
+    whatsapp: z
+      .string()
+      .trim()
+      .min(8, "WhatsApp obrigatório")
+      .max(20, "WhatsApp inválido"),
     artist_name: z.string().trim().min(2).max(160),
     release_type: z.enum(["single", "ep", "album"]),
     release_name: z.string().trim().min(1).max(200),
@@ -176,6 +181,7 @@ export const submitRelease = createServerFn({ method: "POST" })
         email: data.email.toLowerCase(),
         full_name: data.full_name,
         cpf: data.cpf,
+        whatsapp: data.whatsapp.replace(/[^\d+]/g, ""),
         artist_name: data.artist_name,
         release_type: data.release_type,
         release_name: data.release_name,

@@ -22,6 +22,7 @@ import {
   PURCHASE_STATUS_LIST,
   type PurchaseStatus,
 } from "@/lib/purchases.functions";
+import { waLink as buildWaLink } from "@/lib/whatsapp";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -374,6 +375,20 @@ function PurchaseDetailPage() {
                 <PackageCheck className="h-4 w-4" />{" "}
                 {p.status === "arquivos_enviados" ? "Reenviar arquivos" : "Entregar arquivos"}
               </Button>
+              {(() => {
+                const msg = `Olá ${p.nome_cliente}, sua compra do beat *${beat?.nome ?? ""}* foi liberada! Em instantes você recebe o e-mail com os arquivos. Qualquer dúvida, é só responder por aqui. — Braba Music`;
+                const link = buildWaLink(p.whatsapp, msg);
+                return link ? (
+                  <Button
+                    asChild
+                    className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95"
+                  >
+                    <a href={link} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="h-4 w-4" /> Avisar entrega no WhatsApp
+                    </a>
+                  </Button>
+                ) : null;
+              })()}
               {p.status !== "pagamento_confirmado" && p.status !== "arquivos_enviados" && (
                 <p className="text-xs text-muted-foreground self-center">
                   Confirme o pagamento antes de entregar.

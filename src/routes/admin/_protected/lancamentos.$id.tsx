@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   RELEASE_TYPE_LABEL,
   type ReleaseStatus,
 } from "@/lib/releases.constants";
+import { waLink } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/admin/_protected/lancamentos/$id")({
   component: LancamentoDetail,
@@ -88,6 +89,36 @@ function LancamentoDetail() {
         </div>
       </div>
 
+      {(() => {
+        const artistWa = (r as { whatsapp?: string }).whatsapp || "";
+        const baseMsg =
+          r.status === "aprovado"
+            ? `Olá ${r.artist_name}! Seu lançamento *${r.release_name}* foi aprovado. Avisando que foi aprovado e em breve estaremos em contato para o planejamento do lançamento. — Braba Music`
+            : `Olá ${r.artist_name}! Atualização do seu lançamento *${r.release_name}*: status agora é *${RELEASE_STATUS_LABEL[r.status]}*. — Braba Music`;
+        const link = waLink(artistWa, baseMsg);
+        return (
+          <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 flex flex-wrap items-center gap-3 justify-between">
+            <div className="text-sm">
+              <p className="font-semibold">Avisar artista pelo WhatsApp</p>
+              <p className="text-xs text-muted-foreground">
+                Mensagem pré-preenchida com base no status atual ({RELEASE_STATUS_LABEL[r.status]}).
+              </p>
+            </div>
+            {link ? (
+              <Button asChild className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95">
+                <a href={link} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-4 w-4" /> Avisar artista por WhatsApp
+                </a>
+              </Button>
+            ) : (
+              <Button disabled variant="outline" title="Artista não informou WhatsApp">
+                <MessageCircle className="h-4 w-4" /> WhatsApp indisponível
+              </Button>
+            )}
+          </div>
+        );
+      })()}
+
       <header className="flex gap-6 items-start">
         {r.cover_url && (
           <img
@@ -117,6 +148,7 @@ function LancamentoDetail() {
           <Info label="Nome completo" value={r.full_name} />
           <Info label="CPF" value={r.cpf} />
           <Info label="E-mail" value={r.email} />
+          <Info label="WhatsApp" value={(r as { whatsapp?: string }).whatsapp || "—"} />
           <Info label="Nome artístico" value={r.artist_name} />
           <Block label="Sobre o artista" value={r.about_artist} />
         </InfoCard>
