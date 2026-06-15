@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Loader2, Send, MessageCircle, Mail, History, Copy } from "lucide-react";
+import { Send, MessageCircle, Mail, History, Copy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -54,8 +53,6 @@ export function ResendInstructionsCard({ purchase }: Props) {
   const noEmail = !purchase.email;
   const noWhats = !purchase.whatsapp;
 
-  const [email, setEmail] = useState(!noEmail);
-  const [whatsapp, setWhatsapp] = useState(!noWhats);
   const [custom, setCustom] = useState("");
 
   const origin =
@@ -89,39 +86,44 @@ export function ResendInstructionsCard({ purchase }: Props) {
     setCustom("");
   }, [purchase.id]);
 
-  const mutation = useMutation({
-    mutationFn: () =>
+  const logMutation = useMutation({
+    mutationFn: (channel: "whatsapp" | "email") =>
       logFn({
-        data: { id: purchase.id, canal_email: email, canal_whatsapp: whatsapp },
+        data: {
+          id: purchase.id,
+          canal_email: channel === "email",
+          canal_whatsapp: channel === "whatsapp",
+        },
       }),
-    onSuccess: (res) => {
-      if (whatsapp && purchase.whatsapp) {
-        const wa = purchase.whatsapp.replace(/\D/g, "");
-        const url = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
-        window.open(url, "_blank", "noopener,noreferrer");
-      }
-      if (email && (res as { email_sent?: boolean })?.email_sent) {
-        toast.success("E-mail reenviado ao cliente.");
-      } else if (email) {
-        toast.warning("E-mail não foi enviado (cliente sem e-mail ou suprimido).");
-      } else {
-        toast.success("Reenvio registrado.");
-      }
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "resend-instructions", purchase.id] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro ao registrar."),
   });
+
+  function handleWhatsapp() {
+    if (!purchase.whatsapp) return;
+    const wa = purchase.whatsapp.replace(/\D/g, "");
+    const url = `https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    logMutation.mutate("whatsapp");
+  }
+
+  function handleEmail() {
+    if (!purchase.email) return;
+    const subject = encodeURIComponent("Braba Music - Instruções de Pagamento");
+    const body = encodeURIComponent(message);
+    window.location.href = `mailto:${purchase.email}?subject=${subject}&body=${body}`;
+    logMutation.mutate("email");
+  }
 
   async function copyMsg() {
     try {
       await navigator.clipboard.writeText(message);
-      toast.success("Mensagem copiada.");
+      toast.success("Mensagem copiada com sucesso.");
     } catch {
       toast.error("Não foi possível copiar.");
     }
   }
-
-  const noChannel = !email && !whatsapp;
 
   return (
     <Card className="md:col-span-2 border-accent/30">
@@ -132,51 +134,10 @@ export function ResendInstructionsCard({ purchase }: Props) {
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <p className="text-xs text-muted-foreground">
-          Use quando o cliente se perder no fluxo: reenvia a chave de pagamento e o link de
-          envio de comprovante para o contato cadastrado.
+          Use quando o cliente se perder no fluxo: a mensagem abaixo contém os dados da
+          compra, valor, pagamento e o link para envio do comprovante. Edite se quiser —
+          os botões usam exatamente a versão exibida.
         </p>
-
-        <div className="space-y-2">
-          <Label>Canais</Label>
-          <div className="space-y-2 rounded-md border p-3">
-            <label className="flex items-start gap-2 cursor-pointer">
-              <Checkbox
-                checked={whatsapp}
-                onCheckedChange={(v) => setWhatsapp(!!v)}
-                disabled={noWhats}
-                className="mt-0.5"
-              />
-              <span className="flex-1">
-                <span className="inline-flex items-center gap-1">
-                  <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {noWhats
-                    ? "Cliente não informou WhatsApp."
-                    : `Abrirá ${purchase.whatsapp} com a mensagem pronta.`}
-                </span>
-              </span>
-            </label>
-            <label className="flex items-start gap-2 cursor-pointer">
-              <Checkbox
-                checked={email}
-                onCheckedChange={(v) => setEmail(!!v)}
-                disabled={noEmail}
-                className="mt-0.5"
-              />
-              <span className="flex-1">
-                <span className="inline-flex items-center gap-1">
-                  <Mail className="h-3.5 w-3.5" /> E-mail
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {noEmail
-                    ? "Cliente não informou e-mail."
-                    : `Abrirá o cliente de e-mail com destino ${purchase.email}.`}
-                </span>
-              </span>
-            </label>
-          </div>
-        </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="resend-msg">Mensagem (edite se quiser)</Label>
@@ -187,12 +148,36 @@ export function ResendInstructionsCard({ purchase }: Props) {
             rows={8}
             className="text-xs font-mono"
           />
-          <div className="flex justify-end">
-            <Button type="button" variant="outline" size="sm" onClick={copyMsg}>
-              <Copy className="h-3.5 w-3.5" /> Copiar
-            </Button>
-          </div>
         </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            onClick={handleWhatsapp}
+            disabled={noWhats}
+            className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90"
+          >
+            <MessageCircle className="h-4 w-4" /> Reenviar por WhatsApp
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleEmail}
+            disabled={noEmail}
+          >
+            <Mail className="h-4 w-4" /> Reenviar por E-mail
+          </Button>
+          <Button type="button" variant="outline" onClick={copyMsg}>
+            <Copy className="h-4 w-4" /> Copiar Mensagem
+          </Button>
+        </div>
+
+        {(noWhats || noEmail) && (
+          <p className="text-xs text-muted-foreground">
+            {noWhats && "Cliente não informou WhatsApp. "}
+            {noEmail && "Cliente não informou e-mail."}
+          </p>
+        )}
 
         {history.data && history.data.length > 0 && (
           <div className="space-y-1.5">
@@ -218,21 +203,6 @@ export function ResendInstructionsCard({ purchase }: Props) {
             </div>
           </div>
         )}
-
-        <div>
-          <Button
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending || noChannel}
-          >
-            {mutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                <Send className="h-4 w-4" /> Reenviar instruções
-              </>
-            )}
-          </Button>
-        </div>
       </CardContent>
     </Card>
   );
