@@ -319,6 +319,44 @@ export function BeatForm({ initial, onDone }: Props) {
           />
           <FormField
             control={form.control}
+            name="tipo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo do beat *</FormLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={(v) => {
+                    const next = v as "fechado" | "aberto";
+                    const current = form.getValues("preco");
+                    const isDefault =
+                      !current || current === "100,00" || current === "150,00";
+                    field.onChange(next);
+                    if (isDefault) {
+                      form.setValue("preco", next === "aberto" ? "150,00" : "100,00", {
+                        shouldDirty: true,
+                      });
+                    }
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="fechado">Fechado (WAV)</SelectItem>
+                    <SelectItem value="aberto">Aberto (WAV + Stems)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Fechado entrega só WAV. Aberto entrega WAV + Stems.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="preco"
             render={({ field }) => (
               <FormItem>
@@ -328,7 +366,7 @@ export function BeatForm({ initial, onDone }: Props) {
                     type="text"
                     inputMode="decimal"
                     {...field}
-                    placeholder="199,99"
+                    placeholder="100,00"
                     onChange={(e) =>
                       field.onChange(e.target.value.replace(/[^\d,.]/g, ""))
                     }
