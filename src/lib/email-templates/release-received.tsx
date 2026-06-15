@@ -7,6 +7,7 @@ interface Props {
   artistName?: string;
   releaseName?: string;
   releaseType?: string;
+  faixaFoco?: string;
 }
 
 const TYPE_LABEL: Record<string, string> = {
