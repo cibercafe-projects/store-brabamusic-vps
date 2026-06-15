@@ -102,18 +102,19 @@ function SendReceiptPage() {
         />
       </div>
 
-      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
-        Após avisar a administração, aguarde até <span className="font-semibold text-foreground">24h</span> para a revisão do comprovante, aprovação do pagamento e envio dos arquivos adquiridos.
-      </div>
-
       <a
         href={waLink}
         target="_blank"
         rel="noreferrer"
-        className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 text-center"
+        className="mt-6 w-full inline-flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-95 hover:shadow-primary/50 transition text-center"
       >
-        <MessageCircle className="h-4 w-4" /> Avisar a Administração da Braba sobre o seu pagamento
+        <MessageCircle className="h-6 w-6" /> Avisar imediatamente a Administração da Braba sobre o seu pagamento
       </a>
+
+      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
+        Após avisar a administração, aguarde até <span className="font-semibold text-foreground">24h</span> para a revisão do comprovante, aprovação do pagamento e envio dos arquivos adquiridos.
+      </div>
+
     </div>
   );
 }
