@@ -50,6 +50,7 @@ function SubmitReleasePage() {
   const [releaseType, setReleaseType] = useState<ReleaseType>("single");
   const [releaseName, setReleaseName] = useState("");
   const [tracklist, setTracklist] = useState("");
+  const [faixaFoco, setFaixaFoco] = useState("");
   const [lyricsDriveUrl, setLyricsDriveUrl] = useState("");
   const [isrc, setIsrc] = useState("");
   const [audioDriveUrl, setAudioDriveUrl] = useState("");
