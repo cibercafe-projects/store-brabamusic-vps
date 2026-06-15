@@ -115,13 +115,6 @@ export function PurchaseDialog({
         },
       });
       setToken(res.continuation_token);
-      // Abre WhatsApp em nova aba
-      const msg = `Olá!\n\nAcabei de solicitar a compra do beat:\n${beatName}\n\nMeu nome é:\n${nome.trim()}\n\nAguardo a confirmação do pagamento.`;
-      try {
-        window.open(whatsappLink(commercialWa, msg), "_blank", "noopener,noreferrer");
-      } catch {
-        // ignore popup blockers
-      }
       setStep("receipt");
       toast.success("Pedido registrado!");
     } catch (e) {
