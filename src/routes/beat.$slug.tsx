@@ -156,7 +156,7 @@ function BeatDetail() {
             </Link>
           )}
 
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+          <div className="mt-3 flex w-fit items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
             {beat.tipo === "aberto" ? "Aberto · WAV + Stems" : "Fechado · WAV"}
           </div>
 

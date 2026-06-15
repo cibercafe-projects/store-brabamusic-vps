@@ -90,13 +90,16 @@ function Index() {
           <p className="text-xs uppercase tracking-[0.4em] text-accent">
             Selo BRABA Music · loja de beats
           </p>
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
+            Feita por mulheres para artistas mulheres · Inclusiva LGBTQIAPN+
+          </div>
           <h1 className="mt-4 font-display text-5xl md:text-7xl leading-none">
             <span className="text-gradient">ESCOLHE</span> O BEAT.
             <br />
             <span className="text-gradient">ESCREVE</span> A HISTÓRIA.
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-muted-foreground">
-            Catálogo oficial dos produtores da BRABA. Escute a prévia e conheça o time por trás de
+            Catálogo oficial das produtoras da BRABA. Escute a prévia e conheça o time por trás de
             cada beat.
           </p>
 

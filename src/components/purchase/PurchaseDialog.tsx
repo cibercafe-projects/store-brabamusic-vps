@@ -88,7 +88,7 @@ export function PurchaseDialog({
     }
   }, [open]);
 
-  const commercialWa = settings.data?.commercial_whatsapp ?? "+5511913401000";
+  
   const pixKey = settings.data?.pix_key ?? "";
   const paymentLink = settings.data?.payment_link ?? "";
 
@@ -332,10 +332,6 @@ export function PurchaseDialog({
                 </label>
               </div>
 
-              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs">
-                <span className="text-muted-foreground">WhatsApp Comercial: </span>
-                <span className="font-semibold">{commercialWa}</span>
-              </div>
             </div>
 
             <DialogFooter>
