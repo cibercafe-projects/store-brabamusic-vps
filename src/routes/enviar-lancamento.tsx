@@ -314,8 +314,8 @@ function SubmitReleasePage() {
               />
               <p className="text-xs text-muted-foreground">
                 {isMulti
-                  ? "Cole o link de uma pasta do Drive com todas as faixas (WAV ou MP3). "
-                  : "Cole o link do arquivo no Drive (WAV ou MP3). "}
+                  ? "Cole o link de uma pasta do Drive com todas as faixas (apenas WAV). "
+                  : "Cole o link do arquivo no Drive (apenas WAV). "}
                 Garanta que o link esteja como <strong>“Qualquer pessoa com o link pode visualizar”</strong>.
               </p>
             </Field>
