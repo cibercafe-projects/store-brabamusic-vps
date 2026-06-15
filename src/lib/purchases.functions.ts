@@ -61,6 +61,13 @@ export const getPurchaseSettings = createServerFn({ method: "GET" }).handler(asy
 const createSchema = z.object({
   beat_id: z.string().uuid("Beat inválido"),
   nome_cliente: z.string().trim().min(2, "Nome obrigatório").max(160),
+  nome_artistico: z
+    .string()
+    .trim()
+    .max(120)
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : null))
+    .nullable(),
   email: z.string().trim().toLowerCase().email("E-mail inválido").max(255),
   whatsapp: z
     .string()
@@ -102,6 +109,7 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
       .insert({
         beat_id: data.beat_id,
         nome_cliente: data.nome_cliente,
+        nome_artistico: data.nome_artistico,
         email: data.email,
         whatsapp: data.whatsapp,
         instagram: data.instagram,
@@ -140,6 +148,7 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
         idempotencyKey: `purchase-created-${inserted.id}`,
         templateData: {
           nome: data.nome_cliente,
+          nomeArtistico: data.nome_artistico ?? "",
           beatNome: beat.nome,
           valor: beat.preco,
           formaPagamento: data.forma_pagamento,
@@ -157,6 +166,7 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
           idempotencyKey: `admin-new-purchase-${inserted.id}`,
           templateData: {
             nomeCliente: data.nome_cliente,
+            nomeArtistico: data.nome_artistico ?? "",
             email: data.email,
             whatsapp: data.whatsapp,
             beatNome: beat.nome,

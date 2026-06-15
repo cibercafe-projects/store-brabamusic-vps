@@ -154,6 +154,12 @@ function PurchaseDetailPage() {
               <p className="text-xs text-muted-foreground">Nome</p>
               <p className="font-medium">{p.nome_cliente}</p>
             </div>
+            {p.nome_artistico && (
+              <div>
+                <p className="text-xs text-muted-foreground">Nome artístico</p>
+                <p className="font-medium">{p.nome_artistico}</p>
+              </div>
+            )}
             <div>
               <p className="text-xs text-muted-foreground">E-mail</p>
               <p className="font-medium break-all">{p.email}</p>
