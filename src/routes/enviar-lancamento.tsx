@@ -287,6 +287,20 @@ function SubmitReleasePage() {
               </Field>
             )}
 
+            {isMulti && (
+              <Field label="Faixa Foco" required>
+                <Input
+                  required
+                  value={faixaFoco}
+                  onChange={(e) => setFaixaFoco(e.target.value)}
+                  placeholder="Nome exato da faixa principal"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Música principal para divulgação e distribuição.
+                </p>
+              </Field>
+            )}
+
             <Field
               label={isMulti ? "Link do Google Drive (pasta com as músicas)" : "Link do Google Drive da música"}
               required
