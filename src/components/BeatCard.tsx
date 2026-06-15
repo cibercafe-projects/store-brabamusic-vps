@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Play, Pause, Headphones, MessageCircle, ShoppingCart } from "lucide-react";
+import { Play, Pause, Headphones, ShoppingCart } from "lucide-react";
 import { usePlayer } from "./PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
-import { InterestForm } from "@/components/InterestForm";
 import { PurchaseDialog } from "@/components/purchase/PurchaseDialog";
 import type { PublicBeat } from "@/lib/catalog.types";
 
 export function BeatCard({ beat }: { beat: PublicBeat }) {
-  const [interestOpen, setInterestOpen] = useState(false);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
 
   const { current, playing, play } = usePlayer();
@@ -95,27 +93,14 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
               Ver
             </Link>
             <button
-              onClick={() => setInterestOpen(true)}
-              className="flex-1 inline-flex items-center justify-center gap-1 rounded-full border border-white/15 px-3 py-2 text-xs font-semibold hover:bg-white/10"
+              onClick={() => setPurchaseOpen(true)}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-bold hover:opacity-90"
             >
-              <MessageCircle className="h-3.5 w-3.5" /> Interesse
+              <ShoppingCart className="h-4 w-4" /> COMPRAR
             </button>
           </div>
-          <button
-            onClick={() => setPurchaseOpen(true)}
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-accent text-accent-foreground px-4 py-2 text-sm font-bold hover:opacity-90"
-          >
-            <ShoppingCart className="h-4 w-4" /> COMPRAR
-          </button>
         </div>
       </div>
-      <InterestForm
-        beatId={beat.id}
-        beatName={beat.nome}
-        produtora={beat.produtora_nome}
-        open={interestOpen}
-        onOpenChange={setInterestOpen}
-      />
       <PurchaseDialog
         open={purchaseOpen}
         onOpenChange={setPurchaseOpen}

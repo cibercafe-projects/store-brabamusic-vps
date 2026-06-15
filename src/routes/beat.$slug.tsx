@@ -1,12 +1,11 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Play, Pause, Instagram, Music2, Share2, Check, MessageCircle, ArrowLeft, ShoppingCart } from "lucide-react";
+import { Play, Pause, Instagram, Music2, Share2, Check, ArrowLeft, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getPublicBeatBySlug } from "@/lib/catalog.functions";
 import { usePlayer } from "@/components/PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
-import { InterestForm } from "@/components/InterestForm";
 import { PurchaseDialog } from "@/components/purchase/PurchaseDialog";
 
 
@@ -49,7 +48,6 @@ function BeatDetail() {
   const isPlaying = current?.id === beat.id && playing;
   const hasPreview = !!beat.preview_url;
   const [copied, setCopied] = useState(false);
-  const [interestOpen, setInterestOpen] = useState(false);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
 
 
