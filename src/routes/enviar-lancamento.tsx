@@ -20,7 +20,7 @@ import {
 import { submitRelease } from "@/lib/releases.functions";
 import { waLink } from "@/lib/whatsapp";
 import { useQuery } from "@tanstack/react-query";
-import { getPaymentSettings } from "@/lib/purchases.functions";
+import { getPurchaseSettings } from "@/lib/purchases.functions";
 
 export const Route = createFileRoute("/enviar-lancamento")({
   head: () => ({
@@ -45,6 +45,7 @@ function SubmitReleasePage() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [cpf, setCpf] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [artistName, setArtistName] = useState("");
   const [releaseType, setReleaseType] = useState<ReleaseType>("single");
   const [releaseName, setReleaseName] = useState("");
