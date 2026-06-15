@@ -99,7 +99,8 @@ function LeadsPage() {
       <header>
         <h1 className="font-display text-3xl">Leads</h1>
         <p className="text-sm text-muted-foreground">
-          Interesses recebidos pelo catálogo público.
+          Interesses recebidos pelo catálogo público e cadastros de clientes do fluxo de compra
+          (mesmo que ainda não tenham pago).
         </p>
       </header>
 
@@ -142,100 +143,119 @@ function LeadsPage() {
         </Card>
       ) : (
         <div className="grid gap-3">
-          {rows.map((lead) => (
-            <Card key={lead.id}>
-              <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
-                <div className="min-w-0">
-                  <CardTitle className="text-base flex items-center gap-2 flex-wrap">
-                    {lead.nome}
-                    <Badge variant={STATUS_VARIANT[lead.status]}>
-                      {LEAD_STATUS_LABEL[lead.status]}
-                    </Badge>
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(lead.created_at).toLocaleString("pt-BR")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Select
-                    value={lead.status}
-                    onValueChange={(v) =>
-                      updateMutation.mutate({ id: lead.id, status: v as LeadStatus })
-                    }
-                  >
-                    <SelectTrigger className="w-[150px] h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEAD_STATUSES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {LEAD_STATUS_LABEL[s]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => setDeleting(lead.id)}
-                    aria-label="Remover lead"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
-                  <a
-                    href={`mailto:${lead.email}`}
-                    className="inline-flex items-center gap-1 hover:text-foreground"
-                  >
-                    <Mail className="h-3.5 w-3.5" /> {lead.email}
-                  </a>
-                  <a
-                    href={`https://wa.me/${lead.telefone.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 hover:text-foreground"
-                  >
-                    <Phone className="h-3.5 w-3.5" /> {lead.telefone}
-                  </a>
-                  {lead.instagram && (
+          {rows.map((lead) => {
+            const isPurchase = lead.source === "compra";
+            return (
+              <Card key={lead.id}>
+                <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
+                  <div className="min-w-0">
+                    <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+                      {lead.nome}
+                      <Badge variant={STATUS_VARIANT[lead.status]}>
+                        {LEAD_STATUS_LABEL[lead.status]}
+                      </Badge>
+                      <Badge variant={isPurchase ? "outline" : "secondary"} className="text-[10px]">
+                        {isPurchase ? "Compra" : "Interesse"}
+                      </Badge>
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(lead.created_at).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {isPurchase ? (
+                      <Button asChild size="sm" variant="outline" className="h-8">
+                        <Link
+                          to="/admin/compras/$id"
+                          params={{ id: lead.purchase_id! }}
+                        >
+                          Abrir pedido
+                        </Link>
+                      </Button>
+                    ) : (
+                      <>
+                        <Select
+                          value={lead.status}
+                          onValueChange={(v) =>
+                            updateMutation.mutate({ id: lead.id, status: v as LeadStatus })
+                          }
+                        >
+                          <SelectTrigger className="w-[150px] h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LEAD_STATUSES.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {LEAD_STATUS_LABEL[s]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => setDeleting(lead.id)}
+                          aria-label="Remover lead"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
                     <a
-                      href={`https://instagram.com/${lead.instagram}`}
+                      href={`mailto:${lead.email}`}
+                      className="inline-flex items-center gap-1 hover:text-foreground"
+                    >
+                      <Mail className="h-3.5 w-3.5" /> {lead.email}
+                    </a>
+                    <a
+                      href={`https://wa.me/${lead.telefone.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-1 hover:text-foreground"
                     >
-                      <Instagram className="h-3.5 w-3.5" /> @{lead.instagram}
+                      <Phone className="h-3.5 w-3.5" /> {lead.telefone}
                     </a>
-                  )}
-                </div>
-                {lead.mensagem && (
-                  <p className="text-sm italic text-muted-foreground border-l-2 border-white/10 pl-3">
-                    "{lead.mensagem}"
-                  </p>
-                )}
-                {lead.beat && (
-                  <div className="text-xs pt-2 border-t border-white/5">
-                    Beat:{" "}
-                    <Link
-                      to="/beat/$slug"
-                      params={{ slug: lead.beat.slug }}
-                      target="_blank"
-                      className="text-accent hover:underline font-medium"
-                    >
-                      {lead.beat.nome}
-                    </Link>
-                    {lead.beat.produtora_nome ? (
-                      <span className="text-muted-foreground"> — {lead.beat.produtora_nome}</span>
-                    ) : null}
+                    {lead.instagram && (
+                      <a
+                        href={`https://instagram.com/${lead.instagram}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 hover:text-foreground"
+                      >
+                        <Instagram className="h-3.5 w-3.5" /> @{lead.instagram}
+                      </a>
+                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  {lead.mensagem && (
+                    <p className="text-sm italic text-muted-foreground border-l-2 border-white/10 pl-3">
+                      "{lead.mensagem}"
+                    </p>
+                  )}
+                  {lead.beat && (
+                    <div className="text-xs pt-2 border-t border-white/5">
+                      Beat:{" "}
+                      <Link
+                        to="/beat/$slug"
+                        params={{ slug: lead.beat.slug }}
+                        target="_blank"
+                        className="text-accent hover:underline font-medium"
+                      >
+                        {lead.beat.nome}
+                      </Link>
+                      {lead.beat.produtora_nome ? (
+                        <span className="text-muted-foreground"> — {lead.beat.produtora_nome}</span>
+                      ) : null}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

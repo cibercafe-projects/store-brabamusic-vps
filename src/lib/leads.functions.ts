@@ -140,35 +140,117 @@ const listInput = z
   })
   .default({});
 
+const PURCHASE_STATUS_TO_LEAD: Record<string, LeadStatus> = {
+  aguardando_pagamento: "novo",
+  pagamento_confirmado: "pago",
+  arquivos_enviados: "entregue",
+  cancelado: "perdido",
+};
+
 export const listLeads = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => listInput.parse(input ?? {}))
   .handler(async ({ context, data }) => {
     const admin = await assertAdmin(context.userId);
-    const from = (data.page - 1) * data.pageSize;
-    const to = from + data.pageSize - 1;
 
-    let q = admin
+    // ---------- Leads ----------
+    let leadsQ = admin
       .from("leads")
-      .select("id, beat_id, nome, email, telefone, instagram, mensagem, status, created_at", {
-        count: "exact",
-      })
+      .select("id, beat_id, nome, email, telefone, instagram, mensagem, status, created_at")
       .order("created_at", { ascending: false })
-      .range(from, to);
-
-    if (data.status) q = q.eq("status", data.status);
+      .limit(500);
+    if (data.status) leadsQ = leadsQ.eq("status", data.status);
     if (data.search) {
       const s = data.search.replace(/[%_,()]/g, " ").trim();
-      if (s) q = q.or(`nome.ilike.%${s}%,email.ilike.%${s}%,telefone.ilike.%${s}%,instagram.ilike.%${s}%`);
+      if (s)
+        leadsQ = leadsQ.or(
+          `nome.ilike.%${s}%,email.ilike.%${s}%,telefone.ilike.%${s}%,instagram.ilike.%${s}%`,
+        );
     }
-
-    const { data: rows, error, count } = await q;
-    if (error) {
-      console.error("[leads.list]", error);
+    const { data: leadRows, error: leadsErr } = await leadsQ;
+    if (leadsErr) {
+      console.error("[leads.list] leads", leadsErr);
       throw new Error("Erro ao carregar leads.");
     }
 
-    const beatIds = Array.from(new Set((rows ?? []).map((r) => r.beat_id)));
+    // ---------- Cadastros vindos de compras ----------
+    let purchasesQ = admin
+      .from("purchase_requests")
+      .select(
+        "id, beat_id, nome_cliente, nome_artistico, email, whatsapp, instagram, status, created_at",
+      )
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (data.search) {
+      const s = data.search.replace(/[%_,()]/g, " ").trim();
+      if (s)
+        purchasesQ = purchasesQ.or(
+          `nome_cliente.ilike.%${s}%,nome_artistico.ilike.%${s}%,email.ilike.%${s}%,whatsapp.ilike.%${s}%,instagram.ilike.%${s}%`,
+        );
+    }
+    const { data: purchaseRows, error: purchasesErr } = await purchasesQ;
+    if (purchasesErr) {
+      console.error("[leads.list] purchases", purchasesErr);
+    }
+
+    type Row = {
+      id: string;
+      source: "lead" | "compra";
+      beat_id: string;
+      nome: string;
+      email: string;
+      telefone: string;
+      instagram: string | null;
+      mensagem: string | null;
+      status: LeadStatus;
+      created_at: string;
+      purchase_id?: string;
+    };
+
+    const leadItems: Row[] = (leadRows ?? []).map((r) => ({
+      id: r.id,
+      source: "lead",
+      beat_id: r.beat_id,
+      nome: r.nome,
+      email: r.email,
+      telefone: r.telefone,
+      instagram: r.instagram,
+      mensagem: r.mensagem,
+      status: r.status as LeadStatus,
+      created_at: r.created_at,
+    }));
+
+    const purchaseItems: Row[] = (purchaseRows ?? [])
+      .map((r) => {
+        const mapped = PURCHASE_STATUS_TO_LEAD[r.status as string] ?? "novo";
+        return {
+          id: `purchase:${r.id}`,
+          source: "compra" as const,
+          beat_id: r.beat_id,
+          nome: r.nome_artistico
+            ? `${r.nome_cliente} (${r.nome_artistico})`
+            : r.nome_cliente,
+          email: r.email,
+          telefone: r.whatsapp,
+          instagram: r.instagram,
+          mensagem: null,
+          status: mapped,
+          created_at: r.created_at,
+          purchase_id: r.id,
+        };
+      })
+      .filter((r) => !data.status || r.status === data.status);
+
+    const merged = [...leadItems, ...purchaseItems].sort((a, b) =>
+      a.created_at < b.created_at ? 1 : -1,
+    );
+
+    // Paginação em memória após merge
+    const from = (data.page - 1) * data.pageSize;
+    const paged = merged.slice(from, from + data.pageSize);
+
+    // Lookup de beats / produtoras
+    const beatIds = Array.from(new Set(paged.map((r) => r.beat_id)));
     const beatMap = new Map<
       string,
       { id: string; nome: string; slug: string; produtora_nome: string | null }
@@ -198,8 +280,8 @@ export const listLeads = createServerFn({ method: "POST" })
     }
 
     return {
-      rows: (rows ?? []).map((r) => ({ ...r, beat: beatMap.get(r.beat_id) ?? null })),
-      total: count ?? 0,
+      rows: paged.map((r) => ({ ...r, beat: beatMap.get(r.beat_id) ?? null })),
+      total: merged.length,
     };
   });
 
