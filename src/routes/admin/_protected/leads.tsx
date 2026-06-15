@@ -99,7 +99,8 @@ function LeadsPage() {
       <header>
         <h1 className="font-display text-3xl">Leads</h1>
         <p className="text-sm text-muted-foreground">
-          Interesses recebidos pelo catálogo público.
+          Interesses recebidos pelo catálogo público e cadastros de clientes do fluxo de compra
+          (mesmo que ainda não tenham pago).
         </p>
       </header>
 
