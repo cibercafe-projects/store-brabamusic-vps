@@ -22,6 +22,7 @@ const AdminNewRelease = ({
   artistName = "—",
   releaseName = "—",
   releaseType = "single",
+  faixaFoco = "",
   email = "—",
   adminUrl = "https://brababeats.app/admin/lancamentos",
 }: Props) => (
@@ -40,6 +41,11 @@ const AdminNewRelease = ({
       <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
         <strong>Tipo:</strong> {TYPE_LABEL[releaseType] ?? releaseType}
       </Text>
+      {releaseType !== "single" && faixaFoco && (
+        <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
+          <strong>Faixa foco:</strong> {faixaFoco}
+        </Text>
+      )}
       <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
         <strong>E-mail:</strong> {email}
       </Text>
