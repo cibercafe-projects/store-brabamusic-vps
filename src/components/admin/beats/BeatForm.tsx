@@ -57,6 +57,7 @@ const schema = z.object({
   tom: z.string().trim().max(60).optional().or(z.literal("")),
   mood: z.string().trim().max(60).optional().or(z.literal("")),
   preco: z.string().optional().or(z.literal("")),
+  tipo: z.enum(["fechado", "aberto"]).default("fechado"),
   descricao: z.string().trim().max(2000).optional().or(z.literal("")),
   status: z.enum(["rascunho", "ativo", "vendido"]),
   capa_path: z.string().max(300).optional().or(z.literal("")),
@@ -80,6 +81,7 @@ export type BeatFormInitial = {
   tom?: string | null;
   mood?: string | null;
   preco?: number | string | null;
+  tipo?: "fechado" | "aberto";
   descricao?: string | null;
   status?: "rascunho" | "ativo" | "vendido";
   capa_url?: string | null;
@@ -133,7 +135,8 @@ export function BeatForm({ initial, onDone }: Props) {
       preco:
         initial?.preco != null
           ? String(initial.preco).replace(".", ",")
-          : "199,99",
+          : "100,00",
+      tipo: initial?.tipo ?? "fechado",
       descricao: initial?.descricao ?? "",
       status: initial?.status ?? "rascunho",
       capa_path: initial?.capa_path ?? "",
@@ -166,6 +169,7 @@ export function BeatForm({ initial, onDone }: Props) {
         tom: values.tom || "",
         mood: values.mood || "",
         preco: values.preco ? Number(String(values.preco).replace(",", ".")) : null,
+        tipo: values.tipo,
         descricao: values.descricao || "",
         status: values.status,
         capa_url: "",
