@@ -1,20 +1,26 @@
-## Alterações
+## Ajustes na tela de comprovante enviado
 
-### 1. `src/routes/enviar-comprovante.$token.tsx`
-- Renomear o botão final de `Falar no WhatsApp ({commercialWa})` para **`Avisar a Administração da Braba sobre o seu pagamento`** (mantendo o ícone `MessageCircle` e o link `wa.me` para o número comercial).
-- Atualizar o texto introdutório / adicionar bloco informativo logo após o card de "Comprovante já enviado!" (ou abaixo do uploader) com a mensagem:
-  > "Após avisar a administração, aguarde até **24h** para a revisão do comprovante, aprovação do pagamento e envio dos arquivos adquiridos."
-- Ajustar o `text` da mensagem `wa.me` para algo como:
-  > "Olá! Sou {nome}. Acabei de enviar o comprovante do beat {beat}. Aguardo a validação e o envio dos arquivos."
+**Arquivo:** `src/routes/enviar-comprovante.$token.tsx`
 
-### 2. `src/components/purchase/PurchaseDialog.tsx` (tela de sucesso, lista "Próximos passos")
-Atualizar a lista para refletir o novo fluxo e o prazo:
-1. Efetue o pagamento.
-2. Envie seu comprovante no link.
-3. Avise a administração da Braba pelo WhatsApp.
-4. Aguarde até 24h para validação e envio dos arquivos.
+### Mudanças
+
+1. **Reordenar** os blocos após o card "Comprovante já enviado!":
+   - 1º: Botão "Avisar a Administração" (movido para cima)
+   - 2º: Aviso "Após avisar a administração, aguarde até 24h..."
+
+2. **Renomear o botão** de:
+   - "Avisar a Administração da Braba sobre o seu pagamento"
+   - para: **"Avisar imediatamente a Administração da Braba sobre o seu pagamento"**
+
+3. **Destacar mais o botão** (CTA principal):
+   - Trocar o estilo atual (outline/translúcido) por um botão sólido com a cor primária da marca (gradiente rosa/magenta consistente com o restante da página)
+   - Aumentar padding vertical, peso da fonte (bold) e tamanho do ícone
+   - Manter o link `wa.me` e a mensagem já configurada (nome, beat, "Aguardo a validação e o envio dos arquivos")
+   - Continuar visível após cliques (não desabilitar) — usuário pode clicar sempre
 
 ### O que NÃO muda
-- Server functions, e-mails, banco de dados, upload de comprovante.
-- Número de WhatsApp comercial (continua vindo de `settings.commercial_whatsapp`).
-- Demais botões e fluxo de compra.
+
+- Lógica de envio do comprovante
+- Mensagem do WhatsApp (`wa.me`)
+- Demais textos, card do beat, botão "Enviar outro"
+- Server functions, e-mails e banco de dados
