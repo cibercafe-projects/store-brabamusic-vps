@@ -3,20 +3,22 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/como-funciona")({ component: Como });
 
 const steps = [
-  { n: "01", t: "Acessa o catálogo", d: "Navega pela loja em loja.brabamusic.com.br sem precisar de cadastro." },
+  { n: "01", t: "Acessa o catálogo", d: "Navega pela loja em brababeats.app sem precisar de cadastro." },
   { n: "02", t: "Escuta a prévia", d: "Toca o player no card ou na página do beat. Tudo aberto pra visitante." },
-  { n: "03", t: "Manda interesse no WhatsApp", d: "Na página do beat, clica em 'Tenho interesse' e cai direto no WhatsApp da equipe BRABA com a mensagem pronta." },
-  { n: "04", t: "Pagamento manual", d: "A equipe envia link de Pix ou dados de pagamento conforme a licença escolhida." },
-  { n: "05", t: "Entrega manual", d: "Confirmado o pagamento, o beat é enviado pelo WhatsApp e/ou e-mail com link pra download (WAV + stems conforme a licença)." },
+  { n: "03", t: "Clica em COMPRAR", d: "Escolhe a licença (Lease, Premium ou Exclusiva) e preenche nome, e-mail e WhatsApp." },
+  { n: "04", t: "Recebe as instruções", d: "O link de pagamento (Pix ou checkout) chega por WhatsApp e e-mail, junto com o link pra enviar o comprovante." },
+  { n: "05", t: "Envia o comprovante", d: "Direto pelo link gerado na compra — upload rápido, sem precisar voltar pro WhatsApp." },
+  { n: "06", t: "Recebe os arquivos", d: "Confirmado o pagamento, a equipe Braba entrega WAV e stems (conforme a licença) por WhatsApp e e-mail." },
 ];
 
 const faqs = [
-  { q: "Preciso criar conta pra comprar?", a: "Não. Por enquanto o atendimento é todo manual via WhatsApp. Você escolhe o beat, fala com a equipe e fecha por lá." },
+  { q: "Preciso criar conta pra comprar?", a: "Não. Os dados necessários (nome, e-mail e WhatsApp) são pedidos no próprio checkout." },
   { q: "Quais licenças vocês oferecem?", a: "Lease, Premium e Exclusiva. Cada uma libera diferentes usos comerciais — confira a comparação na página de cada beat." },
-  { q: "Como funciona o pagamento?", a: "Combinamos no WhatsApp — Pix ou link de pagamento, conforme a licença. Sem gateway automatizado nesta fase." },
-  { q: "Como recebo o beat?", a: "Após confirmar o pagamento, enviamos o link de download pelo WhatsApp e/ou e-mail." },
+  { q: "Como funciona o pagamento?", a: "Por enquanto é manual: enviamos um link de Pix ou checkout depois que você fecha a compra. Sem gateway automatizado nesta fase." },
+  { q: "Como envio o comprovante?", a: "Cada compra gera um link exclusivo pra upload do comprovante. O link chega por WhatsApp e e-mail logo após o checkout." },
+  { q: "Como recebo o beat?", a: "Após a Braba confirmar o pagamento, enviamos o link de download pelo WhatsApp e pelo e-mail cadastrados na compra." },
   { q: "Posso usar em clipe / Spotify?", a: "Depende da licença. Premium e Exclusiva liberam distribuição em DSPs e vídeo-clipe." },
-  { q: "O beat fica fora do catálogo se eu comprar exclusiva?", a: "Sim. A licença exclusiva remove o beat do catálogo e te dá direitos exclusivos." },
+  { q: "O beat sai do catálogo se eu comprar exclusiva?", a: "Sim. A licença exclusiva remove o beat do catálogo e te dá direitos exclusivos sobre ele." },
 ];
 
 function Como() {
@@ -24,7 +26,7 @@ function Como() {
     <div className="mx-auto max-w-5xl px-4 py-12">
       <h1 className="font-display text-5xl text-gradient">Como funciona</h1>
       <p className="mt-2 text-muted-foreground max-w-2xl">
-        Fluxo simples e direto: catálogo → interesse no WhatsApp → pagamento manual → entrega manual.
+        Catálogo → compra com licença → pagamento → entrega dos arquivos.
       </p>
 
       <ol className="mt-12 grid gap-4 grid-cols-1">

@@ -7,8 +7,6 @@
 export const FEATURES = {
   /** Login passwordless do cliente (AuthModal, requireAuth, persistência). */
   auth: false,
-  /** Favoritos / "Meus interesses" (coração, contador, página, envio consolidado). */
-  interests: false,
   /** Promoção e links para o aplicativo BRABA. */
   appPromo: false,
 };

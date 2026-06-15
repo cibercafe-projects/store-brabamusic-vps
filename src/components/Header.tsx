@@ -1,13 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { ShoppingBag, ExternalLink, LogOut, User, Menu } from "lucide-react";
+import { ExternalLink, LogOut, User, Menu } from "lucide-react";
 import { useState } from "react";
-import { useInterests } from "./PlayerStore";
 import { useAuth } from "./AuthStore";
 import { FEATURES } from "@/config/features";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
 export function Header() {
-  const count = useInterests((s) => s.items.length);
   const { user, logout, requireAuth } = useAuth();
   const [open, setOpen] = useState(false);
 
@@ -41,15 +39,6 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {FEATURES.interests && (
-            <Link to="/meus-interesses" className="relative inline-flex items-center gap-2 rounded-full bg-primary/20 hover:bg-primary/30 px-3 py-2 text-sm border border-primary/40">
-              <ShoppingBag className="h-4 w-4" />
-              <span className="hidden sm:inline">Interesses</span>
-              {count > 0 && (
-                <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-accent text-accent-foreground text-xs font-bold grid place-items-center">{count}</span>
-              )}
-            </Link>
-          )}
 
           {FEATURES.auth && (
             user ? (
