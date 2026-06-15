@@ -14,6 +14,7 @@ import { Route as TermosUsoRouteImport } from './routes/termos-uso'
 import { Route as ProdutoresRouteImport } from './routes/produtores'
 import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
 import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
+import { Route as LicencaDeUsoRouteImport } from './routes/licenca-de-uso'
 import { Route as EnviarLancamentoRouteImport } from './routes/enviar-lancamento'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AppRouteImport } from './routes/app'
@@ -65,6 +66,11 @@ const PoliticaPrivacidadeRoute = PoliticaPrivacidadeRouteImport.update({
 const MeusInteressesRoute = MeusInteressesRouteImport.update({
   id: '/meus-interesses',
   path: '/meus-interesses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LicencaDeUsoRoute = LicencaDeUsoRouteImport.update({
+  id: '/licenca-de-uso',
+  path: '/licenca-de-uso',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnviarLancamentoRoute = EnviarLancamentoRouteImport.update({
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -248,6 +255,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -418,6 +430,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   EnviarLancamentoRoute: typeof EnviarLancamentoRoute
+  LicencaDeUsoRoute: typeof LicencaDeUsoRoute
   MeusInteressesRoute: typeof MeusInteressesRoute
   PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
   ProdutoresRoute: typeof ProdutoresRoute
@@ -469,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/meus-interesses'
       fullPath: '/meus-interesses'
       preLoaderRoute: typeof MeusInteressesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/licenca-de-uso': {
+      id: '/licenca-de-uso'
+      path: '/licenca-de-uso'
+      fullPath: '/licenca-de-uso'
+      preLoaderRoute: typeof LicencaDeUsoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enviar-lancamento': {
@@ -714,6 +734,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   EnviarLancamentoRoute: EnviarLancamentoRoute,
+  LicencaDeUsoRoute: LicencaDeUsoRoute,
   MeusInteressesRoute: MeusInteressesRoute,
   PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
   ProdutoresRoute: ProdutoresRoute,

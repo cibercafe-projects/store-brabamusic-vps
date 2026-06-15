@@ -2,7 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Copy, ExternalLink, MessageCircle, CheckCircle2, ArrowRight, CreditCard, Upload } from "lucide-react";
+import {
+  Loader2,
+  Copy,
+  ExternalLink,
+  CheckCircle2,
+  ArrowRight,
+  CreditCard,
+  Upload,
+  FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -35,11 +44,6 @@ function digitsOnly(s: string) {
   return s.replace(/\D/g, "");
 }
 
-function whatsappLink(numberRaw: string, message: string) {
-  const num = digitsOnly(numberRaw);
-  return `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
-}
-
 export function PurchaseDialog({
   open,
   onOpenChange,
@@ -51,6 +55,7 @@ export function PurchaseDialog({
   const [step, setStep] = useState<Step>("form");
   const [method, setMethod] = useState<Method>("pix");
   const [nome, setNome] = useState("");
+  const [nomeArtistico, setNomeArtistico] = useState("");
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [instagram, setInstagram] = useState("");
@@ -73,6 +78,7 @@ export function PurchaseDialog({
       setStep("form");
       setMethod("pix");
       setNome("");
+      setNomeArtistico("");
       setEmail("");
       setWhatsapp("");
       setInstagram("");
@@ -106,6 +112,7 @@ export function PurchaseDialog({
         data: {
           beat_id: beatId,
           nome_cliente: nome.trim(),
+          nome_artistico: nomeArtistico.trim() || undefined,
           email: email.trim(),
           whatsapp: whatsapp.trim(),
           instagram: instagram.trim() || undefined,
@@ -235,6 +242,16 @@ export function PurchaseDialog({
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label htmlFor="p-nome-artistico">Nome artístico</Label>
+                  <Input
+                    id="p-nome-artistico"
+                    value={nomeArtistico}
+                    onChange={(e) => setNomeArtistico(e.target.value)}
+                    placeholder="Como você é conhecida(o) artisticamente"
+                    maxLength={120}
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="p-email">E-mail *</Label>
                   <Input
                     id="p-email"
@@ -268,24 +285,52 @@ export function PurchaseDialog({
                 </div>
               </div>
 
-              <label className="flex items-start gap-2 text-sm">
-                <Checkbox
-                  checked={aceito}
-                  onCheckedChange={(v) => setAceito(v === true)}
-                  className="mt-0.5"
-                />
-                <span>
-                  Li e aceito os{" "}
-                  <Link
-                    to="/termos-uso"
-                    target="_blank"
-                    className="text-accent hover:underline"
-                  >
-                    Termos de Uso
-                  </Link>{" "}
-                  da Braba Music.
-                </span>
-              </label>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+                <p className="text-sm">
+                  Antes de finalizar, leia e aceite os documentos abaixo. Eles
+                  também serão enviados por e-mail junto com os arquivos do beat.
+                </p>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-accent" />
+                      Licença de Uso dos Beats
+                    </span>
+                    <Link
+                      to="/licenca-de-uso"
+                      target="_blank"
+                      className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                    >
+                      Abrir <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-accent" />
+                      Termos de Uso da Braba Music
+                    </span>
+                    <Link
+                      to="/termos-uso"
+                      target="_blank"
+                      className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                    >
+                      Abrir <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </li>
+                </ul>
+                <label className="flex items-start gap-2 text-sm pt-1">
+                  <Checkbox
+                    checked={aceito}
+                    onCheckedChange={(v) => setAceito(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Li e aceito a{" "}
+                    <strong>Licença de Uso dos Beats</strong> e os{" "}
+                    <strong>Termos de Uso da Braba Music</strong>.
+                  </span>
+                </label>
+              </div>
 
               <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs">
                 <span className="text-muted-foreground">WhatsApp Comercial: </span>
@@ -316,30 +361,10 @@ export function PurchaseDialog({
           const origin = typeof window !== "undefined" ? window.location.origin : "";
           const receiptUrl = `${origin}/enviar-comprovante/${token}`;
           const paymentLineForMsg = paymentLink || "Será enviado pelo time Braba";
-          const message = `Olá!
-
-Parabéns, você acabou de registrar sua compra na Braba Beats.
-
-Beat:
-${beatName}
-
-Valor:
-${valorFmt}
-
-Link para pagamento:
-${paymentLineForMsg}
-
-Link para envio do comprovante:
-${receiptUrl}
-
-Após o envio do comprovante nossa equipe realizará a validação do pagamento e enviará os arquivos adquiridos.
-
-Braba Music`;
           const copyText = `Beat: ${beatName}
 Valor: ${valorFmt}
 Link para pagamento: ${paymentLineForMsg}
 Link para envio do comprovante: ${receiptUrl}`;
-          const waUrl = whatsappLink(whatsapp, message);
           return (
             <>
               <DialogHeader>
@@ -368,13 +393,19 @@ Link para envio do comprovante: ${receiptUrl}`;
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                     <li>Efetue o pagamento.</li>
                     <li>Envie seu comprovante no link.</li>
-                    <li>Avise a administração da Braba pelo WhatsApp.</li>
                     <li>Aguarde até 24h para validação e envio dos arquivos.</li>
                   </ol>
                 </div>
 
                 <div className="grid gap-2">
                   <Button
+                    onClick={() => window.open(receiptUrl, "_blank", "noopener,noreferrer")}
+                    className="w-full"
+                  >
+                    <Upload className="h-4 w-4" /> ENVIAR COMPROVANTE DE PAGAMENTO
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       if (!paymentLink) {
                         toast.info("O link de pagamento será enviado pelo time Braba.");
@@ -385,20 +416,6 @@ Link para envio do comprovante: ${receiptUrl}`;
                     className="w-full"
                   >
                     <CreditCard className="h-4 w-4" /> Pagar Agora
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(receiptUrl, "_blank", "noopener,noreferrer")}
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4" /> Enviar Comprovante
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(waUrl, "_blank", "noopener,noreferrer")}
-                    className="w-full"
-                  >
-                    <MessageCircle className="h-4 w-4" /> Enviar informações para meu WhatsApp
                   </Button>
                   <Button
                     variant="outline"
