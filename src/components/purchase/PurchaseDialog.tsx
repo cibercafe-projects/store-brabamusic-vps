@@ -88,7 +88,7 @@ export function PurchaseDialog({
     }
   }, [open]);
 
-  const commercialWa = settings.data?.commercial_whatsapp ?? "+5511913401000";
+  
   const pixKey = settings.data?.pix_key ?? "";
   const paymentLink = settings.data?.payment_link ?? "";
 
