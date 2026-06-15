@@ -152,6 +152,7 @@ const submitSchema = z
     about_artist: z.string().trim().min(1).max(5000),
     about_release: z.string().trim().min(1).max(5000),
     has_videoclip: z.boolean(),
+    faixa_foco: z.string().trim().max(200).optional().default(""),
     // anti-spam
     website: z.string().max(0, "Bot").optional().default(""),
     started_at: z.number().int().positive(),
@@ -159,6 +160,10 @@ const submitSchema = z
   .refine(
     (v) => (v.release_type === "single" ? true : v.tracklist.length > 0),
     { message: "Liste as músicas do EP/Álbum.", path: ["tracklist"] },
+  )
+  .refine(
+    (v) => (v.release_type === "single" ? true : v.faixa_foco.length > 0),
+    { message: "Informe a faixa foco do EP/Álbum.", path: ["faixa_foco"] },
   );
 
 export const submitRelease = createServerFn({ method: "POST" })
