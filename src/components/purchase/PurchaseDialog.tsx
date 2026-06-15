@@ -367,9 +367,9 @@ Link para envio do comprovante: ${receiptUrl}`;
                   <p className="text-sm font-semibold mb-2">Próximos passos:</p>
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                     <li>Efetue o pagamento.</li>
-                    <li>Envie seu comprovante.</li>
-                    <li>Aguarde a validação da equipe.</li>
-                    <li>Receba seus arquivos.</li>
+                    <li>Envie seu comprovante no link.</li>
+                    <li>Avise a administração da Braba pelo WhatsApp.</li>
+                    <li>Aguarde até 24h para validação e envio dos arquivos.</li>
                   </ol>
                 </div>
 

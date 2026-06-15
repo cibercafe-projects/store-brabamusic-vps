@@ -59,7 +59,7 @@ function SendReceiptPage() {
   const beat = purchase.beat;
   const commercialWa = settings.data?.commercial_whatsapp ?? "+5511913401000";
   const waLink = `https://wa.me/${commercialWa.replace(/\D/g, "")}?text=${encodeURIComponent(
-    `Olá!\n\nSou ${purchase.nome_cliente}.\nAcabei de enviar o comprovante do beat: ${beat?.nome ?? ""}.`,
+    `Olá! Sou ${purchase.nome_cliente}.\nAcabei de enviar o comprovante do beat: ${beat?.nome ?? ""}.\nAguardo a validação e o envio dos arquivos.`,
   )}`;
 
   return (
@@ -102,14 +102,19 @@ function SendReceiptPage() {
         />
       </div>
 
+      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
+        Após avisar a administração, aguarde até <span className="font-semibold text-foreground">24h</span> para a revisão do comprovante, aprovação do pagamento e envio dos arquivos adquiridos.
+      </div>
+
       <a
         href={waLink}
         target="_blank"
         rel="noreferrer"
-        className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10"
+        className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10 text-center"
       >
-        <MessageCircle className="h-4 w-4" /> Falar no WhatsApp ({commercialWa})
+        <MessageCircle className="h-4 w-4" /> Avisar a Administração da Braba sobre o seu pagamento
       </a>
     </div>
   );
 }
+
