@@ -26,6 +26,7 @@ const deliverSchema = z.object({
   arquivos: z.array(z.enum(FILE_KINDS)).min(1, "Selecione pelo menos um arquivo."),
   canal_email: z.boolean(),
   canal_whatsapp: z.boolean(),
+  email_mode: z.enum(["auto", "mailto"]).optional().default("auto"),
   observacao: z.string().trim().max(1000).optional().nullable(),
 });
 
@@ -83,21 +84,29 @@ export const deliverPurchase = createServerFn({ method: "POST" })
       links.push({ kind, label: LABEL[kind], url: signed.signedUrl });
     }
 
-    // Email: envia se o cliente tiver e-mail e o canal estiver marcado.
+    // Email: envia transacional só quando email_mode = 'auto'.
     let emailSent = false;
+    let emailMailtoUrl: string | null = null;
     if (data.canal_email && purchase.email) {
-      const res = await sendAppEmail({
-        templateName: "purchase-delivered",
-        recipientEmail: purchase.email,
-        idempotencyKey: `purchase-delivered-${purchase.id}-${Date.now()}`,
-        templateData: {
-          nome: purchase.nome_cliente,
-          beatNome: beat.nome,
-          links: links.map((l) => ({ label: l.label, url: l.url })),
-          observacao: data.observacao ?? "",
-        },
-      });
-      emailSent = res.ok;
+      if (data.email_mode === "mailto") {
+        const body = buildEmailBody(purchase.nome_cliente, beat.nome, links, data.observacao);
+        const subject = `Braba Music — arquivos do beat ${beat.nome}`;
+        emailMailtoUrl = `mailto:${encodeURIComponent(purchase.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        emailSent = true; // entrega manual marcada como enviada
+      } else {
+        const res = await sendAppEmail({
+          templateName: "purchase-delivered",
+          recipientEmail: purchase.email,
+          idempotencyKey: `purchase-delivered-${purchase.id}-${Date.now()}`,
+          templateData: {
+            nome: purchase.nome_cliente,
+            beatNome: beat.nome,
+            links: links.map((l) => ({ label: l.label, url: l.url })),
+            observacao: data.observacao ?? "",
+          },
+        });
+        emailSent = res.ok;
+      }
     }
     const emailPending = data.canal_email && !emailSent;
 
@@ -141,10 +150,29 @@ export const deliverPurchase = createServerFn({ method: "POST" })
       delivery_id: delivery.id,
       enviado_em: delivery.enviado_em,
       whatsapp_url: whatsappUrl,
+      email_mailto_url: emailMailtoUrl,
       email_pending: emailPending,
       links,
     };
   });
+
+function buildEmailBody(nome: string, beatNome: string, links: FileLink[], obs?: string | null): string {
+  const lines = [
+    `Olá ${nome}!`,
+    "",
+    "Seu pagamento foi confirmado. Segue o material do beat adquirido:",
+    "",
+    `Beat: ${beatNome}`,
+    "",
+    "Arquivos (links válidos por 7 dias):",
+    ...links.map((l) => `- ${l.label}: ${l.url}`),
+  ];
+  if (obs) {
+    lines.push("", `Observação: ${obs}`);
+  }
+  lines.push("", "Documentos:", "- Licença de Uso dos Beats: https://brababeats.app/licenca-de-uso", "- Termos de Uso: https://brababeats.app/termos-uso", "", "Obrigado por comprar na Braba Music!", "— Braba Music");
+  return lines.join("\n");
+}
 
 function buildWhatsappMessage(nome: string, beatNome: string, links: FileLink[]): string {
   const lines = [
@@ -175,7 +203,26 @@ export const listDeliveries = createServerFn({ method: "POST" })
       .eq("purchase_id", data.purchase_id)
       .order("enviado_em", { ascending: false });
     if (error) throw new Error(error.message);
-    return rows ?? [];
+
+    const userIds = Array.from(
+      new Set((rows ?? []).map((r) => r.enviado_por).filter((v): v is string => !!v)),
+    );
+    const emailMap = new Map<string, string>();
+    await Promise.all(
+      userIds.map(async (uid) => {
+        try {
+          const { data: u } = await admin.auth.admin.getUserById(uid);
+          if (u?.user?.email) emailMap.set(uid, u.user.email);
+        } catch (e) {
+          console.error("[deliveries.responsavel]", uid, e);
+        }
+      }),
+    );
+
+    return (rows ?? []).map((r) => ({
+      ...r,
+      enviado_por_email: r.enviado_por ? emailMap.get(r.enviado_por) ?? null : null,
+    }));
   });
 
 export const getDeliveryStats = createServerFn({ method: "GET" })
