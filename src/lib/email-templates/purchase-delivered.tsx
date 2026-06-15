@@ -60,6 +60,24 @@ const PurchaseDelivered = ({
       Salve os arquivos em um lugar seguro. Se algum link expirar, é só responder este
       e-mail que reenviamos.
     </Text>
+
+    <Section style={styles.card}>
+      <Text style={{ ...styles.paragraph, margin: "0 0 8px", fontWeight: 700 }}>
+        Documentos
+      </Text>
+      <Text style={{ ...styles.paragraph, margin: "4px 0" }}>
+        •{" "}
+        <Link href="https://brababeats.app/licenca-de-uso" style={styles.link}>
+          Licença de Uso dos Beats
+        </Link>
+      </Text>
+      <Text style={{ ...styles.paragraph, margin: "4px 0" }}>
+        •{" "}
+        <Link href="https://brababeats.app/termos-uso" style={styles.link}>
+          Termos de Uso da Braba Music
+        </Link>
+      </Text>
+    </Section>
   </EmailShell>
 );
 

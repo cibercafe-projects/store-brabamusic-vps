@@ -1,52 +1,61 @@
-# Tipo do beat (Aberto / Fechado) + novos preços padrão
+# Compra e checkout — nome artístico, dois documentos e botão de comprovante
 
-Adicionar a noção de **tipo** ao beat, com defaults de preço e de entrega associados, sem mexer no fluxo de pagamento/entrega existente.
+Três frentes na janela de compra (`PurchaseDialog`) + um campo novo no pedido + uma página nova de licença + ajuste no e-mail de entrega.
 
-## 1. Banco
+## 1. Banco — novo campo "Nome Artístico"
 
 Migration:
 
-- `CREATE TYPE public.beat_tipo AS ENUM ('fechado','aberto');`
-- `ALTER TABLE public.beats ADD COLUMN tipo public.beat_tipo NOT NULL DEFAULT 'fechado';`
-- Backfill: beats existentes ficam como `'fechado'` (default cobre).
-- Index opcional `beats_tipo_idx` (barato, ajuda filtros futuros).
+- `ALTER TABLE public.purchase_requests ADD COLUMN nome_artistico text;` (nullable — pedidos antigos não têm).
 
-Regras de negócio (semântica do tipo, aplicadas na UI):
-- **Fechado** — entrega só WAV. Preço padrão sugerido **R$ 100,00**.
-- **Aberto** — entrega WAV + STEMS. Preço padrão sugerido **R$ 150,00**.
+GRANTs/RLS já cobrem (apenas admin lê/escreve via service role + RLS atual).
 
-RLS / GRANTs do `beats` já cobrem a nova coluna (sem mudança).
+## 2. Página nova `/licenca-de-uso`
 
-## 2. Cadastro de beats (`src/components/admin/beats/BeatForm.tsx`)
+Criar `src/routes/licenca-de-uso.tsx` no mesmo padrão visual de `termos-uso.tsx`, com `head()` próprio (title, description, OG). Conteúdo: descrição das licenças oferecidas (Lease / Premium / Exclusiva), usos liberados/proibidos por modalidade, prazo de entrega, política de revenda e atribuição.
 
-- Adicionar `tipo: z.enum(['fechado','aberto'])` no schema (default `'fechado'`).
-- Novo `<Select>` "Tipo do beat" com opções **Fechado (WAV)** e **Aberto (WAV + STEMS)**, posicionado antes de "Preço".
-- Default do campo **preço** muda de `"199,99"` para `"100,00"`.
-- Ao trocar o tipo, se o preço atual estiver vazio ou for igual ao default do tipo anterior (100 ↔ 150), atualizar automaticamente para o default do novo tipo. Edição manual do preço não é sobrescrita.
-- Help text no bloco "Arquivos privados": exibir um aviso suave quando `tipo = fechado` mas houver `stems_path` (e vice-versa: `tipo = aberto` sem `stems_path`). Sem bloquear o submit.
-- Persistir `tipo` no payload de `createBeat` / `updateBeat`.
+**Pergunta aberta:** preciso do texto final da Licença de Uso. Se não enviar agora, eu publico um rascunho padrão com as três modalidades já mencionadas em `como-funciona.tsx` (Lease, Premium, Exclusiva) e você ajusta depois — sem mudança de código.
 
-## 3. Server functions (`src/lib/beats.functions.ts`)
+## 3. `PurchaseDialog` — checkout
 
-- Acrescentar `tipo: z.enum(['fechado','aberto']).default('fechado')` nos schemas de create/update.
-- Passar `tipo` no insert/update do Supabase.
-- Default do preço no insert continua nullable, mas quando o admin não informar e o tipo for conhecido, gravamos o valor sugerido (100 ou 150).
+### 3.1 Formulário
+- Novo input **"Nome artístico"** (opcional, máx. 120 chars), entre "Nome completo" e "E-mail".
+- Estado `nomeArtistico` + reset no `useEffect`.
+- Enviar `nome_artistico` no payload do `createPurchaseRequest`.
 
-## 4. Exibição pública (opcional, dentro do escopo da seção)
+### 3.2 Aceite de documentos
+Substituir o bloco atual de aceite (uma checkbox + link único de "Termos de Uso") por:
 
-- `src/lib/catalog.types.ts` + `src/lib/catalog.functions.ts`: incluir `tipo` no `PublicBeat` (select já lista os campos um a um).
-- `src/components/BeatCard.tsx` e `src/routes/beat.$slug.tsx`: badge discreto **"Aberto · WAV + Stems"** ou **"Fechado · WAV"** ao lado de gênero/BPM. Sem mudança de layout.
+- Texto introdutório curto: "Antes de finalizar, leia e aceite os documentos abaixo. Eles também serão enviados por e-mail junto com os arquivos do beat."
+- **Dois itens em lista**, cada um com nome + link "Abrir" (target="_blank") apontando para `/licenca-de-uso` e `/termos-uso`.
+- **Uma única checkbox** "Li e aceito a Licença de Uso dos Beats e os Termos de Uso da Braba Music." (mantém um único `aceito` no estado, evita complexidade desnecessária).
 
-## 5. Entrega (`DeliveryDialog`)
+### 3.3 Tela de sucesso (step "receipt")
+- **Remover** o botão "Enviar informações para meu WhatsApp" (e a função `whatsappLink`, se ficar órfã).
+- **Renomear** o botão "Enviar Comprovante" → **"ENVIAR COMPROVANTE DE PAGAMENTO"** (texto em caixa alta, mantém `Upload` icon). Promover esse botão a destaque principal: estilo `bg-accent text-accent-foreground` (mesma cor de "Pagar Agora"), e o "Pagar Agora" passa a `variant="outline"`. **OU** manter o "Pagar Agora" como ação principal — me diga qual prefere; meu default é "ENVIAR COMPROVANTE" como principal (alinha com a remoção do WhatsApp e o foco do passo).
+- Manter os botões "Pagar Agora" e "Copiar Informações".
+- Remover do passo-a-passo o item "Avise a administração da Braba pelo WhatsApp" (que sumiu junto com o botão).
 
-Sem mudança de lógica — o admin continua escolhendo manualmente. Apenas exibir o tipo no cabeçalho do dialog ("Beat: Trap da Rua · Aberto") para evitar entrega errada. A seleção inicial de arquivos continua sendo "tudo que tem path", o que casa naturalmente com a regra (beat fechado não terá `stems_path`).
+## 4. Server function `createPurchaseRequest` (`src/lib/purchases.functions.ts`)
 
-## 6. Tipos gerados
+- Adicionar `nome_artistico: z.string().trim().max(120).optional().transform(v => v || null).nullable()` ao `createSchema`.
+- Persistir `nome_artistico: data.nome_artistico` no `insert`.
+- Passar `nomeArtistico` para os templates `purchase-created` e `admin-new-purchase` (campo opcional; nada quebra se ausente).
 
-Após a migration, `src/integrations/supabase/types.ts` é regerado e ganha o enum + a coluna automaticamente. Nada a editar à mão.
+## 5. E-mail de entrega — anexar os documentos
+
+Quando o admin entrega o beat, o e-mail `purchase-delivered` deve incluir referência aos dois documentos.
+
+- `src/lib/email-templates/purchase-delivered.tsx`: adicionar parágrafo final com dois links: **Licença de Uso dos Beats** → `${siteUrl}/licenca-de-uso` e **Termos de Uso** → `${siteUrl}/termos-uso`. Sem anexos físicos (mais simples, sem complicação de bundle e MIME no worker — links públicos cumprem o requisito de "enviados ao cliente").
+- Se preferir PDF anexo no futuro, fica registrado como follow-up.
+
+## 6. UI das compras no admin (mínimo)
+
+`src/routes/admin/_protected/compras.$id.tsx`: exibir o **Nome artístico** (quando preenchido) logo abaixo do nome do cliente, sem outras mudanças de layout.
 
 ## Fora de escopo
 
-- Não alterar `purchase_requests`, e-mails transacionais nem fluxo de comprovante.
-- Não migrar/relistar beats existentes para "Aberto" — fica como `'fechado'` até o admin editar.
-- Não criar tabela de preços por tipo; valores ficam por beat (a coluna `preco` continua a fonte da verdade).
+- Sem mudanças no fluxo de pagamento (PIX/link continuam iguais).
+- Sem mudanças no `enviar-comprovante.$token.tsx`.
+- Sem anexos físicos no e-mail — apenas links para as páginas hospedadas.
+- Sem alteração do número comercial exibido no rodapé do modal (continua útil como contato).
