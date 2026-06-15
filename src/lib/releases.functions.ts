@@ -223,6 +223,7 @@ export const submitRelease = createServerFn({ method: "POST" })
           artistName: data.artist_name,
           releaseName: data.release_name,
           releaseType: data.release_type,
+          faixaFoco: data.faixa_foco || "",
         },
       });
       const adminEmail = await getAdminNotificationEmail();
