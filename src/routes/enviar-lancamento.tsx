@@ -82,6 +82,7 @@ function SubmitReleasePage() {
           email,
           full_name: fullName,
           cpf,
+          whatsapp,
           artist_name: artistName,
           release_type: releaseType,
           release_name: releaseName,
@@ -118,19 +119,45 @@ function SubmitReleasePage() {
     if (photosDriveUrl.trim() && !DRIVE_RE.test(photosDriveUrl.trim())) return false;
     if (genres.length === 0 || moods.length === 0) return false;
     if (isMulti && tracklist.trim().length === 0) return false;
+    if (whatsapp.replace(/\D/g, "").length < 8) return false;
     return true;
-  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist]);
+  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist, whatsapp]);
+
+  const settings = useQuery({
+    queryKey: ["purchase-settings"],
+    queryFn: () => getPurchaseSettings(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const commercialWa = settings.data?.commercial_whatsapp ?? "+5511913401000";
 
   if (submitted) {
+    const tipoLabel = releaseType === "ep" ? "EP" : releaseType === "album" ? "Álbum" : "Single";
+    const msg = `Olá! Acabei de enviar meu lançamento *${releaseName}* (${tipoLabel}) — artista *${artistName}*. Aguardo o retorno da equipe Braba.`;
+    const adminWa = waLink(commercialWa, msg);
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
         <div className="max-w-md text-center space-y-6">
           <CheckCircle2 className="h-16 w-16 mx-auto text-accent" />
           <h1 className="font-display text-3xl">Lançamento enviado!</h1>
           <p className="text-muted-foreground">
-            Recebemos seu material. Em breve a equipe Braba entrará em contato.
+            Recebemos seu material. Para acelerar a análise, avise a administração da Braba pelo WhatsApp.
           </p>
-          <Button asChild>
+          {adminWa && (
+            <Button
+              asChild
+              size="lg"
+              className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg hover:opacity-95"
+            >
+              <a href={adminWa} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="h-5 w-5" />
+                Avisar a Administração da Braba sobre meu lançamento
+              </a>
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Após o aviso, aguarde até 24h para a equipe analisar e retornar.
+          </p>
+          <Button asChild variant="ghost">
             <Link to="/">Voltar para o catálogo</Link>
           </Button>
         </div>
