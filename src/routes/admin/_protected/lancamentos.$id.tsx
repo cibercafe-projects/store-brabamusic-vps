@@ -89,6 +89,36 @@ function LancamentoDetail() {
         </div>
       </div>
 
+      {(() => {
+        const artistWa = (r as { whatsapp?: string }).whatsapp || "";
+        const baseMsg =
+          r.status === "aprovado"
+            ? `Olá ${r.artist_name}! Seu lançamento *${r.release_name}* foi aprovado. Avisando que foi aprovado e em breve estaremos em contato para o planejamento do lançamento. — Braba Music`
+            : `Olá ${r.artist_name}! Atualização do seu lançamento *${r.release_name}*: status agora é *${RELEASE_STATUS_LABEL[r.status]}*. — Braba Music`;
+        const link = waLink(artistWa, baseMsg);
+        return (
+          <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 flex flex-wrap items-center gap-3 justify-between">
+            <div className="text-sm">
+              <p className="font-semibold">Avisar artista pelo WhatsApp</p>
+              <p className="text-xs text-muted-foreground">
+                Mensagem pré-preenchida com base no status atual ({RELEASE_STATUS_LABEL[r.status]}).
+              </p>
+            </div>
+            {link ? (
+              <Button asChild className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95">
+                <a href={link} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-4 w-4" /> Avisar artista por WhatsApp
+                </a>
+              </Button>
+            ) : (
+              <Button disabled variant="outline" title="Artista não informou WhatsApp">
+                <MessageCircle className="h-4 w-4" /> WhatsApp indisponível
+              </Button>
+            )}
+          </div>
+        );
+      })()}
+
       <header className="flex gap-6 items-start">
         {r.cover_url && (
           <img
