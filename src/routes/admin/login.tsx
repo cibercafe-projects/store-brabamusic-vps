@@ -117,7 +117,22 @@ function AdminLoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Aguarde..." : needsBootstrap ? "Criar admin" : "Entrar"}
             </Button>
+            {!needsBootstrap && (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={recovering}
+                className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 w-full text-center"
+              >
+                {recovering ? "Enviando..." : "Esqueci minha senha"}
+              </button>
+            )}
           </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
         </CardContent>
       </Card>
     </div>
