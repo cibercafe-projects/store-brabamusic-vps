@@ -363,76 +363,11 @@ function PurchaseDetailPage() {
           />
         )}
 
-        <Card className="md:col-span-2 border-accent/30">
-          <CardHeader>
-            <CardTitle className="text-base inline-flex items-center gap-2">
-              <PackageCheck className="h-4 w-4" /> Entrega de arquivos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Cliente</p>
-                <p className="font-medium">{p.nome_cliente}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Beat</p>
-                <p className="font-medium">{beat?.nome ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">E-mail</p>
-                <p className="font-medium break-all">{p.email || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">WhatsApp</p>
-                <p className="font-medium">{p.whatsapp || "—"}</p>
-              </div>
-            </div>
-            <div className="rounded-md border p-3 text-xs space-y-1">
-              <p className="text-muted-foreground">Arquivos cadastrados no beat:</p>
-              <ul className="space-y-0.5">
-                <li>WAV: {beat?.wav_path ? "✅ disponível" : "❌ não cadastrado"}</li>
-                <li>STEMS: {beat?.stems_path ? "✅ disponível" : "❌ não cadastrado"}</li>
-                <li>Licença: {beat?.license_path ? "✅ disponível" : "❌ não cadastrada"}</li>
-              </ul>
-            </div>
-            {p.delivered_at && (
-              <p className="text-xs text-muted-foreground">
-                Última entrega registrada em {fmtDate(p.delivered_at)}.
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button
-                onClick={() => setDeliveryOpen(true)}
-                disabled={
-                  !(p.status === "pagamento_confirmado" || p.status === "arquivos_enviados")
-                }
-              >
-                <PackageCheck className="h-4 w-4" />{" "}
-                {p.status === "arquivos_enviados" ? "Reenviar arquivos" : "Entregar arquivos"}
-              </Button>
-              {(() => {
-                const msg = `Olá ${p.nome_cliente}, sua compra do beat *${beat?.nome ?? ""}* foi liberada! Em instantes você recebe o e-mail com os arquivos. Qualquer dúvida, é só responder por aqui. — Braba Music`;
-                const link = buildWaLink(p.whatsapp, msg);
-                return link ? (
-                  <Button
-                    asChild
-                    className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-md hover:opacity-95"
-                  >
-                    <a href={link} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="h-4 w-4" /> Avisar entrega no WhatsApp
-                    </a>
-                  </Button>
-                ) : null;
-              })()}
-              {p.status !== "pagamento_confirmado" && p.status !== "arquivos_enviados" && (
-                <p className="text-xs text-muted-foreground self-center">
-                  Confirme o pagamento antes de entregar.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <DeliveryCard
+          purchase={p}
+          beat={beat}
+          onOpenDialog={() => setDeliveryOpen(true)}
+        />
       </div>
 
       <DeliveryDialog
@@ -454,6 +389,244 @@ function PurchaseDetailPage() {
         }}
       />
     </div>
+  );
+}
+
+type DeliveryCardBeat = {
+  nome: string;
+  wav_path?: string | null;
+  stems_path?: string | null;
+  license_path?: string | null;
+} | null;
+
+type DeliveryCardPurchase = {
+  id: string;
+  nome_cliente: string;
+  email: string | null;
+  whatsapp: string | null;
+  status: string;
+  delivered_at: string | null;
+};
+
+function DeliveryCard({
+  purchase,
+  beat,
+  onOpenDialog,
+}: {
+  purchase: DeliveryCardPurchase;
+  beat: DeliveryCardBeat;
+  onOpenDialog: () => void;
+}) {
+  const qc = useQueryClient();
+  const deliverFn = useServerFn(deliverPurchase);
+  const listFn = useServerFn(listDeliveries);
+
+  const available = (["wav", "stems", "license"] as const).filter(
+    (k) => !!beat?.[`${k}_path` as const],
+  );
+
+  const history = useQuery({
+    queryKey: ["admin", "deliveries", purchase.id],
+    queryFn: () => listFn({ data: { purchase_id: purchase.id } }),
+  });
+
+  const [busyChannel, setBusyChannel] = useState<"whatsapp" | "email" | null>(null);
+
+  const canDeliver =
+    purchase.status === "pagamento_confirmado" || purchase.status === "arquivos_enviados";
+  const isDelivered = purchase.status === "arquivos_enviados";
+  const hasFiles = available.length > 0;
+  const lastDelivery = history.data?.[0];
+
+  async function trigger(channel: "whatsapp" | "email") {
+    if (!hasFiles || !canDeliver) return;
+    setBusyChannel(channel);
+    try {
+      const res = await deliverFn({
+        data: {
+          purchase_id: purchase.id,
+          arquivos: available,
+          canal_email: channel === "email",
+          canal_whatsapp: channel === "whatsapp",
+          email_mode: channel === "email" ? "mailto" : "auto",
+          observacao: null,
+        },
+      });
+      if (channel === "whatsapp" && res.whatsapp_url) {
+        window.open(res.whatsapp_url, "_blank", "noopener,noreferrer");
+        toast.success("Entrega registrada. WhatsApp aberto.");
+      } else if (channel === "email" && res.email_mailto_url) {
+        window.location.href = res.email_mailto_url;
+        toast.success("Entrega registrada. E-mail aberto no seu cliente.");
+      } else {
+        toast.success("Entrega registrada.");
+      }
+      qc.invalidateQueries({ queryKey: ["admin", "purchase", purchase.id] });
+      qc.invalidateQueries({ queryKey: ["admin", "purchases"] });
+      qc.invalidateQueries({ queryKey: ["admin", "purchase-counts"] });
+      qc.invalidateQueries({ queryKey: ["admin", "deliveries", purchase.id] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao entregar.");
+    } finally {
+      setBusyChannel(null);
+    }
+  }
+
+  return (
+    <Card
+      className={`md:col-span-2 ${
+        purchase.status === "pagamento_confirmado"
+          ? "border-accent ring-2 ring-accent/30"
+          : "border-accent/30"
+      }`}
+    >
+      <CardHeader>
+        <CardTitle className="text-base inline-flex items-center gap-2">
+          <PackageCheck className="h-4 w-4" /> Enviar Arquivos
+          {purchase.status === "pagamento_confirmado" && (
+            <Badge className="ml-2 bg-accent text-accent-foreground">Pendente de entrega</Badge>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm">
+        {isDelivered && lastDelivery && (
+          <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3 flex items-start gap-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-400 mt-0.5" />
+            <div className="flex-1 text-xs">
+              <p className="text-sm font-semibold text-emerald-300">Arquivos entregues com sucesso</p>
+              <p className="mt-1">
+                Em{" "}
+                {new Date(lastDelivery.enviado_em).toLocaleString("pt-BR", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </p>
+              {lastDelivery.enviado_por_email && (
+                <p>Responsável: {lastDelivery.enviado_por_email}</p>
+              )}
+              <p className="text-muted-foreground">
+                Canais:{" "}
+                {[
+                  lastDelivery.enviado_email && "E-mail",
+                  lastDelivery.enviado_whatsapp && "WhatsApp",
+                ]
+                  .filter(Boolean)
+                  .join(" + ") || "—"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <div>
+            <p className="text-xs text-muted-foreground">Cliente</p>
+            <p className="font-medium">{purchase.nome_cliente}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Beat</p>
+            <p className="font-medium">{beat?.nome ?? "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">E-mail</p>
+            <p className="font-medium break-all">{purchase.email || "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">WhatsApp</p>
+            <p className="font-medium">{purchase.whatsapp || "—"}</p>
+          </div>
+        </div>
+
+        <div className="rounded-md border p-3 text-xs space-y-1">
+          <p className="text-muted-foreground">Arquivos cadastrados no beat:</p>
+          <ul className="space-y-0.5">
+            <li>WAV: {beat?.wav_path ? "✅ disponível" : "❌ não cadastrado"}</li>
+            <li>STEMS: {beat?.stems_path ? "✅ disponível" : "❌ não cadastrado"}</li>
+            <li>Licença: {beat?.license_path ? "✅ disponível" : "❌ não cadastrada"}</li>
+          </ul>
+        </div>
+
+        {!canDeliver && (
+          <p className="text-xs text-muted-foreground">
+            Confirme o pagamento antes de entregar os arquivos.
+          </p>
+        )}
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Button
+            onClick={() => trigger("whatsapp")}
+            disabled={
+              !canDeliver || !hasFiles || !purchase.whatsapp || busyChannel !== null
+            }
+            className="bg-[#25D366] hover:bg-[#1ebe57] text-white"
+          >
+            {busyChannel === "whatsapp" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={() => trigger("email")}
+            disabled={!canDeliver || !hasFiles || !purchase.email || busyChannel !== null}
+            variant="outline"
+          >
+            {busyChannel === "email" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Mail className="h-4 w-4" /> Enviar por E-mail
+              </>
+            )}
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button variant="ghost" size="sm" onClick={onOpenDialog} disabled={!canDeliver}>
+            <Settings2 className="h-4 w-4" /> Mais opções
+          </Button>
+          {(() => {
+            const msg = `Olá ${purchase.nome_cliente}, sua compra do beat *${beat?.nome ?? ""}* foi liberada! — Braba Music`;
+            const link = buildWaLink(purchase.whatsapp, msg);
+            return link ? (
+              <Button asChild variant="ghost" size="sm">
+                <a href={link} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="h-4 w-4" /> Aviso curto
+                </a>
+              </Button>
+            ) : null;
+          })()}
+        </div>
+
+        {(history.data?.length ?? 0) > 0 && (
+          <section className="space-y-1.5 pt-2 border-t border-white/10">
+            <p className="text-xs font-semibold inline-flex items-center gap-1">
+              <History className="h-3.5 w-3.5" /> Histórico de entregas
+            </p>
+            <div className="space-y-1 text-xs rounded-md border p-2 max-h-40 overflow-auto">
+              {history.data!.slice(0, 5).map((d) => (
+                <div key={d.id} className="flex justify-between gap-2">
+                  <span>
+                    {new Date(d.enviado_em).toLocaleString("pt-BR", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                  <span className="text-muted-foreground truncate">
+                    {(d.arquivos as string[]).join(", ")} ·{" "}
+                    {[d.enviado_email && "email", d.enviado_whatsapp && "whats"]
+                      .filter(Boolean)
+                      .join(" + ")}
+                    {d.enviado_por_email ? ` · ${d.enviado_por_email}` : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
