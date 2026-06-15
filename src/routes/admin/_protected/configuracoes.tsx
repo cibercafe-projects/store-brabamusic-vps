@@ -66,30 +66,6 @@ function SettingsPage() {
         </div>
       ) : (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <MessageCircle className="h-4 w-4 text-accent" /> WhatsApp do formulário de interesse
-              </CardTitle>
-              <CardDescription>
-                Número usado nos botões "Tenho interesse". Formato internacional (ex: 5511999998888).
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="whatsapp">Número (com DDI)</Label>
-                <Input
-                  id="whatsapp"
-                  value={form.whatsapp_number}
-                  onChange={(e) =>
-                    update("whatsapp_number", e.target.value.replace(/[^\d+\s()-]/g, ""))
-                  }
-                  placeholder="+55 11 99999-8888"
-                  maxLength={30}
-                />
-              </div>
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>
