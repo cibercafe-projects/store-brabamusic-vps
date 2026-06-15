@@ -1,52 +1,52 @@
-# Ajustes no catálogo de beats
+# Tipo do beat (Aberto / Fechado) + novos preços padrão
 
-Três frentes, todas em frontend + um pequeno update de dados.
+Adicionar a noção de **tipo** ao beat, com defaults de preço e de entrega associados, sem mexer no fluxo de pagamento/entrega existente.
 
-## 1. Remover o fluxo "Tenho Interesse"
+## 1. Banco
 
-A entrada principal passa a ser o botão **COMPRAR** (já existe em todo lugar).
+Migration:
 
-- `src/components/BeatCard.tsx` — remover o botão "Interesse" (e o `useState interestOpen`), o `<InterestForm/>` e o import. O card fica com **Ver** + **COMPRAR**.
-- `src/routes/beat.$slug.tsx` — remover o botão "Tenho interesse", o `<InterestForm/>`, o `interestOpen` e o import `MessageCircle`/`InterestForm`. Sobram **COMPRAR** e **Compartilhar**.
-- `src/components/Header.tsx` — remover o bloco `FEATURES.interests && <Link/>` (já estava off por flag) e o import `ShoppingBag` se ficar órfão.
-- `src/routes/meus-interesses.tsx` — substituir por um redirect simples para `/` (mantém a rota viva para qualquer link antigo, mas sem UI de "em breve").
-- `src/config/features.ts` — remover a flag `interests` (não é mais usada).
-- **Arquivos preservados** (não deletar, podem voltar): `src/components/InterestForm.tsx`, `src/lib/leads.functions.ts`, tabela `leads` e a configuração de WhatsApp do form em `admin/configuracoes` (continua útil para o admin como número-padrão de contato).
+- `CREATE TYPE public.beat_tipo AS ENUM ('fechado','aberto');`
+- `ALTER TABLE public.beats ADD COLUMN tipo public.beat_tipo NOT NULL DEFAULT 'fechado';`
+- Backfill: beats existentes ficam como `'fechado'` (default cobre).
+- Index opcional `beats_tipo_idx` (barato, ajuda filtros futuros).
 
-## 2. Página "Como funciona"
+Regras de negócio (semântica do tipo, aplicadas na UI):
+- **Fechado** — entrega só WAV. Preço padrão sugerido **R$ 100,00**.
+- **Aberto** — entrega WAV + STEMS. Preço padrão sugerido **R$ 150,00**.
 
-`src/routes/como-funciona.tsx` hoje descreve o fluxo antigo (WhatsApp manual + "Tenho interesse"). Reescrever para o fluxo atual de compra:
+RLS / GRANTs do `beats` já cobrem a nova coluna (sem mudança).
 
-Passos:
-1. **Acessa o catálogo** — navega pela loja sem precisar de cadastro.
-2. **Escuta a prévia** — player no card ou na página do beat.
-3. **Clica em COMPRAR** — escolhe a licença (Lease, Premium ou Exclusiva) e preenche nome, e-mail e WhatsApp.
-4. **Recebe as instruções de pagamento** — link de Pix/pagamento chega por WhatsApp e e-mail, junto com o link para enviar o comprovante.
-5. **Envia o comprovante** — pelo link gerado na compra (upload direto, sem precisar voltar pro WhatsApp).
-6. **Recebe os arquivos** — a equipe confirma o pagamento e entrega os arquivos (WAV + stems conforme a licença) por WhatsApp e e-mail.
+## 2. Cadastro de beats (`src/components/admin/beats/BeatForm.tsx`)
 
-FAQ atualizada nos mesmos pontos:
-- Cadastro: continua opcional, dados pedidos no checkout.
-- Licenças: Lease, Premium, Exclusiva — comparativo na página do beat.
-- Pagamento: Pix / link, manual nesta fase.
-- Entrega: link de download por WhatsApp e e-mail após confirmação.
-- Clipe / DSPs: Premium e Exclusiva liberam.
-- Exclusiva: remove o beat do catálogo.
+- Adicionar `tipo: z.enum(['fechado','aberto'])` no schema (default `'fechado'`).
+- Novo `<Select>` "Tipo do beat" com opções **Fechado (WAV)** e **Aberto (WAV + STEMS)**, posicionado antes de "Preço".
+- Default do campo **preço** muda de `"199,99"` para `"100,00"`.
+- Ao trocar o tipo, se o preço atual estiver vazio ou for igual ao default do tipo anterior (100 ↔ 150), atualizar automaticamente para o default do novo tipo. Edição manual do preço não é sobrescrita.
+- Help text no bloco "Arquivos privados": exibir um aviso suave quando `tipo = fechado` mas houver `stems_path` (e vice-versa: `tipo = aberto` sem `stems_path`). Sem bloquear o submit.
+- Persistir `tipo` no payload de `createBeat` / `updateBeat`.
 
-Subtítulo no topo passa a ser: "Catálogo → compra com licença → pagamento → entrega dos arquivos."
+## 3. Server functions (`src/lib/beats.functions.ts`)
 
-## 3. Produtoras — textos no feminino
+- Acrescentar `tipo: z.enum(['fechado','aberto']).default('fechado')` nos schemas de create/update.
+- Passar `tipo` no insert/update do Supabase.
+- Default do preço no insert continua nullable, mas quando o admin não informar e o tipo for conhecido, gravamos o valor sugerido (100 ou 150).
 
-Atualizar `public.producers.bio` via migration (1 produtora ativa, 1 inativa):
+## 4. Exibição pública (opcional, dentro do escopo da seção)
 
-- **Anonima Beats** — bio atual já está no feminino e ok. Sugestão de pequena revisão: "Beatmaker e produtora musical, atua desde 2020 no desenvolvimento de artistas independentes. Cria beats autorais, produz e direciona artisticamente, transformando referências em projetos com identidade própria."
-- **Gizzabell** — bio atual é só "Afrobeats". Sugestão: "Produtora e beatmaker focada em Afrobeats, baseada em Florianópolis. Cria instrumentais com pegada dançante e identidade afro-contemporânea."
+- `src/lib/catalog.types.ts` + `src/lib/catalog.functions.ts`: incluir `tipo` no `PublicBeat` (select já lista os campos um a um).
+- `src/components/BeatCard.tsx` e `src/routes/beat.$slug.tsx`: badge discreto **"Aberto · WAV + Stems"** ou **"Fechado · WAV"** ao lado de gênero/BPM. Sem mudança de layout.
 
-Se preferir reescrever esses textos antes da migration, me passe a versão final e eu uso ela.
+## 5. Entrega (`DeliveryDialog`)
 
-## Detalhes técnicos
+Sem mudança de lógica — o admin continua escolhendo manualmente. Apenas exibir o tipo no cabeçalho do dialog ("Beat: Trap da Rua · Aberto") para evitar entrega errada. A seleção inicial de arquivos continua sendo "tudo que tem path", o que casa naturalmente com a regra (beat fechado não terá `stems_path`).
 
-- Nenhuma mudança em schema/RLS/backend além do `UPDATE` em `producers.bio`.
-- `leads` e `InterestForm` ficam no repo (zero risco, fácil reativar).
-- Sem mudanças em rotas — `/meus-interesses` vira redirect (`throw redirect({ to: '/' })` no `beforeLoad`).
-- Build deve continuar passando: ao remover imports órfãos, conferir `MessageCircle`, `InterestForm`, `ShoppingBag`, `FEATURES`.
+## 6. Tipos gerados
+
+Após a migration, `src/integrations/supabase/types.ts` é regerado e ganha o enum + a coluna automaticamente. Nada a editar à mão.
+
+## Fora de escopo
+
+- Não alterar `purchase_requests`, e-mails transacionais nem fluxo de comprovante.
+- Não migrar/relistar beats existentes para "Aberto" — fica como `'fechado'` até o admin editar.
+- Não criar tabela de preços por tipo; valores ficam por beat (a coluna `preco` continua a fonte da verdade).
