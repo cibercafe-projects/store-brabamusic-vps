@@ -133,8 +133,3 @@ function AdminLoginPage() {
     </div>
   );
 }
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
