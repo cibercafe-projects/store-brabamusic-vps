@@ -26,6 +26,7 @@ import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
 import { Route as EnviarComprovanteTokenRouteImport } from './routes/enviar-comprovante.$token'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
+import { Route as AdminResetPasswordRouteImport } from './routes/admin/reset-password'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -128,6 +129,11 @@ const BeatSlugRoute = BeatSlugRouteImport.update({
   path: '/beat/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/termos-uso': typeof TermosUsoRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AdminIndexRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/_protected': typeof AdminProtectedRouteRouteWithChildren
   '/admin/login': typeof AdminLoginRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/beat/$slug': typeof BeatSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/termos-uso'
     | '/unsubscribe'
     | '/admin/login'
+    | '/admin/reset-password'
     | '/beat/$slug'
     | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin'
     | '/admin/login'
+    | '/admin/reset-password'
     | '/beat/$slug'
     | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/_protected'
     | '/admin/login'
+    | '/admin/reset-password'
     | '/beat/$slug'
     | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
@@ -568,6 +580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BeatSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/reset-password': {
+      id: '/admin/reset-password'
+      path: '/reset-password'
+      fullPath: '/admin/reset-password'
+      preLoaderRoute: typeof AdminResetPasswordRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -715,12 +734,14 @@ const AdminProtectedRouteRouteWithChildren =
 interface AdminRouteRouteChildren {
   AdminProtectedRouteRoute: typeof AdminProtectedRouteRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminProtectedRouteRoute: AdminProtectedRouteRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
+  AdminResetPasswordRoute: AdminResetPasswordRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
