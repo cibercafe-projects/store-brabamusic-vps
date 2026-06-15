@@ -1,61 +1,44 @@
-# Entrega de arquivos — destaque, ações rápidas e visibilidade do responsável
+# Envio de lançamentos — apenas WAV + Faixa Foco
 
-A base de entrega já existe (`DeliveryDialog`, `deliverPurchase`, tabela `purchase_deliveries` com `enviado_por` e `enviado_em`). Faltam: destaque dos pedidos pendentes, dois botões diretos (WhatsApp + e-mail mailto) seguindo o padrão do `ResendInstructionsCard`, e exibição clara do responsável + data + sucesso.
+## 1. Aceitar apenas WAV (remover MP3)
 
-## 1. Destaque de pedidos pendentes de entrega
+**`src/lib/releases.functions.ts`**
+- `AUDIO_CT`: remover `audio/mpeg`, `audio/mp3`; manter apenas variantes WAV (`audio/wav`, `audio/x-wav`, `audio/wave`, `audio/vnd.wave`).
+- `getReleaseUploadUrl`: schema `ext` deixa de aceitar `"mp3"`; mensagem passa a "Use WAV.".
 
-**Lista `/admin/compras` (`compras.index.tsx`):**
-- Adicionar coluna/visual para pedidos com status `pagamento_confirmado`: linha com borda esquerda accent + badge "Entregar agora" (variant accent). Filtro rápido novo no topo: botão "Pendentes de entrega" que aplica `status=pagamento_confirmado`.
-- Ordenação: pendentes de entrega aparecem primeiro quando o filtro for "Todos" (ordenar em memória após a query: `pagamento_confirmado` primeiro, depois `created_at desc`).
+**`src/routes/enviar-lancamento.tsx`**
+- Texto de ajuda do campo de áudio: trocar "WAV ou MP3" por **"apenas WAV"** nos dois textos (single e EP/álbum).
 
-**Dashboard admin (`dashboard.tsx`):** já consome `getDeliveryStats` (`pendentes`/`enviados`). Sem mudança necessária além de garantir que o card "Pendentes de entrega" tenha link rápido para `/admin/compras?status=pagamento_confirmado` (search param) — se já estiver, mantém.
+> Observação: o envio é via link do Google Drive (não há upload direto no formulário público). O ajuste no `getReleaseUploadUrl` cobre fluxos administrativos que ainda usem upload assinado.
 
-## 2. Seção "Entrega de arquivos" — dois botões diretos
+## 2. Campo "Faixa Foco" obrigatório para EP e Álbum
 
-Hoje a seção tem um botão único que abre o `DeliveryDialog` (que tem checkboxes de canal + arquivos). Vamos manter o dialog para casos avançados, mas adicionar dois botões diretos no card principal, no mesmo padrão do `ResendInstructionsCard`:
+### Banco
+Migração adicionando coluna opcional na tabela `releases`:
+- `faixa_foco text` (nullable — singles não usam).
 
-- **Botão "Enviar por WhatsApp"** — chama `deliverPurchase` com todos os arquivos disponíveis selecionados + `canal_whatsapp=true`, `canal_email=false`. Servidor retorna `whatsapp_url` pronta (mensagem com links assinados de 7 dias) e abre em nova aba. Já existe o backend; só consumir.
-- **Botão "Enviar por E-mail"** — duas opções:
-  - **Padrão (recomendado e meu default):** dispara `deliverPurchase` com `canal_email=true`, `canal_whatsapp=false`. O sistema envia o e-mail transacional `purchase-delivered` (template já configurado, com a mensagem e os links).
-  - **Mailto manual:** abre `mailto:` com assunto e corpo pré-preenchido contendo a mensagem padrão (sem links assinados — apenas texto, já que `mailto:` não consegue gerar URLs de 7 dias no momento do clique sem antes chamar o servidor). 
-  
-  **Plano:** botão único "Enviar por E-mail" usa o **envio transacional** (links assinados garantidos). Acrescento abaixo um link discreto "Abrir no meu e-mail (mailto)" que dispara `deliverPurchase` apenas para registrar entrega + gerar links, e em seguida abre `mailto:` com os links já gerados no corpo. Isso atende "padrão já usado" (mailto) e "link gerado" sem perder os signed URLs.
+### Backend (`src/lib/releases.functions.ts`)
+- `submitSchema`: adicionar `faixa_foco: z.string().trim().max(200).optional().default("")`.
+- Novo `.refine`: quando `release_type ∈ {ep, album}`, `faixa_foco` deve ter ao menos 1 caractere — mensagem "Informe a faixa foco do EP/Álbum." em `path: ["faixa_foco"]`.
+- Insert em `releases`: gravar `faixa_foco: data.faixa_foco || null`.
+- `getRelease` (admin): incluir `faixa_foco` no select.
 
-  Se preferir apenas um botão e simplificar, me avise — meu default é os dois acima (transacional + mailto), espelhando o pattern do `ResendInstructionsCard`.
+### Formulário público (`src/routes/enviar-lancamento.tsx`)
+- Novo state `faixaFoco`.
+- Quando `isMulti` (EP/Álbum), renderizar campo **"Faixa Foco"** (Input obrigatório) logo após a tracklist, com texto auxiliar: *"Música principal para divulgação e distribuição."*
+- Incluir no payload `submitFn`.
+- `canSubmit`: exigir `faixaFoco.trim().length > 0` quando `isMulti`.
 
-- **Botão "Mais opções"** — abre o `DeliveryDialog` atual para casos com seleção custom de arquivos / observação interna.
+### Painel admin (`src/routes/admin/_protected/lancamentos.$id.tsx`)
+- Exibir a "Faixa Foco" no bloco de informações do lançamento quando presente.
 
-Validações:
-- Botões desabilitados se status ≠ `pagamento_confirmado` (ou `arquivos_enviados` para reenvio).
-- Desabilita "WhatsApp" se cliente não tem whatsapp; "E-mail" se cliente não tem e-mail; e ambos se beat não tem nenhum arquivo cadastrado.
+### E-mails
+- `admin-new-release` e `release-received`: incluir linha "Faixa foco: X" quando aplicável (apenas EP/Álbum). Passar `faixaFoco` em `templateData`.
 
-## 3. Confirmação visual + responsável + data
-
-**Estado pós-entrega no card:**
-- Quando `purchase.status === 'arquivos_enviados'`, exibir bloco verde de sucesso no topo do card: ícone `CheckCircle2`, texto **"Arquivos entregues"**, data de `delivered_at` e nome (e-mail) do responsável da **última** entrega.
-- Histórico de entregas resumido (últimas 3) abaixo dos botões, com data, canais usados e responsável.
-
-**Backend — enriquecer `listDeliveries`:**
-- Hoje retorna `enviado_por` como UUID. Adicionar lookup dos e-mails dos responsáveis via `supabaseAdmin.auth.admin.listUsers()` (ou `getUserById` por id, em paralelo via `Promise.all`) e devolver `enviado_por_email: string | null` para cada linha.
-- Custo: poucos itens por compra; sem impacto perceptível.
-
-**Frontend:**
-- O hook de histórico já existe (`listDeliveries`). Trazê-lo também no card principal (não apenas no dialog) com `useQuery` em `purchase-deliveries`, e renderizar a linha de destaque do último responsável.
-- Após `deliverPurchase` ter sucesso, invalidar `["admin","deliveries",purchase_id]` (já feito no dialog) — replicar no card.
-
-## 4. Migração e schema
-
-Nenhuma migração necessária — `purchase_deliveries.enviado_por`, `enviado_em`, e `purchase_requests.delivered_at` já existem e são preenchidos pelo handler atual.
-
-## Arquivos afetados
-
-- `src/lib/deliveries.functions.ts` — `listDeliveries` retorna `enviado_por_email`; nova `deliverPurchaseQuick` (ou parametrização para chamada simplificada com "todos os arquivos disponíveis"). Reaproveito `deliverPurchase` existente passando o array filtrado pelo client.
-- `src/routes/admin/_protected/compras.$id.tsx` — refatora o card "Entrega de arquivos" com os 2 botões + bloco de sucesso + responsável + histórico.
-- `src/routes/admin/_protected/compras.index.tsx` — destaque das linhas pendentes + filtro rápido.
-- (sem mudanças no `DeliveryDialog` além de continuar funcionando como "Mais opções".)
-
-## Fora de escopo
-
-- Nenhuma mudança no template `purchase-delivered.tsx` (já contém os links e os documentos adicionados na etapa anterior).
-- Nenhuma mudança em fluxo de pagamento ou comprovante.
-- Sem notificação push/realtime — basta refresh por `useQuery`.
+## Arquivos
+- migração SQL (nova)
+- `src/lib/releases.functions.ts`
+- `src/routes/enviar-lancamento.tsx`
+- `src/routes/admin/_protected/lancamentos.$id.tsx`
+- `src/lib/email-templates/admin-new-release.tsx`
+- `src/lib/email-templates/release-received.tsx`

@@ -502,6 +502,7 @@ export type Database = {
           cpf: string
           created_at: string
           email: string
+          faixa_foco: string | null
           full_name: string
           genres: string[]
           has_videoclip: boolean
@@ -531,6 +532,7 @@ export type Database = {
           cpf: string
           created_at?: string
           email: string
+          faixa_foco?: string | null
           full_name: string
           genres?: string[]
           has_videoclip?: boolean
@@ -560,6 +562,7 @@ export type Database = {
           cpf?: string
           created_at?: string
           email?: string
+          faixa_foco?: string | null
           full_name?: string
           genres?: string[]
           has_videoclip?: boolean
