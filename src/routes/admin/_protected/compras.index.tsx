@@ -67,20 +67,20 @@ function PurchasesListPage() {
     staleTime: 15_000,
   });
 
-  // Pendentes de entrega aparecem primeiro quando o filtro é "Todos".
+  // Ordem: pendentes de entrega (pagamento_confirmado) > aguardando validação (comprovante_recebido) > resto.
   const rows = (() => {
     const list = query.data ?? [];
     if (status !== "all") return list;
-    return [...list].sort((a, b) => {
-      const ap = a.status === "pagamento_confirmado" ? 0 : 1;
-      const bp = b.status === "pagamento_confirmado" ? 0 : 1;
-      if (ap !== bp) return ap - bp;
-      return 0;
-    });
+    const rank = (s: string) =>
+      s === "pagamento_confirmado" ? 0 : s === "comprovante_recebido" ? 1 : 2;
+    return [...list].sort((a, b) => rank(a.status) - rank(b.status));
   })();
 
   const pendentesCount = (query.data ?? []).filter(
     (p) => p.status === "pagamento_confirmado",
+  ).length;
+  const aValidarCount = (query.data ?? []).filter(
+    (p) => p.status === "comprovante_recebido",
   ).length;
 
   return (
@@ -117,6 +117,24 @@ function PurchasesListPage() {
           {pendentesCount > 0 && (
             <span className="rounded-full bg-background/30 px-1.5 text-xs">
               {pendentesCount}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            setStatus(status === "comprovante_recebido" ? "all" : "comprovante_recebido")
+          }
+          className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition ${
+            status === "comprovante_recebido"
+              ? "bg-amber-500 text-black"
+              : "border border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+          }`}
+        >
+          Aguardando validação
+          {aValidarCount > 0 && (
+            <span className="rounded-full bg-background/30 px-1.5 text-xs">
+              {aValidarCount}
             </span>
           )}
         </button>
@@ -161,11 +179,14 @@ function PurchasesListPage() {
             <TableBody>
               {rows.map((p) => {
                 const pending = p.status === "pagamento_confirmado";
+                const toValidate = p.status === "comprovante_recebido";
+                const rowClass = pending
+                  ? "bg-accent/5 border-l-4 border-l-accent"
+                  : toValidate
+                    ? "bg-amber-500/5 border-l-4 border-l-amber-500"
+                    : "";
                 return (
-                  <TableRow
-                    key={p.id}
-                    className={pending ? "bg-accent/5 border-l-4 border-l-accent" : ""}
-                  >
+                  <TableRow key={p.id} className={rowClass}>
                     <TableCell>
                       <div className="font-medium">{p.nome_cliente}</div>
                       <div className="text-xs text-muted-foreground">{p.email}</div>
@@ -197,6 +218,11 @@ function PurchasesListPage() {
                           Entregar agora
                         </Badge>
                       )}
+                      {toValidate && (
+                        <Badge className="ml-1 bg-amber-500 text-black">
+                          Validar comprovante
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {p.receipt_path ? (
@@ -210,9 +236,9 @@ function PurchasesListPage() {
                       <Link
                         to="/admin/compras/$id"
                         params={{ id: p.id }}
-                        className={`text-xs hover:underline ${pending ? "font-semibold text-accent" : "text-accent"}`}
+                        className={`text-xs hover:underline ${pending || toValidate ? "font-semibold text-accent" : "text-accent"}`}
                       >
-                        {pending ? "Entregar →" : "Abrir"}
+                        {pending ? "Entregar →" : toValidate ? "Validar →" : "Abrir"}
                       </Link>
                     </TableCell>
                   </TableRow>
