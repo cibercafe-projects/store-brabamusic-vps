@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   RELEASE_TYPE_LABEL,
   type ReleaseStatus,
 } from "@/lib/releases.constants";
+import { waLink } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/admin/_protected/lancamentos/$id")({
   component: LancamentoDetail,
@@ -117,6 +118,7 @@ function LancamentoDetail() {
           <Info label="Nome completo" value={r.full_name} />
           <Info label="CPF" value={r.cpf} />
           <Info label="E-mail" value={r.email} />
+          <Info label="WhatsApp" value={(r as { whatsapp?: string }).whatsapp || "—"} />
           <Info label="Nome artístico" value={r.artist_name} />
           <Block label="Sobre o artista" value={r.about_artist} />
         </InfoCard>
