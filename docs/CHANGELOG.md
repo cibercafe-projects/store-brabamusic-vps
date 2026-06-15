@@ -5,6 +5,36 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ---
 
+## [Revisão Fase 1 — Gaps de fluxo] — 2026-06-15
+
+Revisão dos fluxos de Cadastro, Compra, Comprovante e Entrega após Fase 1.
+
+### Added
+- Badge âmbar **"Validar comprovante"**, filtro rápido **"Aguardando
+  validação"** e ordenação dedicada para pedidos em `comprovante_recebido`
+  na lista `/admin/compras`.
+- Documentação dos 5 estados de `purchase_requests` em
+  `docs/regras-de-negocio.md` (seção 2.4).
+- Seção de **Leads unificados** nos docs (regras 2.5 + fluxo 6).
+
+### Changed
+- `deliverPurchase` agora valida no back-end que o pedido está em
+  `pagamento_confirmado` ou `arquivos_enviados` antes de gerar links/entregar.
+- `uploadReceiptByToken` bloqueia upload quando o pedido já está em
+  `arquivos_enviados` (além do bloqueio já existente para `cancelado`).
+- Botões da seção "Enviar Arquivos" passam a exibir **"Reenviar por
+  WhatsApp/E-mail"** quando o pedido já foi entregue.
+- Fluxo documentado em `docs/fluxos-do-sistema.md` agora inclui o estado
+  intermediário `comprovante_recebido`.
+
+### Removed
+- Bloco/Botão **"Avisar imediatamente a Administração"** (WhatsApp comercial)
+  da página pública `/enviar-comprovante/:token` — alinhado à regra Fase 1
+  de notificações manuais pelo admin.
+
+---
+
+
 ## [Fase 1] — 2026-06-15
 
 Marco operacional: plataforma pronta para a operação oficial da Fase 1

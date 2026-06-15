@@ -563,7 +563,8 @@ function DeliveryCard({
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
+                <MessageCircle className="h-4 w-4" />{" "}
+                {isDelivered ? "Reenviar por WhatsApp" : "Enviar por WhatsApp"}
               </>
             )}
           </Button>
@@ -576,7 +577,8 @@ function DeliveryCard({
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <Mail className="h-4 w-4" /> Enviar por E-mail
+                <Mail className="h-4 w-4" />{" "}
+                {isDelivered ? "Reenviar por E-mail" : "Enviar por E-mail"}
               </>
             )}
           </Button>
