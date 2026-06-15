@@ -12,6 +12,9 @@ import {
   Instagram,
   Save,
   PackageCheck,
+  CheckCircle2,
+  Settings2,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,6 +25,7 @@ import {
   PURCHASE_STATUS_LIST,
   type PurchaseStatus,
 } from "@/lib/purchases.functions";
+import { deliverPurchase, listDeliveries } from "@/lib/deliveries.functions";
 import { waLink as buildWaLink } from "@/lib/whatsapp";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
