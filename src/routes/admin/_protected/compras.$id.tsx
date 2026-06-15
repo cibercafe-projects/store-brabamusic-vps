@@ -260,11 +260,37 @@ function PurchaseDetailPage() {
             ) : (
               <p className="text-xs text-muted-foreground">Nenhum comprovante enviado ainda.</p>
             )}
-            <div className="pt-2 border-t border-white/10">
+            <div className="pt-2 border-t border-white/10 space-y-1.5">
               <p className="text-xs text-muted-foreground">Link de envio do cliente:</p>
-              <code className="text-[11px] break-all font-mono text-accent">
-                /enviar-comprovante/{p.continuation_token}
-              </code>
+              {(() => {
+                const origin =
+                  typeof window !== "undefined" && window.location?.origin
+                    ? window.location.origin
+                    : "https://brababeats.app";
+                const fullLink = `${origin}/enviar-comprovante/${p.continuation_token}`;
+                return (
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={fullLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] break-all font-mono text-accent underline-offset-2 hover:underline flex-1"
+                    >
+                      {fullLink}
+                    </a>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(fullLink);
+                        toast.success("Link copiado");
+                      }}
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>
