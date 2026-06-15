@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,9 @@ import {
   type ReleaseType,
 } from "@/lib/releases.constants";
 import { submitRelease } from "@/lib/releases.functions";
+import { waLink } from "@/lib/whatsapp";
+import { useQuery } from "@tanstack/react-query";
+import { getPaymentSettings } from "@/lib/purchases.functions";
 
 export const Route = createFileRoute("/enviar-lancamento")({
   head: () => ({
