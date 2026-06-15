@@ -20,6 +20,7 @@ const ReleaseReceived = ({
   artistName = "",
   releaseName = "—",
   releaseType = "single",
+  faixaFoco = "",
 }: Props) => (
   <EmailShell
     preview="Recebemos seu lançamento"
@@ -33,6 +34,11 @@ const ReleaseReceived = ({
       <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
         <strong>Tipo:</strong> {TYPE_LABEL[releaseType] ?? releaseType}
       </Text>
+      {releaseType !== "single" && faixaFoco && (
+        <Text style={{ ...styles.paragraph, margin: "4px 0 0" }}>
+          <strong>Faixa foco:</strong> {faixaFoco}
+        </Text>
+      )}
     </Section>
 
     <Text style={styles.paragraph}>
