@@ -58,8 +58,6 @@ const uploadKinds = z.enum(["cover", "audio", "photo"]);
 
 const IMAGE_CT = ["image/jpeg", "image/png", "image/webp"] as const;
 const AUDIO_CT = [
-  "audio/mpeg",
-  "audio/mp3",
   "audio/wav",
   "audio/x-wav",
   "audio/wave",
