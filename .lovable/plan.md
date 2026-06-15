@@ -1,44 +1,31 @@
-# Envio de lançamentos — apenas WAV + Faixa Foco
+# Documentação operacional — Fase 1
 
-## 1. Aceitar apenas WAV (remover MP3)
+Criar três documentos em `docs/` consolidando o estado atual após os ajustes de hoje.
 
-**`src/lib/releases.functions.ts`**
-- `AUDIO_CT`: remover `audio/mpeg`, `audio/mp3`; manter apenas variantes WAV (`audio/wav`, `audio/x-wav`, `audio/wave`, `audio/vnd.wave`).
-- `getReleaseUploadUrl`: schema `ext` deixa de aceitar `"mp3"`; mensagem passa a "Use WAV.".
+## 1. `docs/regras-de-negocio.md`
+Referência canônica de regras. Seções:
+- **Catálogo de Beats** — Tipos (Fechado R$100/WAV, Aberto R$150/WAV+STEMS), cadastro, status.
+- **Compra e Checkout** — Dados do cliente (com Nome Artístico), aceite de Licença + Termos, ação primária "ENVIAR COMPROVANTE DE PAGAMENTO", remoção do WhatsApp comercial.
+- **Entrega de Arquivos** — Pendentes destacados, botões WhatsApp/E-mail, registros obrigatórios (data, responsável, canal, arquivos), confirmação visual e histórico.
+- **Envio de Lançamentos** — Apenas WAV, Faixa Foco obrigatória para EP/Álbum, fluxo de notificações.
+- **Identidade e Comunicação** — Linguagem no feminino, banner inclusivo, notificações majoritariamente manuais.
+- **Papéis e Acesso** — Admin, Super Admin, Cliente/Artista (sem login).
 
-**`src/routes/enviar-lancamento.tsx`**
-- Texto de ajuda do campo de áudio: trocar "WAV ou MP3" por **"apenas WAV"** nos dois textos (single e EP/álbum).
+## 2. `docs/fluxos-do-sistema.md`
+Fluxogramas em texto (ASCII) dos processos principais:
+- **Fluxo de Compra** — Cliente → Checkout → Comprovante → Admin confirma pagamento → Pendente de entrega.
+- **Fluxo de Entrega** — Pedido pendente → Botão WhatsApp/E-mail → Registro automático → Status `arquivos_enviados` → Bloco verde + histórico.
+- **Fluxo de Lançamento** — Artista envia formulário → E-mails automáticos (artista + admin) → Admin analisa → Mudanças de status disparam e-mail.
+- **Fluxo de Notificação** — Quais são automáticas vs manuais.
 
-> Observação: o envio é via link do Google Drive (não há upload direto no formulário público). O ajuste no `getReleaseUploadUrl` cobre fluxos administrativos que ainda usem upload assinado.
-
-## 2. Campo "Faixa Foco" obrigatório para EP e Álbum
-
-### Banco
-Migração adicionando coluna opcional na tabela `releases`:
-- `faixa_foco text` (nullable — singles não usam).
-
-### Backend (`src/lib/releases.functions.ts`)
-- `submitSchema`: adicionar `faixa_foco: z.string().trim().max(200).optional().default("")`.
-- Novo `.refine`: quando `release_type ∈ {ep, album}`, `faixa_foco` deve ter ao menos 1 caractere — mensagem "Informe a faixa foco do EP/Álbum." em `path: ["faixa_foco"]`.
-- Insert em `releases`: gravar `faixa_foco: data.faixa_foco || null`.
-- `getRelease` (admin): incluir `faixa_foco` no select.
-
-### Formulário público (`src/routes/enviar-lancamento.tsx`)
-- Novo state `faixaFoco`.
-- Quando `isMulti` (EP/Álbum), renderizar campo **"Faixa Foco"** (Input obrigatório) logo após a tracklist, com texto auxiliar: *"Música principal para divulgação e distribuição."*
-- Incluir no payload `submitFn`.
-- `canSubmit`: exigir `faixaFoco.trim().length > 0` quando `isMulti`.
-
-### Painel admin (`src/routes/admin/_protected/lancamentos.$id.tsx`)
-- Exibir a "Faixa Foco" no bloco de informações do lançamento quando presente.
-
-### E-mails
-- `admin-new-release` e `release-received`: incluir linha "Faixa foco: X" quando aplicável (apenas EP/Álbum). Passar `faixaFoco` em `templateData`.
+## 3. `docs/CHANGELOG.md`
+Entrada `## [Fase 1] — 2026-06-15` com seções:
+- **Added** — Tipo do Beat, Nome Artístico, Faixa Foco, botões diretos de entrega, banner inclusivo, página `/licenca-de-uso`, histórico de entregas, filtro "Pendentes de entrega".
+- **Changed** — Preço padrão R$100, textos para "Produtoras"/"das produtoras", ação primária do checkout.
+- **Removed** — Aceitação de MP3 em lançamentos, bloco "WhatsApp Comercial" do checkout, direcionamento automático para WhatsApp.
+- **Database** — Colunas `nome_artistico` em `purchase_requests` e `faixa_foco` em `releases`.
 
 ## Arquivos
-- migração SQL (nova)
-- `src/lib/releases.functions.ts`
-- `src/routes/enviar-lancamento.tsx`
-- `src/routes/admin/_protected/lancamentos.$id.tsx`
-- `src/lib/email-templates/admin-new-release.tsx`
-- `src/lib/email-templates/release-received.tsx`
+- `docs/regras-de-negocio.md` (novo)
+- `docs/fluxos-do-sistema.md` (novo)
+- `docs/CHANGELOG.md` (novo)
