@@ -217,6 +217,17 @@ function SubmitReleasePage() {
                 onChange={(e) => setCpf(e.target.value)}
               />
             </Field>
+            <Field label="WhatsApp (com DDI)" required>
+              <Input
+                required
+                placeholder="+55 11 91234-5678"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value.replace(/[^\d+\s()-]/g, ""))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Usaremos para te avisar sobre o status do lançamento.
+              </p>
+            </Field>
             <Field label="Nome artístico" required>
               <Input required value={artistName} onChange={(e) => setArtistName(e.target.value)} />
             </Field>
