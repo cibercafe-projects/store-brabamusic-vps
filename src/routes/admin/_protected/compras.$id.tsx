@@ -22,7 +22,7 @@ import {
   PURCHASE_STATUS_LIST,
   type PurchaseStatus,
 } from "@/lib/purchases.functions";
-import { waLink } from "@/lib/whatsapp";
+import { waLink as buildWaLink } from "@/lib/whatsapp";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -377,7 +377,7 @@ function PurchaseDetailPage() {
               </Button>
               {(() => {
                 const msg = `Olá ${p.nome_cliente}, sua compra do beat *${beat?.nome ?? ""}* foi liberada! Em instantes você recebe o e-mail com os arquivos. Qualquer dúvida, é só responder por aqui. — Braba Music`;
-                const link = waLink(p.whatsapp, msg);
+                const link = buildWaLink(p.whatsapp, msg);
                 return link ? (
                   <Button
                     asChild
