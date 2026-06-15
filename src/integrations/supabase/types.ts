@@ -358,6 +358,7 @@ export type Database = {
           forma_pagamento: Database["public"]["Enums"]["purchase_payment_method"]
           id: string
           instagram: string | null
+          nome_artistico: string | null
           nome_cliente: string
           receipt_path: string | null
           receipt_uploaded_at: string | null
@@ -377,6 +378,7 @@ export type Database = {
           forma_pagamento: Database["public"]["Enums"]["purchase_payment_method"]
           id?: string
           instagram?: string | null
+          nome_artistico?: string | null
           nome_cliente: string
           receipt_path?: string | null
           receipt_uploaded_at?: string | null
@@ -396,6 +398,7 @@ export type Database = {
           forma_pagamento?: Database["public"]["Enums"]["purchase_payment_method"]
           id?: string
           instagram?: string | null
+          nome_artistico?: string | null
           nome_cliente?: string
           receipt_path?: string | null
           receipt_uploaded_at?: string | null
