@@ -56,6 +56,14 @@ export const deliverPurchase = createServerFn({ method: "POST" })
       .maybeSingle();
     if (pErr || !purchase) throw new Error("Compra não encontrada.");
     if (purchase.status === "cancelado") throw new Error("Compra cancelada.");
+    if (
+      purchase.status !== "pagamento_confirmado" &&
+      purchase.status !== "arquivos_enviados"
+    ) {
+      throw new Error(
+        "Confirme o pagamento antes de entregar os arquivos.",
+      );
+    }
 
     const beat = purchase.beat as {
       id: string;

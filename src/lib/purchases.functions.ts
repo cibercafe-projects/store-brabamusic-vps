@@ -242,6 +242,11 @@ export const uploadReceiptByToken = createServerFn({ method: "POST" })
     }
     if (!row) throw new Error("Pedido não encontrado.");
     if (row.status === "cancelado") throw new Error("Este pedido foi cancelado.");
+    if (row.status === "arquivos_enviados") {
+      throw new Error(
+        "Este pedido já foi concluído. Se precisar de ajuda, fale com a equipe Braba.",
+      );
+    }
 
     const ext = data.filename.includes(".")
       ? data.filename.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "")

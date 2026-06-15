@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, CheckCircle2, MessageCircle } from "lucide-react";
-import { getPurchaseByToken, getPurchaseSettings } from "@/lib/purchases.functions";
+import { Loader2, CheckCircle2 } from "lucide-react";
+import { getPurchaseByToken } from "@/lib/purchases.functions";
 import { ReceiptUploader } from "@/components/purchase/ReceiptUploader";
 
 export const Route = createFileRoute("/enviar-comprovante/$token")({
@@ -19,18 +19,11 @@ function fmtPrice(v: number | string | null | undefined) {
 function SendReceiptPage() {
   const { token } = Route.useParams();
   const loadFn = useServerFn(getPurchaseByToken);
-  const loadSettings = useServerFn(getPurchaseSettings);
 
   const query = useQuery({
     queryKey: ["purchase-by-token", token],
     queryFn: () => loadFn({ data: { token } }),
     retry: false,
-  });
-
-  const settings = useQuery({
-    queryKey: ["purchase-settings"],
-    queryFn: () => loadSettings(),
-    staleTime: 60_000,
   });
 
   if (query.isLoading) {
@@ -57,10 +50,6 @@ function SendReceiptPage() {
 
   const purchase = query.data;
   const beat = purchase.beat;
-  const commercialWa = settings.data?.commercial_whatsapp ?? "+5511913401000";
-  const waLink = `https://wa.me/${commercialWa.replace(/\D/g, "")}?text=${encodeURIComponent(
-    `Olá! Sou ${purchase.nome_cliente}.\nAcabei de enviar o comprovante do beat: ${beat?.nome ?? ""}.\nAguardo a validação e o envio dos arquivos.`,
-  )}`;
 
   return (
     <div className="mx-auto max-w-md px-4 py-12">
@@ -102,19 +91,12 @@ function SendReceiptPage() {
         />
       </div>
 
-      <a
-        href={waLink}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-6 w-full inline-flex items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-accent px-5 py-4 text-base font-bold text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-95 hover:shadow-primary/50 transition text-center"
-      >
-        <MessageCircle className="h-6 w-6" /> Avisar imediatamente a Administração da Braba sobre o seu pagamento
-      </a>
-
-      <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
-        Após avisar a administração, aguarde até <span className="font-semibold text-foreground">24h</span> para a revisão do comprovante, aprovação do pagamento e envio dos arquivos adquiridos.
+      <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
+        Após enviar o comprovante, aguarde até{" "}
+        <span className="font-semibold text-foreground">24h</span> para a revisão,
+        aprovação do pagamento e envio dos arquivos adquiridos. Você receberá
+        tudo por e-mail e WhatsApp.
       </div>
-
     </div>
   );
 }
