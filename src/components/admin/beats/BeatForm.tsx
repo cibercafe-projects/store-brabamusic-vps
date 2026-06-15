@@ -57,6 +57,7 @@ const schema = z.object({
   tom: z.string().trim().max(60).optional().or(z.literal("")),
   mood: z.string().trim().max(60).optional().or(z.literal("")),
   preco: z.string().optional().or(z.literal("")),
+  tipo: z.enum(["fechado", "aberto"]),
   descricao: z.string().trim().max(2000).optional().or(z.literal("")),
   status: z.enum(["rascunho", "ativo", "vendido"]),
   capa_path: z.string().max(300).optional().or(z.literal("")),
@@ -80,6 +81,7 @@ export type BeatFormInitial = {
   tom?: string | null;
   mood?: string | null;
   preco?: number | string | null;
+  tipo?: "fechado" | "aberto";
   descricao?: string | null;
   status?: "rascunho" | "ativo" | "vendido";
   capa_url?: string | null;
@@ -133,7 +135,8 @@ export function BeatForm({ initial, onDone }: Props) {
       preco:
         initial?.preco != null
           ? String(initial.preco).replace(".", ",")
-          : "199,99",
+          : "100,00",
+      tipo: initial?.tipo ?? "fechado",
       descricao: initial?.descricao ?? "",
       status: initial?.status ?? "rascunho",
       capa_path: initial?.capa_path ?? "",
@@ -166,6 +169,7 @@ export function BeatForm({ initial, onDone }: Props) {
         tom: values.tom || "",
         mood: values.mood || "",
         preco: values.preco ? Number(String(values.preco).replace(",", ".")) : null,
+        tipo: values.tipo,
         descricao: values.descricao || "",
         status: values.status,
         capa_url: "",
@@ -315,6 +319,44 @@ export function BeatForm({ initial, onDone }: Props) {
           />
           <FormField
             control={form.control}
+            name="tipo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo do beat *</FormLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={(v) => {
+                    const next = v as "fechado" | "aberto";
+                    const current = form.getValues("preco");
+                    const isDefault =
+                      !current || current === "100,00" || current === "150,00";
+                    field.onChange(next);
+                    if (isDefault) {
+                      form.setValue("preco", next === "aberto" ? "150,00" : "100,00", {
+                        shouldDirty: true,
+                      });
+                    }
+                  }}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="fechado">Fechado (WAV)</SelectItem>
+                    <SelectItem value="aberto">Aberto (WAV + Stems)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Fechado entrega só WAV. Aberto entrega WAV + Stems.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="preco"
             render={({ field }) => (
               <FormItem>
@@ -324,7 +366,7 @@ export function BeatForm({ initial, onDone }: Props) {
                     type="text"
                     inputMode="decimal"
                     {...field}
-                    placeholder="199,99"
+                    placeholder="100,00"
                     onChange={(e) =>
                       field.onChange(e.target.value.replace(/[^\d,.]/g, ""))
                     }

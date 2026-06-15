@@ -58,7 +58,7 @@ export const listPublicBeats = createServerFn({ method: "POST" })
     let q = admin
       .from("beats")
       .select(
-        "id,slug,nome,genero,bpm,tom,mood,preco,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
+        "id,slug,nome,genero,bpm,tom,mood,preco,tipo,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
         { count: "exact" },
       )
       .eq("status", "ativo")
@@ -109,6 +109,7 @@ export const listPublicBeats = createServerFn({ method: "POST" })
         tom: r.tom,
         mood: r.mood,
         preco: r.preco != null ? Number(r.preco) : null,
+        tipo: (r.tipo ?? "fechado") as "fechado" | "aberto",
         descricao: r.descricao,
         produtora_id: r.produtora_id,
         produtora_nome: prodMap.get(r.produtora_id)?.nome_artistico ?? "—",
@@ -157,6 +158,7 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
         tom: row.tom,
         mood: row.mood,
         preco: row.preco != null ? Number(row.preco) : null,
+        tipo: (row.tipo ?? "fechado") as "fechado" | "aberto",
         descricao: row.descricao,
         produtora_id: row.produtora_id,
         produtora_nome: prod?.nome_artistico ?? "—",
@@ -231,7 +233,7 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
     const { data: beats } = await admin
       .from("beats")
       .select(
-        "id,slug,nome,genero,bpm,tom,mood,preco,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
+        "id,slug,nome,genero,bpm,tom,mood,preco,tipo,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
       )
       .eq("produtora_id", prod.id)
       .eq("status", "ativo")
@@ -247,6 +249,7 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
         tom: r.tom,
         mood: r.mood,
         preco: r.preco != null ? Number(r.preco) : null,
+        tipo: (r.tipo ?? "fechado") as "fechado" | "aberto",
         descricao: r.descricao,
         produtora_id: r.produtora_id,
         produtora_nome: prod.nome_artistico,

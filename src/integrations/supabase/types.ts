@@ -53,6 +53,7 @@ export type Database = {
           status: Database["public"]["Enums"]["beat_status"]
           stems_path: string | null
           stems_url: string | null
+          tipo: Database["public"]["Enums"]["beat_tipo"]
           tom: string | null
           updated_at: string
           wav_path: string | null
@@ -78,6 +79,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["beat_status"]
           stems_path?: string | null
           stems_url?: string | null
+          tipo?: Database["public"]["Enums"]["beat_tipo"]
           tom?: string | null
           updated_at?: string
           wav_path?: string | null
@@ -103,6 +105,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["beat_status"]
           stems_path?: string | null
           stems_url?: string | null
+          tipo?: Database["public"]["Enums"]["beat_tipo"]
           tom?: string | null
           updated_at?: string
           wav_path?: string | null
@@ -670,6 +673,7 @@ export type Database = {
     Enums: {
       app_role: "admin"
       beat_status: "rascunho" | "ativo" | "vendido"
+      beat_tipo: "fechado" | "aberto"
       lead_status:
         | "novo"
         | "contatado"
@@ -817,6 +821,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin"],
       beat_status: ["rascunho", "ativo", "vendido"],
+      beat_tipo: ["fechado", "aberto"],
       lead_status: [
         "novo",
         "contatado",
