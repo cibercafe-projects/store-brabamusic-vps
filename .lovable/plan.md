@@ -1,76 +1,84 @@
-# Verificação do estado atual
+# Ajuste no fluxo de compra — Envio das informações para o próprio WhatsApp do cliente
 
-| Notificação | Status |
-|---|---|
-| Cliente: confirmação de compra + link de comprovante | ❌ Não implementado |
-| Cliente: confirmação de entrega dos arquivos | ⚠️ Parcial — `deliverPurchase` tem `TODO: enviar quando domínio estiver configurado` (e-mail nunca é enviado; WhatsApp só abre `wa.me` em nova aba) |
-| Admin Braba: nova compra | ❌ Não implementado |
-| Admin Braba: novo comprovante | ❌ Não implementado |
-| Admin Braba: novo lançamento | ❌ Não implementado |
-| Artista: confirmação de recebimento do lançamento | ❌ Não implementado |
-| Artista: mudança de status do lançamento | ❌ Não implementado |
-| Reenvio de instruções (`ResendInstructionsCard`) | ⚠️ Só registra no banco, não envia |
-| WhatsApp automático (Twilio) | ❌ Não conectado |
-| Domínio `notify.brababeats.app` | ✅ Verificado |
-| Infra de fila de e-mail (pgmq + cron) | ✅ Pronta |
+Objetivo: após registrar a compra, o cliente vê uma tela de sucesso com próximos passos e 4 ações, incluindo um botão que abre o WhatsApp **dele mesmo** com a mensagem contendo todos os links da compra.
 
-Resumo: **a infraestrutura está pronta, mas nenhum envio automático está ativo.** Falta scaffolding transacional, templates, gatilhos e Twilio.
+Sem Twilio, sem WhatsApp API, sem serviços pagos — apenas `wa.me` com o telefone do próprio cliente.
 
-# Plano
+## Arquivo alterado
 
-## 1. Configuração (pré-requisitos)
-- Rodar scaffold de e-mail transacional (cria rotas `/lovable/email/transactional/send` + preview + suppression + unsubscribe + página de unsubscribe).
-- Adicionar setting `admin_notification_email` em `app_settings` (e campo na tela de Configurações) para definir o destinatário das notificações administrativas.
-- Conectar Twilio (connector) — necessário para WhatsApp automático ao cliente. Se o usuário preferir adiar, mantemos WhatsApp manual via `wa.me` e implementamos só e-mail agora.
+`src/components/purchase/PurchaseDialog.tsx` (única alteração de código)
 
-## 2. Templates de e-mail (em `src/lib/email-templates/`)
-Branding consistente com o site (cores, tipografia atuais), sem promoções:
+### 1. Nova tela de sucesso (substitui o conteúdo atual do step `receipt`)
 
-**Cliente (compras)**
-- `purchase-created` — "Recebemos seu pedido" com instruções de pagamento (PIX/link) + botão "Enviar comprovante" (link `/enviar-comprovante/{token}`).
-- `receipt-received` — "Comprovante recebido, em análise".
-- `purchase-delivered` — "Seus arquivos estão prontos" com links assinados (já gerados em `deliverPurchase`).
+Atualmente o step `receipt` renderiza diretamente o `ReceiptUploader` + botões "Enviar depois" e "Abrir WhatsApp Braba". Vamos transformá-lo numa tela de sucesso com próximos passos e 4 botões de ação. O upload do comprovante passa a ser acessado pelo botão "Enviar Comprovante", que abre `/enviar-comprovante/{token}` em nova aba (mesma URL já usada hoje no step `later`).
 
-**Cliente (lançamentos)**
-- `release-received` — "Recebemos seu lançamento".
-- `release-status-changed` — status legível + observação do admin.
+Conteúdo:
 
-**Admin**
-- `admin-new-purchase` — dados do cliente, beat e valor + link para `/admin/compras/{id}`.
-- `admin-new-receipt` — aviso de comprovante recebido + link.
-- `admin-new-release` — novo lançamento recebido + link.
+```
+✅ Compra registrada com sucesso
 
-## 3. Helper de envio
-`src/lib/email/send.ts` — wrapper que faz POST para `/lovable/email/transactional/send` com `idempotencyKey` derivada do evento (`purchase-created-{id}`, `release-status-{id}-{status}` etc.) para evitar duplicação em retry.
+Próximos passos:
+1. Efetue o pagamento.
+2. Envie seu comprovante.
+3. Aguarde a validação da equipe.
+4. Receba seus arquivos.
+```
 
-## 4. WhatsApp (Twilio, se aprovado)
-`src/lib/whatsapp/send.server.ts` — POST para gateway Twilio (`/Messages.json`) usando template do conteúdo WhatsApp Business. Apenas notificações ao cliente:
-- Confirmação de compra com link do comprovante.
-- Aviso quando entrega for feita (links de arquivo).
-Admin recebe só por e-mail (já tem painel).
+Card resumo (Beat, Valor) reaproveitando o mesmo estilo do step `form`.
 
-## 5. Gatilhos (server fns existentes)
-| Server fn | Adicionar |
-|---|---|
-| `createPurchaseRequest` | enviar `purchase-created` ao cliente + `admin-new-purchase` ao admin + WhatsApp ao cliente |
-| `uploadReceiptByToken` | enviar `receipt-received` ao cliente + `admin-new-receipt` ao admin |
-| `deliverPurchase` | enviar `purchase-delivered` (remover TODO) + WhatsApp ao cliente |
-| `logResendInstructions` → renomear para `resendPaymentInstructions` | reenviar `purchase-created` por e-mail e/ou WhatsApp de fato |
-| `createRelease` (em `releases.functions.ts`) | enviar `release-received` ao artista + `admin-new-release` ao admin |
-| `updateReleaseStatus` | enviar `release-status-changed` ao artista |
+### 2. Botões (na ordem)
 
-Cada envio é envolvido em `try/catch` e logado, sem bloquear a operação principal (o registro no banco é a fonte de verdade).
+1. **Pagar Agora** — abre `paymentLink` (de `settings.data.payment_link`) em nova aba. Desabilitado se vazio, com tooltip "Link de pagamento será enviado pelo time Braba".
+2. **Enviar Comprovante** — abre `${window.location.origin}/enviar-comprovante/${token}` em nova aba.
+3. **Enviar informações para meu WhatsApp** — abre `wa.me` com o telefone que o cliente digitou (`whatsapp` state) e a mensagem dinâmica (ver abaixo).
+4. **Copiar Informações** — copia para clipboard o texto consolidado (Beat, Valor, Link de Pagamento, Link de Comprovante).
 
-## 6. UI
-- Em `Configurações`: campo "E-mail para notificações administrativas".
-- `ResendInstructionsCard`: feedback real ("E-mail enviado" / "WhatsApp enviado").
-- `DeliveryDialog`: remover aviso "aguardando configuração de domínio".
+O botão antigo "Abrir WhatsApp Braba" e o step intermediário `later` são removidos (o link de comprovante já fica acessível pelo botão "Enviar Comprovante" e pelo "Copiar Informações"). O `ReceiptUploader` deixa de ser usado neste dialog.
+
+### 3. Geração do link wa.me (telefone do cliente)
+
+Reaproveitar `digitsOnly()` e `whatsappLink()` já presentes no arquivo. O número usado é `whatsapp` (state preenchido pelo cliente). `digitsOnly` já remove `()`, espaços, `-` e `+`.
+
+### 4. Mensagem enviada
+
+```
+Olá!
+
+Parabéns, você acabou de registrar sua compra na Braba Beats.
+
+Beat:
+{beatName}
+
+Valor:
+{valorFmt}
+
+Link para pagamento:
+{paymentLink || "Será enviado pelo time Braba"}
+
+Link para envio do comprovante:
+{origin}/enviar-comprovante/{token}
+
+Após o envio do comprovante nossa equipe realizará a validação do pagamento e enviará os arquivos adquiridos.
+
+Braba Music
+```
+
+`{origin}` = `window.location.origin` (em SSR não é avaliado, pois o dialog só renderiza no client).
+
+### 5. Texto do "Copiar Informações"
+
+Mesmo conteúdo da mensagem do WhatsApp, em texto plano (sem o "Olá!/Parabéns/Braba Music" se preferir um formato mais enxuto — proposta: manter idêntico para consistência).
+
+## O que NÃO muda
+
+- Server function `createPurchaseRequest`, e-mails transacionais, banco, settings.
+- Step `form` permanece igual (sem abertura automática de WhatsApp, conforme ajuste anterior).
+- `commercial_whatsapp` / `pix_key` continuam exibidos no step `form`.
+- Página `/enviar-comprovante/{token}` (já existente) continua sendo onde o upload real acontece.
 
 ## Detalhes técnicos
-- Todos os envios via fila pgmq (não bloqueiam request).
-- `from`: `Braba Beats <noreply@notify.brababeats.app>` (display from root quando habilitado).
-- Página `/email/unsubscribe` será criada pelo scaffold.
-- Sem anexos: arquivos entregues são links assinados de 7 dias (já implementado).
 
-## Pergunta antes de implementar
-Twilio para WhatsApp automático: **conectar agora** (você precisa de uma conta Twilio com WhatsApp habilitado) ou **adiar** e manter só WhatsApp manual (`wa.me`) por enquanto e implementar todos os e-mails agora?
+- Imports a remover: `MessageCircle` se não usar mais — manteremos pois o novo botão "Enviar para meu WhatsApp" usa o ícone. Remover import do `ReceiptUploader`.
+- Remover step `"later"` do union `Step` e seu bloco JSX.
+- `useEffect` de reset do dialog: remover `setStep("form")` referências a estados não mais usados? Tudo continua válido.
+- Tipagem: nenhuma alteração de tipos públicos.
