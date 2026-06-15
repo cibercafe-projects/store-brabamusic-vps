@@ -1,0 +1,1 @@
+ALTER TABLE public.releases ADD COLUMN IF NOT EXISTS whatsapp text NOT NULL DEFAULT '';

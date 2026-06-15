@@ -513,6 +513,7 @@ export type Database = {
           technical_sheet: string
           tracklist: string | null
           updated_at: string
+          whatsapp: string
         }
         Insert: {
           about_artist: string
@@ -541,6 +542,7 @@ export type Database = {
           technical_sheet: string
           tracklist?: string | null
           updated_at?: string
+          whatsapp?: string
         }
         Update: {
           about_artist?: string
@@ -569,6 +571,7 @@ export type Database = {
           technical_sheet?: string
           tracklist?: string | null
           updated_at?: string
+          whatsapp?: string
         }
         Relationships: []
       }
