@@ -43,9 +43,33 @@ mudança técnica.
   cliente.
 
 ### 2.3 Janela de compra
-- Sem direcionamento automático para WhatsApp.
+- Sem direcionamento automático para WhatsApp em nenhuma etapa pública.
 - Ação primária após o registro: botão **"ENVIAR COMPROVANTE DE PAGAMENTO"**.
-- O bloco com o número de WhatsApp comercial foi removido do diálogo de compra.
+- O bloco com o número de WhatsApp comercial foi removido tanto do diálogo
+  de compra quanto da página `/enviar-comprovante/:token` — toda
+  comunicação ao cliente é manual a partir do painel admin.
+
+### 2.4 Estados do pedido (`purchase_requests.status`)
+
+| Estado                  | Quem transita              | Significado                                    |
+| ----------------------- | -------------------------- | ---------------------------------------------- |
+| `aguardando_pagamento`  | Sistema (criação)          | Pedido criado, sem comprovante.                |
+| `comprovante_recebido`  | Sistema (upload cliente)   | Cliente enviou comprovante; admin precisa validar. |
+| `pagamento_confirmado`  | Admin (manual)             | Pagamento validado; pedido pronto para entrega. |
+| `arquivos_enviados`     | Sistema (após `deliverPurchase`) | Arquivos entregues ao cliente.            |
+| `cancelado`             | Admin (manual)             | Pedido cancelado.                              |
+
+Bloqueios:
+- Upload de comprovante é bloqueado quando o pedido está `cancelado` ou `arquivos_enviados`.
+- Entrega de arquivos só ocorre quando o pedido está em `pagamento_confirmado`
+  ou `arquivos_enviados` (este último para reenvio quando os links de 7 dias
+  expiram).
+
+### 2.5 Leads unificados
+A tela **Leads** no admin lista tanto cadastros do formulário de interesse
+(`leads`) quanto cadastros feitos no fluxo de compra (`purchase_requests`),
+mesmo que o pagamento não tenha sido concluído. Cada linha indica a origem
+("Interesse" ou "Compra") e o status correspondente.
 
 ---
 

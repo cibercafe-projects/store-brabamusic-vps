@@ -33,13 +33,18 @@ Diagramas em texto dos fluxos operacionais principais.
 ┌────────────────────────────┐
 │  Cliente envia comprovante │
 │  (upload via link assinado)│
+│  status = comprovante_recebido │
 └──────┬─────────────────────┘
        ▼
-┌────────────────────────────┐
-│  Admin valida pagamento    │
-│  status = pgto_confirmado  │  → entra em "Pendentes de entrega"
-└────────────────────────────┘
+┌──────────────────────────────────────┐
+│  Admin valida e confirma pagamento   │
+│  status = pagamento_confirmado       │ → entra em "Pendentes de entrega"
+└──────────────────────────────────────┘
 ```
+
+Bloqueios:
+- Upload bloqueado quando `status in ('cancelado','arquivos_enviados')`.
+- Entrega bloqueada (back-end) enquanto `status ≠ pagamento_confirmado`.
 
 ---
 
@@ -147,10 +152,23 @@ MANUAIS (admin clica para disparar)
 
 ```text
 purchase_requests.status
-  aguardando_pagamento ──► pagamento_confirmado ──► arquivos_enviados
-                                                 └► cancelado
+  aguardando_pagamento ──► comprovante_recebido ──► pagamento_confirmado ──► arquivos_enviados
+                                                                          └► cancelado
 
 releases.status
   recebido ──► em_analise ──► aprovado ──► distribuido
            └─► recusado
 ```
+
+---
+
+## 6. Leads unificados
+
+A tela `/admin/leads` agrega:
+- `leads` — formulário público de interesse.
+- `purchase_requests` — todos os cadastros do fluxo de compra (mesmo
+  pedidos não pagos ou cancelados).
+
+Cada linha indica a origem (`Interesse` / `Compra`) e um status mapeado:
+`aguardando_pagamento → novo`, `pagamento_confirmado → pago`,
+`arquivos_enviados → entregue`, `cancelado → perdido`.
