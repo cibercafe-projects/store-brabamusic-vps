@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Copy, ExternalLink, MessageCircle, CheckCircle2, ArrowRight } from "lucide-react";
+import { Loader2, Copy, ExternalLink, MessageCircle, CheckCircle2, ArrowRight, CreditCard, Upload } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -18,10 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getPurchaseSettings, createPurchaseRequest } from "@/lib/purchases.functions";
-import { ReceiptUploader } from "@/components/purchase/ReceiptUploader";
 
 type Method = "pix" | "link";
-type Step = "form" | "receipt" | "later";
+type Step = "form" | "receipt";
 
 interface Props {
   open: boolean;
@@ -313,88 +312,112 @@ export function PurchaseDialog({
           </>
         )}
 
-        {step === "receipt" && token && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Envio do Comprovante</DialogTitle>
-              <DialogDescription>
-                Seu pedido foi registrado. Envie agora seu comprovante de pagamento ou faça isso
-                posteriormente através do link enviado por e-mail e WhatsApp.
-              </DialogDescription>
-            </DialogHeader>
+        {step === "receipt" && token && (() => {
+          const origin = typeof window !== "undefined" ? window.location.origin : "";
+          const receiptUrl = `${origin}/enviar-comprovante/${token}`;
+          const paymentLineForMsg = paymentLink || "Será enviado pelo time Braba";
+          const message = `Olá!
 
-            <div className="space-y-4 py-2">
-              <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-accent" />
-                <p className="text-sm">Pedido criado com sucesso!</p>
-              </div>
+Parabéns, você acabou de registrar sua compra na Braba Beats.
 
-              <ReceiptUploader
-                token={token}
-                onSuccess={() => {
-                  setTimeout(() => onOpenChange(false), 1200);
-                }}
-              />
+Beat:
+${beatName}
 
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep("later")}
-                  className="w-full"
-                >
-                  Enviar depois
-                </Button>
-                <a
-                  href={whatsappLink(
-                    commercialWa,
-                    `Olá!\n\nAcabei de solicitar a compra do beat:\n${beatName}\n\nMeu nome é:\n${nome.trim()}\n\nAguardo a confirmação do pagamento.`,
-                  )}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-3 py-2 text-sm hover:bg-white/10"
-                >
-                  <MessageCircle className="h-4 w-4" /> Abrir WhatsApp Braba
-                </a>
-              </div>
-            </div>
-          </>
-        )}
+Valor:
+${valorFmt}
 
-        {step === "later" && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Tudo certo!</DialogTitle>
-              <DialogDescription>
-                Você receberá um link exclusivo por e-mail e WhatsApp para enviar seu comprovante
-                posteriormente.
-              </DialogDescription>
-            </DialogHeader>
+Link para pagamento:
+${paymentLineForMsg}
 
-            {token && (
-              <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-xs space-y-2">
-                <p className="text-muted-foreground">Seu link de continuidade:</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 truncate font-mono text-[11px]">
-                    /enviar-comprovante/{token}
-                  </code>
+Link para envio do comprovante:
+${receiptUrl}
+
+Após o envio do comprovante nossa equipe realizará a validação do pagamento e enviará os arquivos adquiridos.
+
+Braba Music`;
+          const copyText = `Beat: ${beatName}
+Valor: ${valorFmt}
+Link para pagamento: ${paymentLineForMsg}
+Link para envio do comprovante: ${receiptUrl}`;
+          const waUrl = whatsappLink(whatsapp, message);
+          return (
+            <>
+              <DialogHeader>
+                <DialogTitle>Compra registrada com sucesso</DialogTitle>
+                <DialogDescription>
+                  Salve os links abaixo para concluir seu pedido.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent" />
+                  <p className="text-sm">Pedido criado com sucesso!</p>
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Beat
+                  </p>
+                  <p className="font-display text-lg mt-1">{beatName}</p>
+                  <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-sm font-semibold mb-2">Próximos passos:</p>
+                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                    <li>Efetue o pagamento.</li>
+                    <li>Envie seu comprovante.</li>
+                    <li>Aguarde a validação da equipe.</li>
+                    <li>Receba seus arquivos.</li>
+                  </ol>
+                </div>
+
+                <div className="grid gap-2">
                   <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      copy(`${window.location.origin}/enviar-comprovante/${token}`, "Link")
-                    }
+                    onClick={() => {
+                      if (!paymentLink) {
+                        toast.info("O link de pagamento será enviado pelo time Braba.");
+                        return;
+                      }
+                      window.open(paymentLink, "_blank", "noopener,noreferrer");
+                    }}
+                    className="w-full"
                   >
-                    <Copy className="h-3 w-3" /> Copiar
+                    <CreditCard className="h-4 w-4" /> Pagar Agora
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(receiptUrl, "_blank", "noopener,noreferrer")}
+                    className="w-full"
+                  >
+                    <Upload className="h-4 w-4" /> Enviar Comprovante
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(waUrl, "_blank", "noopener,noreferrer")}
+                    className="w-full"
+                  >
+                    <MessageCircle className="h-4 w-4" /> Enviar informações para meu WhatsApp
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => copy(copyText, "Informações da compra")}
+                    className="w-full"
+                  >
+                    <Copy className="h-4 w-4" /> Copiar Informações
                   </Button>
                 </div>
               </div>
-            )}
 
-            <DialogFooter>
-              <Button onClick={() => onOpenChange(false)}>Fechar</Button>
-            </DialogFooter>
-          </>
-        )}
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                  Fechar
+                </Button>
+              </DialogFooter>
+            </>
+          );
+        })()}
       </DialogContent>
     </Dialog>
   );
