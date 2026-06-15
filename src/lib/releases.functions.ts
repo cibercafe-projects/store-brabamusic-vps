@@ -69,7 +69,7 @@ export const getReleaseUploadUrl = createServerFn({ method: "POST" })
     z
       .object({
         kind: uploadKinds,
-        ext: z.enum(["jpg", "jpeg", "png", "webp", "wav", "mp3"]),
+        ext: z.enum(["jpg", "jpeg", "png", "webp", "wav"]),
         contentType: z.string().min(3).max(80),
       })
       .parse(input),
@@ -85,7 +85,7 @@ export const getReleaseUploadUrl = createServerFn({ method: "POST" })
     } else {
       if (!AUDIO_CT.includes(data.contentType as (typeof AUDIO_CT)[number]))
         throw new Error("Tipo de áudio inválido.");
-      if (!["wav", "mp3"].includes(data.ext)) throw new Error("Use WAV ou MP3.");
+      if (data.ext !== "wav") throw new Error("Use WAV.");
       bucket = AUDIO_BUCKET;
     }
     const admin = await getAdmin();
