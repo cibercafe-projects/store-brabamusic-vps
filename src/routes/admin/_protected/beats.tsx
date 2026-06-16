@@ -87,6 +87,37 @@ const statusVariant: Record<BeatStatus, "default" | "secondary" | "outline"> = {
   vendido: "secondary",
 };
 
+const extFromPath = (p: string | null | undefined) => {
+  if (!p) return null;
+  const clean = p.split("?")[0];
+  const base = clean.substring(clean.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  if (dot < 0) return null;
+  return base.slice(dot + 1).toLowerCase();
+};
+
+function FileChip({
+  label,
+  path,
+}: {
+  label: string;
+  path: string | null | undefined;
+}) {
+  const ext = extFromPath(path);
+  if (ext) {
+    return (
+      <Badge variant="secondary" className="text-[10px] uppercase">
+        {label} · {ext}
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+      {label} · pendente
+    </Badge>
+  );
+}
+
 const formatPrice = (v: number | string | null | undefined) => {
   if (v == null || v === "") return "—";
   const n = typeof v === "string" ? Number(v) : v;
@@ -253,6 +284,7 @@ function BeatsPage() {
               <TableHead>Gênero</TableHead>
               <TableHead>Preço</TableHead>
               <TableHead>Plays</TableHead>
+              <TableHead>Arquivos</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
@@ -260,13 +292,13 @@ function BeatsPage() {
           <TableBody>
             {query.isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   <Loader2 className="inline h-4 w-4 animate-spin" /> Carregando...
                 </TableCell>
               </TableRow>
             ) : query.data?.rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                   Nenhum beat cadastrado.
                 </TableCell>
               </TableRow>
@@ -297,6 +329,17 @@ function BeatsPage() {
                       <Headphones className="h-3.5 w-3.5 text-muted-foreground" />
                       {((b as { plays_count?: number }).plays_count ?? 0).toLocaleString("pt-BR")}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1 max-w-[220px]">
+                      <FileChip label="WAV" path={(b as { wav_path?: string | null }).wav_path} />
+                      {(b as { tipo?: string }).tipo === "aberto" && (
+                        <>
+                          <FileChip label="Stems" path={(b as { stems_path?: string | null }).stems_path} />
+                          <FileChip label="Licença" path={(b as { license_path?: string | null }).license_path} />
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={statusVariant[b.status as BeatStatus]}>
