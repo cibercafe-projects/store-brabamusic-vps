@@ -18,10 +18,10 @@ const META: Record<
   { label: string; accept: string; exts: string[]; hint: string; Icon: typeof FileAudio }
 > = {
   wav: {
-    label: "WAV Master",
-    accept: ".wav,audio/wav,audio/x-wav",
-    exts: ["wav"],
-    hint: "Arquivo .wav até 250MB",
+    label: "Áudio Master",
+    accept: ".wav,.mp3,audio/wav,audio/x-wav,audio/mpeg",
+    exts: ["wav", "mp3"],
+    hint: "Arquivo .wav ou .mp3 até 250MB",
     Icon: FileAudio,
   },
   stems: {
@@ -32,10 +32,10 @@ const META: Record<
     Icon: FileArchive,
   },
   license: {
-    label: "Licença (PDF)",
-    accept: ".pdf,application/pdf",
-    exts: ["pdf"],
-    hint: "PDF opcional até 20MB",
+    label: "Documento",
+    accept: ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    exts: ["pdf", "doc", "docx"],
+    hint: "PDF/DOC opcional até 20MB",
     Icon: FileText,
   },
 };
