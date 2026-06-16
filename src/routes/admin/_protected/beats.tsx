@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   deleteBeat,
+  getAdminMetrics,
   listBeats,
   listProducersForSelect,
   setBeatStatus,
@@ -128,9 +129,16 @@ const formatPrice = (v: number | string | null | undefined) => {
 function BeatsPage() {
   const list = useServerFn(listBeats);
   const listProducers = useServerFn(listProducersForSelect);
+  const getMetrics = useServerFn(getAdminMetrics);
   const changeStatus = useServerFn(setBeatStatus);
   const removeBeat = useServerFn(deleteBeat);
   const qc = useQueryClient();
+
+  const metricsQuery = useQuery({
+    queryKey: ["admin", "metrics"],
+    queryFn: () => getMetrics(),
+    staleTime: 30_000,
+  });
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"todas" | BeatStatus>("todas");
@@ -223,7 +231,22 @@ function BeatsPage() {
         </div>
       )}
 
+      <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Total", value: metricsQuery.data?.beatsTotal ?? 0 },
+          { label: "Ativos", value: metricsQuery.data?.beatsAtivos ?? 0 },
+          { label: "Rascunhos", value: metricsQuery.data?.beatsRascunho ?? 0 },
+          { label: "Vendidos", value: metricsQuery.data?.beatsVendidos ?? 0 },
+        ].map((c) => (
+          <div key={c.label} className="rounded-md border p-3">
+            <p className="text-xs text-muted-foreground">{c.label}</p>
+            <p className="text-2xl font-display tabular-nums">{c.value}</p>
+          </div>
+        ))}
+      </section>
+
       <div className="flex flex-wrap items-center gap-3">
+
         <div className="relative flex-1 min-w-[220px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
