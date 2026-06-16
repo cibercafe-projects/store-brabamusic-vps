@@ -87,6 +87,37 @@ const statusVariant: Record<BeatStatus, "default" | "secondary" | "outline"> = {
   vendido: "secondary",
 };
 
+const extFromPath = (p: string | null | undefined) => {
+  if (!p) return null;
+  const clean = p.split("?")[0];
+  const base = clean.substring(clean.lastIndexOf("/") + 1);
+  const dot = base.lastIndexOf(".");
+  if (dot < 0) return null;
+  return base.slice(dot + 1).toLowerCase();
+};
+
+function FileChip({
+  label,
+  path,
+}: {
+  label: string;
+  path: string | null | undefined;
+}) {
+  const ext = extFromPath(path);
+  if (ext) {
+    return (
+      <Badge variant="secondary" className="text-[10px] uppercase">
+        {label} · {ext}
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+      {label} · pendente
+    </Badge>
+  );
+}
+
 const formatPrice = (v: number | string | null | undefined) => {
   if (v == null || v === "") return "—";
   const n = typeof v === "string" ? Number(v) : v;
