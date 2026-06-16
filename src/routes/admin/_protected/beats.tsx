@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   deleteBeat,
+  getAdminMetrics,
   listBeats,
   listProducersForSelect,
   setBeatStatus,
