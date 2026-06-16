@@ -292,13 +292,13 @@ function BeatsPage() {
           <TableBody>
             {query.isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   <Loader2 className="inline h-4 w-4 animate-spin" /> Carregando...
                 </TableCell>
               </TableRow>
             ) : query.data?.rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                   Nenhum beat cadastrado.
                 </TableCell>
               </TableRow>
