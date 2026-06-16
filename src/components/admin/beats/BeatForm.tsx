@@ -453,11 +453,16 @@ export function BeatForm({ initial, onDone }: Props) {
           <div>
             <p className="text-sm font-medium">Arquivos privados para entrega</p>
             <p className="text-xs text-muted-foreground">
-              Enviados apenas ao comprador após confirmação do pagamento. Links assinados, válidos
-              por 7 dias.
+              {form.watch("tipo") === "aberto"
+                ? "Beat aberto: áudio master (WAV/MP3) + stems (ZIP) + documento."
+                : "Beat fechado: apenas o áudio master (WAV/MP3)."}
+              {" "}Enviados ao comprador após confirmação do pagamento. Links assinados, válidos por 7 dias.
             </p>
           </div>
-          {(["wav", "stems", "license"] as const).map((kind) => (
+          {((form.watch("tipo") === "aberto"
+            ? (["wav", "stems", "license"] as const)
+            : (["wav"] as const)
+          )).map((kind) => (
             <BeatPrivateFileUploader
               key={kind}
               kind={kind}
