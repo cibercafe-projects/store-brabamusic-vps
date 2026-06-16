@@ -284,6 +284,7 @@ function BeatsPage() {
               <TableHead>Gênero</TableHead>
               <TableHead>Preço</TableHead>
               <TableHead>Plays</TableHead>
+              <TableHead>Arquivos</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
