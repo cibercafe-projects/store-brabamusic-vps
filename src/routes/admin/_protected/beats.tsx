@@ -129,9 +129,16 @@ const formatPrice = (v: number | string | null | undefined) => {
 function BeatsPage() {
   const list = useServerFn(listBeats);
   const listProducers = useServerFn(listProducersForSelect);
+  const getMetrics = useServerFn(getAdminMetrics);
   const changeStatus = useServerFn(setBeatStatus);
   const removeBeat = useServerFn(deleteBeat);
   const qc = useQueryClient();
+
+  const metricsQuery = useQuery({
+    queryKey: ["admin", "metrics"],
+    queryFn: () => getMetrics(),
+    staleTime: 30_000,
+  });
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"todas" | BeatStatus>("todas");
