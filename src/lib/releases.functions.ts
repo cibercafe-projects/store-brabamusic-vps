@@ -153,6 +153,12 @@ const submitSchema = z
     about_release: z.string().trim().min(1).max(5000),
     has_videoclip: z.boolean(),
     faixa_foco: z.string().trim().max(200).optional().default(""),
+    suggested_release_date: z
+      .string()
+      .trim()
+      .optional()
+      .default("")
+      .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), "Data inválida"),
     // anti-spam
     website: z.string().max(0, "Bot").optional().default(""),
     started_at: z.number().int().positive(),
@@ -204,6 +210,7 @@ export const submitRelease = createServerFn({ method: "POST" })
         about_release: data.about_release,
         has_videoclip: data.has_videoclip,
         faixa_foco: data.faixa_foco || null,
+        suggested_release_date: data.suggested_release_date || null,
       })
       .select("id")
       .single();
@@ -372,6 +379,29 @@ export const countNewReleases = createServerFn({ method: "POST" })
       .select("id", { count: "exact", head: true })
       .eq("status", "recebido");
     return { count: count ?? 0 };
+  });
+
+export const updateReleaseDate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        suggested_release_date: z
+          .string()
+          .trim()
+          .refine((v) => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v), "Data inválida"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { error } = await admin
+      .from("releases")
+      .update({ suggested_release_date: data.suggested_release_date || null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export type { ReleaseStatus, ReleaseType };

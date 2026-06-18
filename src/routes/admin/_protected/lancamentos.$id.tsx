@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, ExternalLink, Image as ImageIcon, Loader2, MessageCircle, Music } from "lucide-react";
+import { ArrowLeft, CalendarDays, Download, ExternalLink, Image as ImageIcon, Loader2, MessageCircle, Music, Save } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getRelease, updateReleaseStatus } from "@/lib/releases.functions";
+import { getRelease, updateReleaseStatus, updateReleaseDate } from "@/lib/releases.functions";
 import {
   RELEASE_STATUSES,
   RELEASE_STATUS_LABEL,
@@ -31,6 +33,7 @@ function LancamentoDetail() {
   const queryClient = useQueryClient();
   const getFn = useServerFn(getRelease);
   const updateFn = useServerFn(updateReleaseStatus);
+  const updateDateFn = useServerFn(updateReleaseDate);
 
   const query = useQuery({
     queryKey: ["admin", "release", id],
@@ -44,6 +47,21 @@ function LancamentoDetail() {
       queryClient.invalidateQueries({ queryKey: ["admin", "releases"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "releases-new-count"] });
       toast.success("Status atualizado");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
+  const [dateDraft, setDateDraft] = useState("");
+  const currentDate = (query.data as { suggested_release_date?: string | null } | undefined)?.suggested_release_date ?? "";
+  useEffect(() => {
+    setDateDraft(currentDate ?? "");
+  }, [currentDate]);
+
+  const dateMutation = useMutation({
+    mutationFn: (d: string) => updateDateFn({ data: { id, suggested_release_date: d } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "release", id] });
+      toast.success("Data de lançamento atualizada");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
@@ -159,6 +177,31 @@ function LancamentoDetail() {
           <Info label="Tipo" value={RELEASE_TYPE_LABEL[r.release_type]} />
           <Info label="ISRC" value={r.isrc || "—"} />
           <Info label="Videoclipe" value={r.has_videoclip ? "Sim" : "Não"} />
+          <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              <span>
+                Data de lançamento {currentDate ? "(sugerida pelo artista)" : "(não informada pelo artista)"}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={dateDraft}
+                onChange={(e) => setDateDraft(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                size="sm"
+                onClick={() => dateMutation.mutate(dateDraft)}
+                disabled={dateMutation.isPending || dateDraft === (currentDate ?? "")}
+                className="gap-1"
+              >
+                {dateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar
+              </Button>
+            </div>
+          </div>
           {r.audio_drive_url && (
             <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
               <p className="text-xs text-muted-foreground mb-2">Áudio no Google Drive</p>

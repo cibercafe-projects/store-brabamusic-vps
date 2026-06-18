@@ -64,6 +64,7 @@ function SubmitReleasePage() {
   const [aboutArtist, setAboutArtist] = useState("");
   const [aboutRelease, setAboutRelease] = useState("");
   const [hasVideoclip, setHasVideoclip] = useState<"sim" | "nao">("nao");
+  const [suggestedReleaseDate, setSuggestedReleaseDate] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
 
   const submitFn = useServerFn(submitRelease);
@@ -103,6 +104,7 @@ function SubmitReleasePage() {
           about_release: aboutRelease,
           has_videoclip: hasVideoclip === "sim",
           faixa_foco: isMulti ? faixaFoco.trim() : "",
+          suggested_release_date: suggestedReleaseDate || "",
           website,
           started_at: startedAt,
         },
@@ -409,6 +411,18 @@ function SubmitReleasePage() {
                   <RadioGroupItem value="nao" /> Não
                 </label>
               </RadioGroup>
+            </Field>
+
+            <Field label="Sugestão de data de lançamento">
+              <Input
+                type="date"
+                value={suggestedReleaseDate}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setSuggestedReleaseDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Opcional. A equipe Braba pode ajustar conforme o planejamento.
+              </p>
             </Field>
           </Section>
 
