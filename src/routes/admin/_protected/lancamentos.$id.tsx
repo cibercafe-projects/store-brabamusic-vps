@@ -134,9 +134,11 @@ function LancamentoDetail() {
             Enviado em {new Date(r.created_at).toLocaleString("pt-BR")}
           </p>
           {r.cover_drive_url && (
-            <Button asChild size="sm" variant="outline" className="mt-3">
+            <Button asChild size="lg" className="mt-3 gap-2 font-semibold shadow-lg shadow-primary/30">
               <a href={r.cover_drive_url} target="_blank" rel="noopener noreferrer">
+                <ImageIcon className="h-4 w-4" />
                 Abrir capa no Drive
+                <ExternalLink className="h-4 w-4 opacity-70" />
               </a>
             </Button>
           )}
