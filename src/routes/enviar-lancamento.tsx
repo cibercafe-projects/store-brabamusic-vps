@@ -64,6 +64,7 @@ function SubmitReleasePage() {
   const [aboutArtist, setAboutArtist] = useState("");
   const [aboutRelease, setAboutRelease] = useState("");
   const [hasVideoclip, setHasVideoclip] = useState<"sim" | "nao">("nao");
+  const [suggestedReleaseDate, setSuggestedReleaseDate] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
 
   const submitFn = useServerFn(submitRelease);
