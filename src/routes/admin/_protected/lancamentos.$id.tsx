@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, Loader2, MessageCircle } from "lucide-react";
+import { ArrowLeft, Download, ExternalLink, Image as ImageIcon, Loader2, MessageCircle, Music } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -134,9 +134,11 @@ function LancamentoDetail() {
             Enviado em {new Date(r.created_at).toLocaleString("pt-BR")}
           </p>
           {r.cover_drive_url && (
-            <Button asChild size="sm" variant="outline" className="mt-3">
+            <Button asChild size="lg" className="mt-3 gap-2 font-semibold shadow-lg shadow-primary/30">
               <a href={r.cover_drive_url} target="_blank" rel="noopener noreferrer">
+                <ImageIcon className="h-4 w-4" />
                 Abrir capa no Drive
+                <ExternalLink className="h-4 w-4 opacity-70" />
               </a>
             </Button>
           )}
@@ -158,11 +160,13 @@ function LancamentoDetail() {
           <Info label="ISRC" value={r.isrc || "—"} />
           <Info label="Videoclipe" value={r.has_videoclip ? "Sim" : "Não"} />
           {r.audio_drive_url && (
-            <div>
-              <p className="text-xs text-muted-foreground">Link do Google Drive</p>
-              <Button asChild size="sm" variant="outline" className="mt-1">
+            <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
+              <p className="text-xs text-muted-foreground mb-2">Áudio no Google Drive</p>
+              <Button asChild size="lg" className="w-full gap-2 font-semibold shadow-lg shadow-primary/30">
                 <a href={r.audio_drive_url} target="_blank" rel="noopener noreferrer">
-                  Abrir no Drive
+                  <Music className="h-4 w-4" />
+                  Abrir áudio no Drive
+                  <ExternalLink className="h-4 w-4 opacity-70" />
                 </a>
               </Button>
             </div>
@@ -191,9 +195,11 @@ function LancamentoDetail() {
           </CardHeader>
           <CardContent className="space-y-3">
             {r.lyrics_drive_url && (
-              <Button asChild size="sm" variant="outline">
+              <Button asChild size="lg" className="gap-2 font-semibold shadow-lg shadow-primary/30">
                 <a href={r.lyrics_drive_url} target="_blank" rel="noopener noreferrer">
-                  Baixar .zip no Drive
+                  <Download className="h-4 w-4" />
+                  Baixar .zip das letras no Drive
+                  <ExternalLink className="h-4 w-4 opacity-70" />
                 </a>
               </Button>
             )}
@@ -245,11 +251,13 @@ function LancamentoDetail() {
               <CardTitle className="text-base">Fotos de divulgação</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <a href={r.photos_drive_url} target="_blank" rel="noopener noreferrer">
-                  Abrir fotos no Drive
-                </a>
-              </Button>
+            <Button asChild size="lg" className="gap-2 font-semibold shadow-lg shadow-primary/30">
+              <a href={r.photos_drive_url} target="_blank" rel="noopener noreferrer">
+                <ImageIcon className="h-4 w-4" />
+                Abrir fotos no Drive
+                <ExternalLink className="h-4 w-4 opacity-70" />
+              </a>
+            </Button>
             </CardContent>
           </Card>
         )}
