@@ -177,6 +177,31 @@ function LancamentoDetail() {
           <Info label="Tipo" value={RELEASE_TYPE_LABEL[r.release_type]} />
           <Info label="ISRC" value={r.isrc || "—"} />
           <Info label="Videoclipe" value={r.has_videoclip ? "Sim" : "Não"} />
+          <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              <span>
+                Data de lançamento {currentDate ? "(sugerida pelo artista)" : "(não informada pelo artista)"}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={dateDraft}
+                onChange={(e) => setDateDraft(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                size="sm"
+                onClick={() => dateMutation.mutate(dateDraft)}
+                disabled={dateMutation.isPending || dateDraft === (currentDate ?? "")}
+                className="gap-1"
+              >
+                {dateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar
+              </Button>
+            </div>
+          </div>
           {r.audio_drive_url && (
             <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
               <p className="text-xs text-muted-foreground mb-2">Áudio no Google Drive</p>
