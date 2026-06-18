@@ -412,6 +412,18 @@ function SubmitReleasePage() {
                 </label>
               </RadioGroup>
             </Field>
+
+            <Field label="Sugestão de data de lançamento">
+              <Input
+                type="date"
+                value={suggestedReleaseDate}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setSuggestedReleaseDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Opcional. A equipe Braba pode ajustar conforme o planejamento.
+              </p>
+            </Field>
           </Section>
 
           <Section title="Categorização">
