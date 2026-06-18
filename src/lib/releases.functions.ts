@@ -210,6 +210,7 @@ export const submitRelease = createServerFn({ method: "POST" })
         about_release: data.about_release,
         has_videoclip: data.has_videoclip,
         faixa_foco: data.faixa_foco || null,
+        suggested_release_date: data.suggested_release_date || null,
       })
       .select("id")
       .single();
