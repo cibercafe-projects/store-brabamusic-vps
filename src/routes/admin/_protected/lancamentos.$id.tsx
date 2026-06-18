@@ -33,6 +33,7 @@ function LancamentoDetail() {
   const queryClient = useQueryClient();
   const getFn = useServerFn(getRelease);
   const updateFn = useServerFn(updateReleaseStatus);
+  const updateDateFn = useServerFn(updateReleaseDate);
 
   const query = useQuery({
     queryKey: ["admin", "release", id],
@@ -46,6 +47,21 @@ function LancamentoDetail() {
       queryClient.invalidateQueries({ queryKey: ["admin", "releases"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "releases-new-count"] });
       toast.success("Status atualizado");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
+  });
+
+  const [dateDraft, setDateDraft] = useState("");
+  const currentDate = (query.data as { suggested_release_date?: string | null } | undefined)?.suggested_release_date ?? "";
+  useEffect(() => {
+    setDateDraft(currentDate ?? "");
+  }, [currentDate]);
+
+  const dateMutation = useMutation({
+    mutationFn: (d: string) => updateDateFn({ data: { id, suggested_release_date: d } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "release", id] });
+      toast.success("Data de lançamento atualizada");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Erro"),
   });
