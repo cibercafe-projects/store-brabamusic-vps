@@ -160,11 +160,13 @@ function LancamentoDetail() {
           <Info label="ISRC" value={r.isrc || "—"} />
           <Info label="Videoclipe" value={r.has_videoclip ? "Sim" : "Não"} />
           {r.audio_drive_url && (
-            <div>
-              <p className="text-xs text-muted-foreground">Link do Google Drive</p>
-              <Button asChild size="sm" variant="outline" className="mt-1">
+            <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
+              <p className="text-xs text-muted-foreground mb-2">Áudio no Google Drive</p>
+              <Button asChild size="lg" className="w-full gap-2 font-semibold shadow-lg shadow-primary/30">
                 <a href={r.audio_drive_url} target="_blank" rel="noopener noreferrer">
-                  Abrir no Drive
+                  <Music className="h-4 w-4" />
+                  Abrir áudio no Drive
+                  <ExternalLink className="h-4 w-4 opacity-70" />
                 </a>
               </Button>
             </div>
