@@ -195,9 +195,11 @@ function LancamentoDetail() {
           </CardHeader>
           <CardContent className="space-y-3">
             {r.lyrics_drive_url && (
-              <Button asChild size="sm" variant="outline">
+              <Button asChild size="lg" className="gap-2 font-semibold shadow-lg shadow-primary/30">
                 <a href={r.lyrics_drive_url} target="_blank" rel="noopener noreferrer">
-                  Baixar .zip no Drive
+                  <Download className="h-4 w-4" />
+                  Baixar .zip das letras no Drive
+                  <ExternalLink className="h-4 w-4 opacity-70" />
                 </a>
               </Button>
             )}
