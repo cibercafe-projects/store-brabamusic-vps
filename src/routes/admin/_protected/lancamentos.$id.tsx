@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getRelease, updateReleaseStatus } from "@/lib/releases.functions";
+import { getRelease, updateReleaseStatus, updateReleaseDate } from "@/lib/releases.functions";
 import {
   RELEASE_STATUSES,
   RELEASE_STATUS_LABEL,
