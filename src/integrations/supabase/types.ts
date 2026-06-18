@@ -517,6 +517,7 @@ export type Database = {
           release_type: Database["public"]["Enums"]["release_type"]
           royalties: string
           status: Database["public"]["Enums"]["release_status"]
+          suggested_release_date: string | null
           technical_sheet: string
           tracklist: string | null
           updated_at: string
@@ -547,6 +548,7 @@ export type Database = {
           release_type: Database["public"]["Enums"]["release_type"]
           royalties: string
           status?: Database["public"]["Enums"]["release_status"]
+          suggested_release_date?: string | null
           technical_sheet: string
           tracklist?: string | null
           updated_at?: string
@@ -577,6 +579,7 @@ export type Database = {
           release_type?: Database["public"]["Enums"]["release_type"]
           royalties?: string
           status?: Database["public"]["Enums"]["release_status"]
+          suggested_release_date?: string | null
           technical_sheet?: string
           tracklist?: string | null
           updated_at?: string
