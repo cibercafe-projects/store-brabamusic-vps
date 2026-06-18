@@ -104,6 +104,7 @@ function SubmitReleasePage() {
           about_release: aboutRelease,
           has_videoclip: hasVideoclip === "sim",
           faixa_foco: isMulti ? faixaFoco.trim() : "",
+          suggested_release_date: suggestedReleaseDate || "",
           website,
           started_at: startedAt,
         },
