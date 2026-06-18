@@ -529,7 +529,20 @@ function ChipGroup({
             }`}
           >
             <span className="inline-flex items-center gap-1.5">
-              <Checkbox checked={isOn} className="pointer-events-none" />
+              <span
+                aria-hidden
+                className={`inline-flex h-4 w-4 items-center justify-center rounded-sm border ${
+                  isOn
+                    ? "bg-accent-foreground/20 border-accent-foreground/40"
+                    : "border-white/30"
+                }`}
+              >
+                {isOn && (
+                  <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M3 8.5l3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
               {opt}
             </span>
           </button>
