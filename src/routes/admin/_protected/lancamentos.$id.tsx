@@ -251,11 +251,13 @@ function LancamentoDetail() {
               <CardTitle className="text-base">Fotos de divulgação</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button asChild size="sm" variant="outline">
-                <a href={r.photos_drive_url} target="_blank" rel="noopener noreferrer">
-                  Abrir fotos no Drive
-                </a>
-              </Button>
+            <Button asChild size="lg" className="gap-2 font-semibold shadow-lg shadow-primary/30">
+              <a href={r.photos_drive_url} target="_blank" rel="noopener noreferrer">
+                <ImageIcon className="h-4 w-4" />
+                Abrir fotos no Drive
+                <ExternalLink className="h-4 w-4 opacity-70" />
+              </a>
+            </Button>
             </CardContent>
           </Card>
         )}
