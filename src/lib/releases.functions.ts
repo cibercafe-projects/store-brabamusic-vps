@@ -381,4 +381,27 @@ export const countNewReleases = createServerFn({ method: "POST" })
     return { count: count ?? 0 };
   });
 
+export const updateReleaseDate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        suggested_release_date: z
+          .string()
+          .trim()
+          .refine((v) => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v), "Data inválida"),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { error } = await admin
+      .from("releases")
+      .update({ suggested_release_date: data.suggested_release_date || null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export type { ReleaseStatus, ReleaseType };
