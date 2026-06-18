@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Download, ExternalLink, Image as ImageIcon, Loader2, MessageCircle, Music } from "lucide-react";
+import { ArrowLeft, CalendarDays, Download, ExternalLink, Image as ImageIcon, Loader2, MessageCircle, Music, Save } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
