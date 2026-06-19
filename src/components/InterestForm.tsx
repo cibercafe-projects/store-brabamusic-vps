@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -78,6 +78,8 @@ export function InterestForm({
     mensagem: "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [website, setWebsite] = useState(""); // honeypot
+  const startedAt = useRef(Date.now()).current;
 
   const submitFn = useServerFn(createLead);
   const mutation = useMutation({
@@ -90,9 +92,12 @@ export function InterestForm({
           telefone: payload.telefone,
           instagram: payload.instagram || undefined,
           mensagem: payload.mensagem || undefined,
+          website,
+          started_at: startedAt,
         },
       }),
   });
+
 
   function update<K extends keyof FormState>(key: K, v: FormState[K]) {
     setValues((p) => ({ ...p, [key]: v }));
@@ -139,6 +144,18 @@ export function InterestForm({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
+          {/* honeypot anti-bot — não renderizar para humanos */}
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            style={{ position: "absolute", left: "-10000px", width: 1, height: 1, opacity: 0 }}
+            aria-hidden="true"
+          />
+
           <div className="space-y-1">
             <Label htmlFor="lead-nome">Nome *</Label>
             <Input
