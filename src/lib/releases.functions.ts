@@ -404,4 +404,57 @@ export const updateReleaseDate = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const optionalStr = (max: number) =>
+  z.string().trim().max(max).optional();
+const optionalDrive = z
+  .string()
+  .trim()
+  .max(500)
+  .optional()
+  .refine((v) => !v || driveUrlRegex.test(v), "Use um link do Google Drive");
+
+const updateSchema = z.object({
+  id: z.string().uuid(),
+  full_name: optionalStr(160),
+  cpf: optionalStr(20),
+  email: z.string().trim().email().max(255).optional(),
+  whatsapp: optionalStr(20),
+  artist_name: optionalStr(160),
+  about_artist: optionalStr(5000),
+  release_type: z.enum(["single", "ep", "album"]).optional(),
+  release_name: optionalStr(200),
+  isrc: optionalStr(2000),
+  has_videoclip: z.boolean().optional(),
+  tracklist: optionalStr(5000),
+  faixa_foco: optionalStr(200),
+  about_release: optionalStr(5000),
+  cover_drive_url: optionalDrive,
+  audio_drive_url: optionalDrive,
+  lyrics_drive_url: optionalDrive,
+  photos_drive_url: optionalDrive,
+  genres: z.array(z.string().max(60)).max(20).optional(),
+  moods: z.array(z.string().max(60)).max(20).optional(),
+  instruments: z.array(z.string().max(60)).max(30).optional(),
+  technical_sheet: optionalStr(5000),
+  royalties: optionalStr(2000),
+});
+
+export const updateRelease = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => updateSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { id, ...rest } = data;
+    const patch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(rest)) {
+      if (v === undefined) continue;
+      patch[k] = v;
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
+    const { error } = await admin.from("releases").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export type { ReleaseStatus, ReleaseType };
+
