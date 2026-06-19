@@ -156,9 +156,7 @@ const submitSchema = z
     suggested_release_date: z
       .string()
       .trim()
-      .optional()
-      .default("")
-      .refine((v) => !v || /^\d{4}-\d{2}-\d{2}$/.test(v), "Data inválida"),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Data de lançamento obrigatória"),
     // anti-spam
     website: z.string().max(0, "Bot").optional().default(""),
     started_at: z.number().int().positive(),
