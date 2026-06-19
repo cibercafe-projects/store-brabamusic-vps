@@ -127,8 +127,9 @@ function SubmitReleasePage() {
     if (isMulti && tracklist.trim().length === 0) return false;
     if (isMulti && faixaFoco.trim().length === 0) return false;
     if (whatsapp.replace(/\D/g, "").length < 8) return false;
+    if (!suggestedReleaseDate) return false;
     return true;
-  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist, faixaFoco, whatsapp]);
+  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist, faixaFoco, whatsapp, suggestedReleaseDate]);
 
   const settings = useQuery({
     queryKey: ["purchase-settings"],
