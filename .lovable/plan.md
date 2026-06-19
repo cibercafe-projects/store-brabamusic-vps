@@ -1,80 +1,63 @@
+## Plano de hardening de segurança
 
-# Revisão dos fluxos — Compra, Comprovante e Entrega
+### Diagnóstico
 
-Fiz uma varredura nos arquivos canônicos do fluxo (`purchases.functions.ts`, `deliveries.functions.ts`, `PurchaseDialog.tsx`, `enviar-comprovante.$token.tsx`, `compras.index.tsx`, `compras.$id.tsx`) e cruzei com `docs/regras-de-negocio.md` e `docs/fluxos-do-sistema.md`. Encontrei 8 gaps — 4 funcionais (corrigir) e 4 de documentação/UX (alinhar).
+Rodei o scanner de segurança e o linter do banco, revisei todas as `server functions` (`src/lib/*.functions.ts`), políticas RLS e GRANTs. A postura é boa em geral (RLS ativo em todas as tabelas, nenhum GRANT para `anon`, todas as leituras públicas passam por server functions com validação Zod), mas há lacunas relevantes.
 
----
+### Achados
 
-## Gaps funcionais (a corrigir)
+**Críticos / médios**
 
-### G1. Status `comprovante_recebido` existe no código mas está fora do fluxo documentado
-O banco/código tem 5 status: `aguardando_pagamento → comprovante_recebido → pagamento_confirmado → arquivos_enviados → cancelado`. A documentação só lista 4 (pula `comprovante_recebido`). Resultado: admin não sabe se deve operar nele.
+1. **Upload anônimo abusável (`getReleaseUploadUrl`)** — emite signed URLs para `release-covers`, `release-audio` e `release-photos` sem autenticação, sem honeypot e sem rate-limit. Permite a um bot consumir storage/banda à vontade.
+2. **Formulários públicos sem anti-bot** — `createLead` e `createPurchaseRequest` não exigem `started_at`/honeypot (só `submitRelease` tem). Vetor de spam que injeta PII (nome, e-mail, telefone, instagram) nas tabelas `leads` e `purchase_requests`.
+3. **PII desnecessário em retorno público (`getPurchaseByToken`)** — devolve `email` completo. Basta uma versão mascarada (`f***@dominio.com`) para confirmar ao cliente que abriu o link correto.
+4. **SECURITY DEFINER expostos pelo PostgREST (linter WARN x2)** — `public.is_admin_active(uuid)` e `public.is_super_admin(uuid)` têm `EXECUTE` para `authenticated`, então qualquer usuário logado pode chamar via RPC e sondar se um `user_id` é admin. Vamos mover para um schema `private` (não exposto pela Data API) e ajustar as policies que os usam.
+5. **Proteção contra senhas vazadas (HIBP)** — não está ativada no Auth. Habilitar via `configure_auth`.
 
-**Correção:** atualizar `docs/regras-de-negocio.md` e `docs/fluxos-do-sistema.md` com o estado intermediário e quem transita.
+**Boas práticas / verificações**
 
-### G2. Pedido com comprovante recém-enviado não fica em destaque na listagem
-Em `compras.index.tsx` o badge "Entregar agora", a borda lateral e o filtro "Pendentes" só consideram `pagamento_confirmado`. Quando o cliente envia o comprovante (status vira `comprovante_recebido`), o pedido cai no meio da lista sem alerta — admin pode esquecer de validar.
+6. `bootstrapFirstAdmin` é público mas só funciona enquanto não existir admin — manter, mas adicionar log de auditoria.
+7. Confirmar que CPF (`releases.cpf`) e `continuation_token` não são logados nem retornados fora do admin.
+8. Garantir que o e-mail enviado ao WhatsApp com `Link do lançamento: /admin/lancamentos/<id>` permanece exigindo login admin (já exige — sem mudança).
 
-**Correção:** adicionar um segundo destaque visual e contador "Aguardando validação" para `comprovante_recebido` (badge âmbar + ordenação no topo, abaixo dos `pagamento_confirmado`).
+### Mudanças a implementar
 
-### G3. `deliverPurchase` não valida o status antes de entregar
-A função aceita entregar arquivos mesmo com status `aguardando_pagamento` ou `comprovante_recebido` — o front bloqueia, mas o backend não. Risco: bypass acidental por chamada direta.
+**Banco (uma migration)**
 
-**Correção:** em `src/lib/deliveries.functions.ts`, exigir `status in ('pagamento_confirmado', 'arquivos_enviados')` antes de gerar links/registrar entrega.
+- Criar schema `private`. Mover `is_admin_active` e `is_super_admin` para `private.*`, `REVOKE ALL ... FROM PUBLIC, authenticated`, `GRANT EXECUTE TO postgres, service_role`.
+- Atualizar policies que referenciam essas funções para chamarem `private.is_admin_active(...)` / `private.is_super_admin(...)`:
+  - `app_settings`, `leads`, `purchase_deliveries`, `purchase_requests` (usam `is_admin_active`)
+  - `user_roles` (usa `is_super_admin`)
+- Manter `public.has_role` como está (já não tem grant para `authenticated`).
 
-### G4. Página pública de envio do comprovante ainda usa "WhatsApp comercial"
-`enviar-comprovante.$token.tsx` mostra o botão "Avisar imediatamente a Administração da Braba" apontando para `commercial_whatsapp`. Isso contraria a regra Fase 1 ("notificações de compra são manuais pelo admin" e "bloco de WhatsApp comercial removido do diálogo de compra") e cria expectativa de atendimento humano imediato.
+**Auth**
 
-**Correção:** remover o botão WhatsApp da página de comprovante. Deixar apenas o upload + bloco "Aguarde até 24h". O envio do comprovante já dispara e-mail automático para o admin (`admin-new-receipt`).
+- `supabase--configure_auth` → `password_hibp_enabled: true`.
 
----
+**Server functions**
 
-## Gaps de UX/documentação (alinhar)
+- `src/lib/releases.functions.ts` (`getReleaseUploadUrl`): exigir `started_at` (≥4s) e honeypot `website` (igual a `submitRelease`); validar `contentType` vs `ext` já existe.
+- `src/lib/leads.functions.ts` (`createLead`): adicionar campos `started_at` + honeypot `website`, com mesma checagem mínima de 4s.
+- `src/lib/purchases.functions.ts` (`createPurchaseRequest`): mesmo padrão honeypot + `started_at`.
+- `src/lib/purchases.functions.ts` (`getPurchaseByToken`): mascarar `email` no retorno (`f***@dominio.com`).
 
-### G5. Sem notificação ao cliente quando admin confirma o pagamento
-Hoje o cliente só recebe e-mail quando o admin **entrega** os arquivos (`purchase-delivered`). Não há sinal entre "comprovante recebido" e "arquivos enviados". Em casos onde a entrega demora (>2h), o cliente fica sem update.
+**Frontend (acompanhar mudanças de schema das mutations)**
 
-**Decisão necessária:** quer um e-mail automático "Pagamento confirmado — preparando seus arquivos" disparado quando admin muda status para `pagamento_confirmado`? Ou mantém só a entrega final?
+- `src/routes/enviar-lancamento.tsx`: já envia `started_at`/`website`; só ajustar a chamada de upload para passar `started_at`/`website` (a `submitRelease` já passa).
+- `src/components/InterestForm.tsx` (lead) e `src/components/purchase/PurchaseDialog.tsx`: incluir hidden input honeypot `website` e `startedAt` (capturado no mount).
+- `src/routes/enviar-comprovante.$token.tsx` / consumidores de `getPurchaseByToken`: usar `email` já mascarado (campo continua string).
 
-### G6. `continuation_token` é eterno
-O token de envio de comprovante nunca expira. Risco baixo (escopo só do próprio pedido), mas eventualmente um link antigo pode ser reaberto e re-enviar comprovante em pedido já entregue.
+### Detalhes técnicos
 
-**Correção sugerida:** bloquear upload quando `status in ('arquivos_enviados', 'cancelado')` (já bloqueia `cancelado`; falta `arquivos_enviados`). Sem expiração temporal — apenas por estado.
+- Não vou criar GRANTs novos para `anon` — todo acesso público continua via service_role em server functions (intencional).
+- O schema `private` não é exposto pelo PostgREST porque não está em `db.schemas`; policies podem referenciá-lo (RLS resolve sob `SECURITY DEFINER` independente do `search_path` do cliente).
+- Os honeypots usam o mesmo padrão já validado em `submitRelease` (`website: z.string().max(0)` + `started_at: z.number().int().positive()` com `MIN_SUBMIT_SECONDS = 4`).
+- Para o e-mail mascarado: manter `email` original na tabela; mascarar somente no DTO de `getPurchaseByToken`.
+- Após aplicar, re-rodo `security--run_security_scan` e `supabase--linter` para confirmar que os 2 WARNs desaparecem.
 
-### G7. Sem botão para "reenviar arquivos" quando links de 7 dias expirarem
-Hoje só dá pra reentregar via diálogo "Mais opções". Se cliente perde os links após 7 dias, o admin precisa abrir o diálogo completo.
+### O que NÃO vou mexer
 
-**Correção sugerida:** habilitar os botões rápidos WhatsApp/E-mail também quando `status = arquivos_enviados` (já permitido na lógica de `canDeliver`), e renomeá-los para "Reenviar arquivos" quando já entregue. Pequeno ajuste de label apenas.
-
-### G8. Documentação não reflete unificação dos Leads nem o status `comprovante_recebido`
-`docs/fluxos-do-sistema.md` ainda mostra fluxo antigo; sem referência a Leads unificados (interesse + compras).
-
-**Correção:** atualizar os dois docs e adicionar entrada no `docs/CHANGELOG.md`.
-
----
-
-## Plano de execução
-
-1. **Backend / lógica**
-   - `src/lib/deliveries.functions.ts`: validar status (G3); permitir reentrega já está ok.
-   - `src/lib/purchases.functions.ts → uploadReceiptByToken`: bloquear upload se `status = 'arquivos_enviados'` (G6).
-
-2. **Frontend**
-   - `src/routes/admin/_protected/compras.index.tsx`: badge "Aguardando validação" + contador + ordenação para `comprovante_recebido` (G2).
-   - `src/routes/admin/_protected/compras.$id.tsx` (DeliveryCard): label dinâmico "Reenviar" quando já entregue (G7).
-   - `src/routes/enviar-comprovante.$token.tsx`: remover bloco WhatsApp comercial (G4).
-
-3. **Documentação**
-   - `docs/regras-de-negocio.md`: nova seção 2.4 estados + nota Leads unificados (G1, G8).
-   - `docs/fluxos-do-sistema.md`: redesenhar diagramas com `comprovante_recebido` + ações do admin (G1, G8).
-   - `docs/CHANGELOG.md`: entrada "Revisão Fase 1 — gaps".
-
-4. **G5 (e-mail de pagamento confirmado)** — aguardando sua decisão antes de implementar.
-
----
-
-## Pergunta para fechar o escopo
-
-**G5 — quer que o sistema envie automaticamente um e-mail "Pagamento confirmado" para o cliente quando o admin trocar o status para `pagamento_confirmado` (antes da entrega de arquivos)?**
-- Sim → crio template `payment-confirmed` e disparo no `updatePurchaseStatus`.
-- Não → mantém só o e-mail de entrega final (`purchase-delivered`).
+- Estrutura de RLS das tabelas (já correta).
+- `src/integrations/supabase/*` (arquivos gerados).
+- Buckets de Storage e suas políticas (todos privados, acesso via signed URL — ok).
+- Fluxos funcionais (login, compra, lançamento) — só endurecimento.
