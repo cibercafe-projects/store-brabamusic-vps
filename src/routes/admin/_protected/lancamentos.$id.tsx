@@ -347,7 +347,7 @@ function LancamentoDetail() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {RELEASE_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{RELEASE_TYPE_LABEL[t]}</SelectItem>
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
