@@ -41,6 +41,7 @@ const DRIVE_RE = /^https?:\/\/(drive|docs)\.google\.com\//i;
 function SubmitReleasePage() {
   const startedAt = useRef(Date.now()).current;
   const [submitted, setSubmitted] = useState(false);
+  const [releaseId, setReleaseId] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
