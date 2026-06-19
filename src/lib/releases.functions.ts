@@ -52,51 +52,10 @@ async function signFromBucket(
   return data.signedUrl;
 }
 
-// ---------- Upload URLs (public) ----------
+// Upload de arquivos públicos foi removido: o formulário usa Google Drive URLs.
+// Mantemos somente o fluxo admin para assinar URLs de leitura via signFromBucket.
 
-const uploadKinds = z.enum(["cover", "audio", "photo"]);
 
-const IMAGE_CT = ["image/jpeg", "image/png", "image/webp"] as const;
-const AUDIO_CT = [
-  "audio/wav",
-  "audio/x-wav",
-  "audio/wave",
-  "audio/vnd.wave",
-] as const;
-
-export const getReleaseUploadUrl = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z
-      .object({
-        kind: uploadKinds,
-        ext: z.enum(["jpg", "jpeg", "png", "webp", "wav"]),
-        contentType: z.string().min(3).max(80),
-      })
-      .parse(input),
-  )
-  .handler(async ({ data }) => {
-    let bucket: string;
-    if (data.kind === "cover" || data.kind === "photo") {
-      if (!IMAGE_CT.includes(data.contentType as (typeof IMAGE_CT)[number]))
-        throw new Error("Tipo de imagem inválido.");
-      if (!["jpg", "jpeg", "png", "webp"].includes(data.ext))
-        throw new Error("Extensão de imagem inválida.");
-      bucket = data.kind === "cover" ? COVER_BUCKET : PHOTOS_BUCKET;
-    } else {
-      if (!AUDIO_CT.includes(data.contentType as (typeof AUDIO_CT)[number]))
-        throw new Error("Tipo de áudio inválido.");
-      if (data.ext !== "wav") throw new Error("Use WAV.");
-      bucket = AUDIO_BUCKET;
-    }
-    const admin = await getAdmin();
-    const folder = new Date().toISOString().slice(0, 10);
-    const path = `incoming/${folder}/${crypto.randomUUID()}.${data.ext}`;
-    const { data: signed, error } = await admin.storage
-      .from(bucket)
-      .createSignedUploadUrl(path);
-    if (error) throw new Error(error.message);
-    return { path, token: signed.token, bucket };
-  });
 
 // ---------- Submit (public) ----------
 
