@@ -174,3 +174,35 @@ A cada entrega o sistema grava em `purchase_deliveries`:
   o papel alterado).
 - **Cliente / Artista** — não possui login; interage via formulários públicos
   e links assinados enviados por WhatsApp/e-mail.
+
+---
+
+## 7. Segurança e Proteção de Dados
+
+### 7.1 Postura geral
+- RLS ativo em todas as tabelas do schema `public`.
+- Nenhum `GRANT` para `anon`; todo acesso público passa por server functions
+  validadas com Zod (`supabaseAdmin` no servidor).
+- Senhas de admin validadas contra **HIBP** (Have I Been Pwned) no Auth.
+
+### 7.2 Funções administrativas privadas
+- `is_admin_active` e `is_super_admin` ficam no schema `private` (fora do
+  PostgREST). Usuários autenticados **não** conseguem sondar via RPC se um
+  `user_id` é admin. Policies que dependiam dessas funções (em
+  `app_settings`, `leads`, `purchase_requests`, `purchase_deliveries`,
+  `user_roles`) foram atualizadas para chamar `private.*`.
+
+### 7.3 Anti-spam em formulários públicos
+Todos os formulários públicos (`submitRelease`, `createLead`,
+`createPurchaseRequest`) usam o mesmo padrão:
+- **Honeypot** `website` (campo escondido, deve vir vazio).
+- **`started_at`** capturado no mount; submissões em menos de ~4s são
+  rejeitadas.
+
+### 7.4 Minimização de PII em respostas públicas
+- `getPurchaseByToken` retorna o e-mail **mascarado** (`j****@dominio.com`)
+  ao cliente, apenas o suficiente para confirmar que abriu o link correto.
+  O e-mail completo nunca sai do admin.
+- CPF (`releases.cpf`) e `continuation_token` nunca são retornados fora do
+  painel admin nem aparecem em logs.
+
