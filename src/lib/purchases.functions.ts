@@ -58,6 +58,7 @@ export const getPurchaseSettings = createServerFn({ method: "GET" }).handler(asy
 });
 
 // ===== Public: create purchase =====
+const MIN_SUBMIT_SECONDS = 3; // anti-bot
 const createSchema = z.object({
   beat_id: z.string().uuid("Beat inválido"),
   nome_cliente: z.string().trim().min(2, "Nome obrigatório").max(160),
@@ -84,11 +85,22 @@ const createSchema = z.object({
     .nullable(),
   forma_pagamento: z.enum(["pix", "link"]),
   termos_aceitos: z.literal(true, { errorMap: () => ({ message: "Aceite os termos para continuar." }) }),
+  // anti-spam
+  website: z.string().max(0, "Bot").optional().default(""),
+  started_at: z.number().int().positive().optional(),
 });
 
 export const createPurchaseRequest = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => createSchema.parse(input))
   .handler(async ({ data }) => {
+    if (data.website && data.website.length > 0) throw new Error("Falha na validação.");
+    if (data.started_at) {
+      const elapsed = (Date.now() - data.started_at) / 1000;
+      if (elapsed < MIN_SUBMIT_SECONDS) {
+        throw new Error("Formulário enviado rápido demais. Tente novamente.");
+      }
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: beat, error: beatErr } = await supabaseAdmin
