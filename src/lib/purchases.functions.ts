@@ -201,6 +201,14 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
 // ===== Public: lookup by token =====
 const tokenSchema = z.object({ token: z.string().uuid("Link inválido") });
 
+function maskEmail(email: string | null | undefined): string | null {
+  if (!email) return null;
+  const [user, domain] = email.split("@");
+  if (!user || !domain) return null;
+  const head = user.slice(0, Math.min(1, user.length));
+  return `${head}${"*".repeat(Math.max(1, user.length - 1))}@${domain}`;
+}
+
 export const getPurchaseByToken = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => tokenSchema.parse(input))
   .handler(async ({ data }) => {
@@ -217,8 +225,10 @@ export const getPurchaseByToken = createServerFn({ method: "GET" })
       throw new Error("Erro ao localizar pedido.");
     }
     if (!row) throw new Error("Pedido não encontrado.");
-    return row;
+    // Não expor PII completo via link público de comprovante.
+    return { ...row, email: maskEmail(row.email) };
   });
+
 
 // ===== Public: upload receipt by token =====
 const uploadSchema = z.object({
