@@ -127,8 +127,9 @@ function SubmitReleasePage() {
     if (isMulti && tracklist.trim().length === 0) return false;
     if (isMulti && faixaFoco.trim().length === 0) return false;
     if (whatsapp.replace(/\D/g, "").length < 8) return false;
+    if (!suggestedReleaseDate) return false;
     return true;
-  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist, faixaFoco, whatsapp]);
+  }, [coverDriveUrl, audioDriveUrl, lyricsDriveUrl, photosDriveUrl, genres, moods, isMulti, tracklist, faixaFoco, whatsapp, suggestedReleaseDate]);
 
   const settings = useQuery({
     queryKey: ["purchase-settings"],
@@ -253,6 +254,19 @@ function SubmitReleasePage() {
           </Section>
 
           <Section title="Sobre o lançamento">
+            <Field label="Data de lançamento" required>
+              <Input
+                type="date"
+                required
+                value={suggestedReleaseDate}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setSuggestedReleaseDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Sugestão de data para o lançamento. A equipe Braba pode ajustar conforme o planejamento.
+              </p>
+            </Field>
+
             <Field label="Tipo de lançamento" required>
               <RadioGroup
                 value={releaseType}
@@ -417,18 +431,6 @@ function SubmitReleasePage() {
                   <RadioGroupItem value="nao" /> Não
                 </label>
               </RadioGroup>
-            </Field>
-
-            <Field label="Sugestão de data de lançamento">
-              <Input
-                type="date"
-                value={suggestedReleaseDate}
-                min={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setSuggestedReleaseDate(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Opcional. A equipe Braba pode ajustar conforme o planejamento.
-              </p>
             </Field>
           </Section>
 
