@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -62,6 +62,9 @@ export function PurchaseDialog({
   const [aceito, setAceito] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [website, setWebsite] = useState(""); // honeypot
+  const startedAt = useRef(Date.now()).current;
+
 
   const loadSettings = useServerFn(getPurchaseSettings);
   const createFn = useServerFn(createPurchaseRequest);
@@ -118,8 +121,11 @@ export function PurchaseDialog({
           instagram: instagram.trim() || undefined,
           forma_pagamento: method,
           termos_aceitos: true,
+          website,
+          started_at: startedAt,
         },
       });
+
       setToken(res.continuation_token);
       setStep("receipt");
       toast.success("Pedido registrado!");
@@ -151,6 +157,18 @@ export function PurchaseDialog({
             </DialogHeader>
 
             <div className="space-y-5 py-2">
+              {/* honeypot anti-bot */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                style={{ position: "absolute", left: "-10000px", width: 1, height: 1, opacity: 0 }}
+                aria-hidden="true"
+              />
+
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground">
                   Beat selecionado

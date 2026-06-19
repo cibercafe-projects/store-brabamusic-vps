@@ -659,8 +659,6 @@ export type Database = {
         Returns: boolean
       }
       increment_beat_plays: { Args: { _beat_id: string }; Returns: number }
-      is_admin_active: { Args: { _user_id: string }; Returns: boolean }
-      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string

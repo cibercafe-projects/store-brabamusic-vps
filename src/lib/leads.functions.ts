@@ -46,6 +46,8 @@ async function assertAdmin(userId: string) {
 const sanitize = (v: string | undefined | null) =>
   (v ?? "").replace(/[\u0000-\u001F\u007F]/g, "").trim();
 
+const MIN_SUBMIT_SECONDS = 3;
+
 const leadInput = z.object({
   beat_id: z.string().uuid("Beat inválido"),
   nome: z
@@ -71,11 +73,22 @@ const leadInput = z.object({
     .max(1000, "Mensagem muito longa")
     .optional()
     .transform((v) => (v ? v : null)),
+  // anti-spam
+  website: z.string().max(0, "Bot").optional().default(""),
+  started_at: z.number().int().positive().optional(),
 });
 
 export const createLead = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => leadInput.parse(input))
   .handler(async ({ data }) => {
+    if (data.website && data.website.length > 0) throw new Error("Falha na validação.");
+    if (data.started_at) {
+      const elapsed = (Date.now() - data.started_at) / 1000;
+      if (elapsed < MIN_SUBMIT_SECONDS) {
+        throw new Error("Formulário enviado rápido demais. Tente novamente.");
+      }
+    }
+
     const admin = await getAdmin();
 
     // Beat tem que existir e estar ativo
