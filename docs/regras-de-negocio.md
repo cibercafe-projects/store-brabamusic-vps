@@ -115,15 +115,34 @@ A cada entrega o sistema grava em `purchase_deliveries`:
   - **Faixa Foco** (obrigatório) — música principal para divulgação e
     distribuição.
 
-### 4.3 Fluxo
+### 4.3 Data de lançamento (sugerida)
+- Campo **obrigatório** no formulário público, posicionado como **primeiro
+  campo** da seção "Sobre o lançamento".
+- Persistido em `releases.suggested_release_date` (tipo `date`).
+- O admin pode **alterar** a data sugerida no painel
+  (`/admin/lancamentos/$id`) caso o artista precise reagendar ou tenha
+  enviado uma data que não pode ser cumprida.
+
+### 4.4 Edição administrativa
+- O admin pode **visualizar e editar todos os campos** do cadastro de
+  lançamento direto no painel — não apenas o status.
+- Mudanças de status continuam disparando e-mail automático ao artista;
+  edições em outros campos são silenciosas.
+
+### 4.5 Fluxo
 1. Artista envia o formulário público em `/enviar-lancamento`.
 2. Sistema registra em `releases` com status `recebido`.
-3. E-mails automáticos:
+3. Tela de sucesso oferece o botão **"Avisar a Administração da Braba sobre
+   o seu lançamento"**, que abre WhatsApp já com o **link direto para o
+   lançamento cadastrado** (`/admin/lancamentos/$id`) para acelerar a
+   triagem.
+4. E-mails automáticos:
    - Artista recebe confirmação ("release-received") com Faixa Foco quando
      EP/Álbum.
    - Administração recebe "admin-new-release" com link direto para o painel.
-4. Painel admin exibe Faixa Foco, links do Drive e todos os metadados.
-5. Status é alterado manualmente pelo admin; cada mudança dispara e-mail ao
+5. Painel admin exibe Faixa Foco, data sugerida, links do Drive e todos os
+   metadados — todos editáveis.
+6. Status é alterado manualmente pelo admin; cada mudança dispara e-mail ao
    artista.
 
 ---
@@ -155,3 +174,35 @@ A cada entrega o sistema grava em `purchase_deliveries`:
   o papel alterado).
 - **Cliente / Artista** — não possui login; interage via formulários públicos
   e links assinados enviados por WhatsApp/e-mail.
+
+---
+
+## 7. Segurança e Proteção de Dados
+
+### 7.1 Postura geral
+- RLS ativo em todas as tabelas do schema `public`.
+- Nenhum `GRANT` para `anon`; todo acesso público passa por server functions
+  validadas com Zod (`supabaseAdmin` no servidor).
+- Senhas de admin validadas contra **HIBP** (Have I Been Pwned) no Auth.
+
+### 7.2 Funções administrativas privadas
+- `is_admin_active` e `is_super_admin` ficam no schema `private` (fora do
+  PostgREST). Usuários autenticados **não** conseguem sondar via RPC se um
+  `user_id` é admin. Policies que dependiam dessas funções (em
+  `app_settings`, `leads`, `purchase_requests`, `purchase_deliveries`,
+  `user_roles`) foram atualizadas para chamar `private.*`.
+
+### 7.3 Anti-spam em formulários públicos
+Todos os formulários públicos (`submitRelease`, `createLead`,
+`createPurchaseRequest`) usam o mesmo padrão:
+- **Honeypot** `website` (campo escondido, deve vir vazio).
+- **`started_at`** capturado no mount; submissões em menos de ~4s são
+  rejeitadas.
+
+### 7.4 Minimização de PII em respostas públicas
+- `getPurchaseByToken` retorna o e-mail **mascarado** (`j****@dominio.com`)
+  ao cliente, apenas o suficiente para confirmar que abriu o link correto.
+  O e-mail completo nunca sai do admin.
+- CPF (`releases.cpf`) e `continuation_token` nunca são retornados fora do
+  painel admin nem aparecem em logs.
+
