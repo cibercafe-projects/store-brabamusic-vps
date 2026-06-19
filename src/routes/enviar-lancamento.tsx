@@ -110,7 +110,8 @@ function SubmitReleasePage() {
           started_at: startedAt,
         },
       }),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      setReleaseId((res as { releaseId?: string })?.releaseId ?? null);
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
