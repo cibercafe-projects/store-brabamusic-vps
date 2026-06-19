@@ -41,6 +41,7 @@ const DRIVE_RE = /^https?:\/\/(drive|docs)\.google\.com\//i;
 function SubmitReleasePage() {
   const startedAt = useRef(Date.now()).current;
   const [submitted, setSubmitted] = useState(false);
+  const [releaseId, setReleaseId] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -109,7 +110,8 @@ function SubmitReleasePage() {
           started_at: startedAt,
         },
       }),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      setReleaseId((res as { releaseId?: string })?.releaseId ?? null);
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     },
@@ -137,7 +139,11 @@ function SubmitReleasePage() {
 
   if (submitted) {
     const tipoLabel = releaseType === "ep" ? "EP" : releaseType === "album" ? "Álbum" : "Single";
-    const msg = `Olá! Acabei de enviar meu lançamento *${releaseName}* (${tipoLabel}) — artista *${artistName}*. Aguardo o retorno da equipe Braba.`;
+    const releaseUrl =
+      releaseId && typeof window !== "undefined"
+        ? `${window.location.origin}/admin/lancamentos/${releaseId}`
+        : "";
+    const msg = `Olá! Acabei de enviar meu lançamento *${releaseName}* (${tipoLabel}) — artista *${artistName}*.${releaseUrl ? `\n\nLink do lançamento: ${releaseUrl}` : ""}\n\nAguardo o retorno da equipe Braba.`;
     const adminWa = waLink(commercialWa, msg);
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
