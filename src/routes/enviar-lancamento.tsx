@@ -139,7 +139,11 @@ function SubmitReleasePage() {
 
   if (submitted) {
     const tipoLabel = releaseType === "ep" ? "EP" : releaseType === "album" ? "Álbum" : "Single";
-    const msg = `Olá! Acabei de enviar meu lançamento *${releaseName}* (${tipoLabel}) — artista *${artistName}*. Aguardo o retorno da equipe Braba.`;
+    const releaseUrl =
+      releaseId && typeof window !== "undefined"
+        ? `${window.location.origin}/admin/lancamentos/${releaseId}`
+        : "";
+    const msg = `Olá! Acabei de enviar meu lançamento *${releaseName}* (${tipoLabel}) — artista *${artistName}*.${releaseUrl ? `\n\nLink do lançamento: ${releaseUrl}` : ""}\n\nAguardo o retorno da equipe Braba.`;
     const adminWa = waLink(commercialWa, msg);
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
