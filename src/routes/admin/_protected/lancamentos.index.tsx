@@ -81,13 +81,19 @@ function LancamentosPage() {
           <Input
             placeholder="Buscar por artista, lançamento ou e-mail..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
             className="pl-9"
           />
         </div>
         <Select
           value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as ReleaseStatus | "all")}
+          onValueChange={(v) => {
+            setPage(1);
+            setStatusFilter(v as ReleaseStatus | "all");
+          }}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Status" />
