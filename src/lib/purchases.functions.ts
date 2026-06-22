@@ -421,6 +421,28 @@ export const updatePurchaseStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const getReceiptSignedUrlByToken = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => tokenSchema.parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("purchase_requests")
+      .select("receipt_path")
+      .eq("continuation_token", data.token)
+      .maybeSingle();
+    if (error || !row?.receipt_path) {
+      throw new Error("Comprovante não encontrado.");
+    }
+    const { data: signed, error: signErr } = await supabaseAdmin.storage
+      .from(RECEIPT_BUCKET)
+      .createSignedUrl(row.receipt_path, 60 * 60 * 24);
+    if (signErr || !signed?.signedUrl) {
+      console.error("[purchases.signedByToken]", signErr);
+      throw new Error("Erro ao gerar link do comprovante.");
+    }
+    return { url: signed.signedUrl };
+  });
+
 export const getReceiptSignedUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => idSchema.parse(input))
