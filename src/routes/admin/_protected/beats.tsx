@@ -384,6 +384,7 @@ function BeatsPage() {
                           tom: b.tom,
                           mood: b.mood,
                           preco: b.preco,
+                          tipo: (b as { tipo?: "fechado" | "aberto" }).tipo ?? "fechado",
                           descricao: b.descricao,
                           status: b.status as BeatStatus,
                           capa_url: b.capa_url,
@@ -394,6 +395,9 @@ function BeatsPage() {
                           preview_signed_url: b.preview_signed_url,
                           wav_url: b.wav_url,
                           stems_url: b.stems_url,
+                          wav_path: (b as { wav_path?: string | null }).wav_path ?? null,
+                          stems_path: (b as { stems_path?: string | null }).stems_path ?? null,
+                          license_path: (b as { license_path?: string | null }).license_path ?? null,
                         });
                         setSheetOpen(true);
                       }}
