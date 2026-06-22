@@ -386,7 +386,7 @@ const PRIVATE_RULES: Record<
   { bucket: string; exts: readonly string[]; maxBytes: number }
 > = {
   wav: { bucket: WAV_BUCKET, exts: ["wav", "mp3"], maxBytes: 250 * 1024 * 1024 },
-  stems: { bucket: STEMS_BUCKET, exts: ["zip"], maxBytes: 500 * 1024 * 1024 },
+  stems: { bucket: STEMS_BUCKET, exts: ["zip", "rar"], maxBytes: 500 * 1024 * 1024 },
   license: { bucket: LICENSE_BUCKET, exts: ["pdf", "doc", "docx"], maxBytes: 20 * 1024 * 1024 },
 };
 
