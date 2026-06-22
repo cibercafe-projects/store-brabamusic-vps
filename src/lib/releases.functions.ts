@@ -222,12 +222,16 @@ export const listReleases = createServerFn({ method: "POST" })
       .object({
         status: z.enum(RELEASE_STATUSES).optional(),
         search: z.string().trim().max(160).optional(),
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(100).default(20),
       })
-      .default({})
+      .default({ page: 1, pageSize: 20 })
       .parse(input ?? {}),
   )
   .handler(async ({ context, data }) => {
     const admin = await assertAdmin(context.userId);
+    const from = (data.page - 1) * data.pageSize;
+    const to = from + data.pageSize - 1;
     let q = admin
       .from("releases")
       .select(
@@ -235,7 +239,7 @@ export const listReleases = createServerFn({ method: "POST" })
         { count: "exact" },
       )
       .order("created_at", { ascending: false })
-      .limit(200);
+      .range(from, to);
     if (data.status) q = q.eq("status", data.status);
     if (data.search) {
       const s = data.search.replace(/[%_,()]/g, " ").trim();
