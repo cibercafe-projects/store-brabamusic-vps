@@ -44,21 +44,27 @@ const STATUS_VARIANT: Record<ReleaseStatus, "default" | "secondary" | "outline">
 function LancamentosPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReleaseStatus | "all">("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   const listFn = useServerFn(listReleases);
 
   const query = useQuery({
-    queryKey: ["admin", "releases", search, statusFilter],
+    queryKey: ["admin", "releases", search, statusFilter, page],
     queryFn: () =>
       listFn({
         data: {
           search: search || undefined,
           status: statusFilter === "all" ? undefined : statusFilter,
+          page,
+          pageSize,
         },
       }),
     staleTime: 10_000,
   });
 
   const rows = query.data?.rows ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="space-y-6">
