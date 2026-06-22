@@ -25,10 +25,10 @@ const META: Record<
     Icon: FileAudio,
   },
   stems: {
-    label: "STEMS (ZIP)",
-    accept: ".zip,application/zip,application/x-zip-compressed",
-    exts: ["zip"],
-    hint: "Pacote .zip até 500MB",
+    label: "STEMS (ZIP ou RAR)",
+    accept: ".zip,.rar,application/zip,application/x-zip-compressed,application/vnd.rar,application/x-rar-compressed",
+    exts: ["zip", "rar"],
+    hint: "Pacote .zip ou .rar até 500MB",
     Icon: FileArchive,
   },
   license: {
