@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, Eye } from "lucide-react";
+import { Loader2, Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -44,21 +44,27 @@ const STATUS_VARIANT: Record<ReleaseStatus, "default" | "secondary" | "outline">
 function LancamentosPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReleaseStatus | "all">("all");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
   const listFn = useServerFn(listReleases);
 
   const query = useQuery({
-    queryKey: ["admin", "releases", search, statusFilter],
+    queryKey: ["admin", "releases", search, statusFilter, page],
     queryFn: () =>
       listFn({
         data: {
           search: search || undefined,
           status: statusFilter === "all" ? undefined : statusFilter,
+          page,
+          pageSize,
         },
       }),
     staleTime: 10_000,
   });
 
   const rows = query.data?.rows ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
     <div className="space-y-6">
@@ -75,13 +81,19 @@ function LancamentosPage() {
           <Input
             placeholder="Buscar por artista, lançamento ou e-mail..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
             className="pl-9"
           />
         </div>
         <Select
           value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as ReleaseStatus | "all")}
+          onValueChange={(v) => {
+            setPage(1);
+            setStatusFilter(v as ReleaseStatus | "all");
+          }}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Status" />
@@ -152,6 +164,34 @@ function LancamentosPage() {
             </Table>
           </CardContent>
         </Card>
+      )}
+
+      {total > pageSize && (
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
+            {total} lançamentos · página {page} de {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Próxima
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
