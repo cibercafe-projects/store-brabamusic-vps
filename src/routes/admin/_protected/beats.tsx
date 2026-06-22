@@ -144,7 +144,7 @@ function BeatsPage() {
   const [status, setStatus] = useState<"todas" | BeatStatus>("todas");
   const [produtoraId, setProdutoraId] = useState<string>("todas");
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 10;
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<BeatFormInitial | undefined>(undefined);

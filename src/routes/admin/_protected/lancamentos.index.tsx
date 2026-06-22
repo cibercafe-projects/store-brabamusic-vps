@@ -45,7 +45,7 @@ function LancamentosPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReleaseStatus | "all">("all");
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 10;
   const listFn = useServerFn(listReleases);
 
   const query = useQuery({
