@@ -65,6 +65,9 @@ function SubmitReleasePage() {
   const [aboutArtist, setAboutArtist] = useState("");
   const [aboutRelease, setAboutRelease] = useState("");
   const [hasVideoclip, setHasVideoclip] = useState<"sim" | "nao">("nao");
+  const [aiOnCover, setAiOnCover] = useState<"sim" | "nao">("nao");
+  const [aiOnMusic, setAiOnMusic] = useState<"sim" | "nao">("nao");
+  const [aiMusicDetails, setAiMusicDetails] = useState("");
   const [suggestedReleaseDate, setSuggestedReleaseDate] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
 
