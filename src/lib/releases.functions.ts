@@ -173,6 +173,9 @@ export const submitRelease = createServerFn({ method: "POST" })
         about_artist: data.about_artist,
         about_release: data.about_release,
         has_videoclip: data.has_videoclip,
+        ai_on_cover: data.ai_on_cover,
+        ai_on_music: data.ai_on_music,
+        ai_music_details: data.ai_on_music ? (data.ai_music_details || null) : null,
         faixa_foco: data.faixa_foco || null,
         suggested_release_date: data.suggested_release_date || null,
       })
