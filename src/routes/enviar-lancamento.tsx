@@ -441,6 +441,69 @@ function SubmitReleasePage() {
             </Field>
           </Section>
 
+          <Section title="Uso de Inteligência Artificial (IA)">
+            <p className="text-xs text-muted-foreground">
+              Precisamos saber se houve uso de IA na criação da capa ou das músicas para
+              cumprir as exigências das plataformas de streaming (Spotify, Apple Music,
+              Deezer, etc.). Seja transparente — isso não impede o lançamento, mas a
+              omissão pode causar a remoção do conteúdo.
+            </p>
+
+            <Field label="Foi utilizada IA na criação da capa?" required>
+              <RadioGroup
+                value={aiOnCover}
+                onValueChange={(v) => setAiOnCover(v as "sim" | "nao")}
+                className="flex gap-4"
+              >
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="sim" /> Sim
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="nao" /> Não
+                </label>
+              </RadioGroup>
+              <p className="text-xs text-muted-foreground">
+                Considere "Sim" se a arte foi gerada ou editada significativamente por
+                ferramentas de IA (Midjourney, DALL·E, Stable Diffusion, etc.).
+              </p>
+            </Field>
+
+            <Field label="Foi utilizada IA na criação das músicas?" required>
+              <RadioGroup
+                value={aiOnMusic}
+                onValueChange={(v) => setAiOnMusic(v as "sim" | "nao")}
+                className="flex gap-4"
+              >
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="sim" /> Sim
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <RadioGroupItem value="nao" /> Não
+                </label>
+              </RadioGroup>
+            </Field>
+
+            {aiOnMusic === "sim" && (
+              <Field label="Como a IA foi utilizada nas músicas?" required>
+                <Textarea
+                  required
+                  rows={4}
+                  value={aiMusicDetails}
+                  onChange={(e) => setAiMusicDetails(e.target.value)}
+                  placeholder={
+                    "Explique em detalhes, por exemplo:\n- Apenas no instrumental (beat gerado por IA)\n- Na voz (vocais sintetizados ou clonados)\n- Em ambos (instrumental + voz)\n- Em letras/composição\nInforme também as ferramentas usadas (Suno, Udio, ElevenLabs, etc.)."
+                  }
+                />
+                <p className="text-xs text-muted-foreground">
+                  Seja específico: se foi só no instrumental, só na voz, em ambos, ou em
+                  qualquer outra parte do processo. Liste as ferramentas utilizadas.
+                </p>
+              </Field>
+            )}
+          </Section>
+
+
+
           <Section title="Categorização">
             <Field label={`Gêneros (${genres.length} selecionados)`} required>
               <ChipGroup
