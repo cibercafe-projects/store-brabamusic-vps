@@ -111,6 +111,9 @@ const submitSchema = z
     about_artist: z.string().trim().min(1).max(5000),
     about_release: z.string().trim().min(1).max(5000),
     has_videoclip: z.boolean(),
+    ai_on_cover: z.boolean().default(false),
+    ai_on_music: z.boolean().default(false),
+    ai_music_details: z.string().trim().max(2000).optional().default(""),
     faixa_foco: z.string().trim().max(200).optional().default(""),
     suggested_release_date: z
       .string()
@@ -127,6 +130,10 @@ const submitSchema = z
   .refine(
     (v) => (v.release_type === "single" ? true : v.faixa_foco.length > 0),
     { message: "Informe a faixa foco do EP/Álbum.", path: ["faixa_foco"] },
+  )
+  .refine(
+    (v) => (v.ai_on_music ? v.ai_music_details.trim().length > 0 : true),
+    { message: "Descreva como a IA foi usada nas músicas.", path: ["ai_music_details"] },
   );
 
 export const submitRelease = createServerFn({ method: "POST" })
@@ -166,6 +173,9 @@ export const submitRelease = createServerFn({ method: "POST" })
         about_artist: data.about_artist,
         about_release: data.about_release,
         has_videoclip: data.has_videoclip,
+        ai_on_cover: data.ai_on_cover,
+        ai_on_music: data.ai_on_music,
+        ai_music_details: data.ai_on_music ? (data.ai_music_details || null) : null,
         faixa_foco: data.faixa_foco || null,
         suggested_release_date: data.suggested_release_date || null,
       })
@@ -386,6 +396,9 @@ const updateSchema = z.object({
   release_name: optionalStr(200),
   isrc: optionalStr(2000),
   has_videoclip: z.boolean().optional(),
+  ai_on_cover: z.boolean().optional(),
+  ai_on_music: z.boolean().optional(),
+  ai_music_details: optionalStr(2000),
   tracklist: optionalStr(5000),
   faixa_foco: optionalStr(200),
   about_release: optionalStr(5000),

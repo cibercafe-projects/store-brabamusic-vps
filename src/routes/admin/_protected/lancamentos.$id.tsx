@@ -42,6 +42,9 @@ type Draft = {
   release_name: string;
   isrc: string;
   has_videoclip: boolean;
+  ai_on_cover: boolean;
+  ai_on_music: boolean;
+  ai_music_details: string;
   tracklist: string;
   faixa_foco: string;
   about_release: string;
@@ -70,6 +73,9 @@ function toDraft(r: Record<string, unknown>): Draft {
     release_name: g("release_name"),
     isrc: g("isrc"),
     has_videoclip: Boolean(r.has_videoclip),
+    ai_on_cover: Boolean(r.ai_on_cover),
+    ai_on_music: Boolean(r.ai_on_music),
+    ai_music_details: g("ai_music_details"),
     tracklist: g("tracklist"),
     faixa_foco: g("faixa_foco"),
     about_release: g("about_release"),
@@ -155,6 +161,9 @@ function LancamentoDetail() {
           release_name: d.release_name,
           isrc: d.isrc,
           has_videoclip: d.has_videoclip,
+          ai_on_cover: d.ai_on_cover,
+          ai_on_music: d.ai_on_music,
+          ai_music_details: d.ai_music_details,
           tracklist: d.tracklist,
           faixa_foco: d.faixa_foco,
           about_release: d.about_release,
@@ -373,6 +382,56 @@ function LancamentoDetail() {
             </div>
           ) : (
             <Info label="Videoclipe" value={r.has_videoclip ? "Sim" : "Não"} />
+          )}
+          {editing && d ? (
+            <>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">IA na capa?</p>
+                <Select
+                  value={d.ai_on_cover ? "sim" : "nao"}
+                  onValueChange={(v) => setField("ai_on_cover", v === "sim")}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sim">Sim</SelectItem>
+                    <SelectItem value="nao">Não</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">IA nas músicas?</p>
+                <Select
+                  value={d.ai_on_music ? "sim" : "nao"}
+                  onValueChange={(v) => setField("ai_on_music", v === "sim")}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sim">Sim</SelectItem>
+                    <SelectItem value="nao">Não</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {d.ai_on_music && (
+                <EditableBlock
+                  editing={editing}
+                  label="Como a IA foi usada nas músicas"
+                  value={d.ai_music_details}
+                  draft={d.ai_music_details}
+                  onChange={(v) => setField("ai_music_details", v)}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              <Info label="IA na capa" value={(r as { ai_on_cover?: boolean }).ai_on_cover ? "Sim" : "Não"} />
+              <Info label="IA nas músicas" value={(r as { ai_on_music?: boolean }).ai_on_music ? "Sim" : "Não"} />
+              {(r as { ai_on_music?: boolean }).ai_on_music && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Detalhes do uso de IA</p>
+                  <p className="whitespace-pre-wrap">{(r as { ai_music_details?: string }).ai_music_details || "—"}</p>
+                </div>
+              )}
+            </>
           )}
           <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">

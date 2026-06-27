@@ -495,6 +495,9 @@ export type Database = {
         Row: {
           about_artist: string
           about_release: string
+          ai_music_details: string | null
+          ai_on_cover: boolean
+          ai_on_music: boolean
           artist_name: string
           audio_drive_url: string | null
           cover_drive_url: string | null
@@ -526,6 +529,9 @@ export type Database = {
         Insert: {
           about_artist: string
           about_release: string
+          ai_music_details?: string | null
+          ai_on_cover?: boolean
+          ai_on_music?: boolean
           artist_name: string
           audio_drive_url?: string | null
           cover_drive_url?: string | null
@@ -557,6 +563,9 @@ export type Database = {
         Update: {
           about_artist?: string
           about_release?: string
+          ai_music_details?: string | null
+          ai_on_cover?: boolean
+          ai_on_music?: boolean
           artist_name?: string
           audio_drive_url?: string | null
           cover_drive_url?: string | null
