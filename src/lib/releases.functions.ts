@@ -130,6 +130,10 @@ const submitSchema = z
   .refine(
     (v) => (v.release_type === "single" ? true : v.faixa_foco.length > 0),
     { message: "Informe a faixa foco do EP/Álbum.", path: ["faixa_foco"] },
+  )
+  .refine(
+    (v) => (v.ai_on_music ? v.ai_music_details.trim().length > 0 : true),
+    { message: "Descreva como a IA foi usada nas músicas.", path: ["ai_music_details"] },
   );
 
 export const submitRelease = createServerFn({ method: "POST" })
