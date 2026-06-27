@@ -111,6 +111,9 @@ const submitSchema = z
     about_artist: z.string().trim().min(1).max(5000),
     about_release: z.string().trim().min(1).max(5000),
     has_videoclip: z.boolean(),
+    ai_on_cover: z.boolean().default(false),
+    ai_on_music: z.boolean().default(false),
+    ai_music_details: z.string().trim().max(2000).optional().default(""),
     faixa_foco: z.string().trim().max(200).optional().default(""),
     suggested_release_date: z
       .string()
