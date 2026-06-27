@@ -42,6 +42,9 @@ type Draft = {
   release_name: string;
   isrc: string;
   has_videoclip: boolean;
+  ai_on_cover: boolean;
+  ai_on_music: boolean;
+  ai_music_details: string;
   tracklist: string;
   faixa_foco: string;
   about_release: string;
