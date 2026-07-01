@@ -175,6 +175,14 @@ export const createProducer = createServerFn({ method: "POST" })
         bio: data.bio,
         status: data.status,
         foto_perfil_path: data.foto_perfil_path ?? null,
+        nome_civil: data.nome_civil,
+        cpf: data.cpf,
+        nome_artistico_creditos: data.nome_artistico_creditos,
+        email_comercial: data.email_comercial,
+        email_royalties: data.email_royalties,
+        texto_creditos: data.texto_creditos,
+        texto_registro: data.texto_registro,
+        texto_royalties: data.texto_royalties,
       })
       .select("*")
       .single();
