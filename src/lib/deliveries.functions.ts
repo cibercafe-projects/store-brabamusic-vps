@@ -6,6 +6,8 @@ import { sendAppEmail } from "@/lib/email/send.server";
 
 const FILE_KINDS = ["wav", "stems", "license"] as const;
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 dias
+const PUBLIC_SITE_URL = "https://brababeats.app";
+
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProdutoraSlugRouteImport } from './routes/produtora.$slug'
 import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
+import { Route as LicencaTokenRouteImport } from './routes/licenca.$token'
 import { Route as EnviarComprovanteTokenRouteImport } from './routes/enviar-comprovante.$token'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
@@ -113,6 +114,11 @@ const ProdutoraSlugRoute = ProdutoraSlugRouteImport.update({
 const ProdutorSlugRoute = ProdutorSlugRouteImport.update({
   id: '/produtor/$slug',
   path: '/produtor/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LicencaTokenRoute = LicencaTokenRouteImport.update({
+  id: '/licenca/$token',
+  path: '/licenca/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnviarComprovanteTokenRoute = EnviarComprovanteTokenRouteImport.update({
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/beat/$slug': typeof BeatSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
+  '/licenca/$token': typeof LicencaTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByTo {
   '/beat/$slug': typeof BeatSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
+  '/licenca/$token': typeof LicencaTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/beats': typeof AdminProtectedBeatsRoute
@@ -319,6 +327,7 @@ export interface FileRoutesById {
   '/beat/$slug': typeof BeatSlugRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/enviar-comprovante/$token': typeof EnviarComprovanteTokenRoute
+  '/licenca/$token': typeof LicencaTokenRoute
   '/produtor/$slug': typeof ProdutorSlugRoute
   '/produtora/$slug': typeof ProdutoraSlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -357,6 +366,7 @@ export interface FileRouteTypes {
     | '/beat/$slug'
     | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
+    | '/licenca/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
     | '/admin/'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/beat/$slug'
     | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
+    | '/licenca/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
     | '/admin/beats'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/beat/$slug'
     | '/email/unsubscribe'
     | '/enviar-comprovante/$token'
+    | '/licenca/$token'
     | '/produtor/$slug'
     | '/produtora/$slug'
     | '/admin/'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   BeatSlugRoute: typeof BeatSlugRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   EnviarComprovanteTokenRoute: typeof EnviarComprovanteTokenRoute
+  LicencaTokenRoute: typeof LicencaTokenRoute
   ProdutorSlugRoute: typeof ProdutorSlugRoute
   ProdutoraSlugRoute: typeof ProdutoraSlugRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -570,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/produtor/$slug'
       fullPath: '/produtor/$slug'
       preLoaderRoute: typeof ProdutorSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/licenca/$token': {
+      id: '/licenca/$token'
+      path: '/licenca/$token'
+      fullPath: '/licenca/$token'
+      preLoaderRoute: typeof LicencaTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enviar-comprovante/$token': {
@@ -798,6 +818,7 @@ const rootRouteChildren: RootRouteChildren = {
   BeatSlugRoute: BeatSlugRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   EnviarComprovanteTokenRoute: EnviarComprovanteTokenRoute,
+  LicencaTokenRoute: LicencaTokenRoute,
   ProdutorSlugRoute: ProdutorSlugRoute,
   ProdutoraSlugRoute: ProdutoraSlugRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
