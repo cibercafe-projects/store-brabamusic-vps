@@ -238,6 +238,14 @@ function ProdutorasPage() {
                           status: p.status,
                           foto_perfil_path: p.foto_perfil_path,
                           foto_perfil_signed_url: p.foto_perfil_signed_url,
+                          nome_civil: p.nome_civil,
+                          cpf: p.cpf,
+                          nome_artistico_creditos: p.nome_artistico_creditos,
+                          email_comercial: p.email_comercial,
+                          email_royalties: p.email_royalties,
+                          texto_creditos: p.texto_creditos,
+                          texto_registro: p.texto_registro,
+                          texto_royalties: p.texto_royalties,
                         });
                         setSheetOpen(true);
                       }}
