@@ -97,7 +97,30 @@ export const getBeatLicenseInfo = createServerFn({ method: "GET" })
     };
   });
 
+// ===== Public: license document by continuation token =====
+export const getPurchaseLicenseByToken = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z.object({ token: z.string().min(10).max(200) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("purchase_requests")
+      .select(
+        "id, created_at, nome_cliente, nome_artistico, email, whatsapp, instagram, valor, forma_pagamento, status, termos_aceitos, license_accepted, license_accepted_at, license_version, license_snapshot, beat:beats(id, nome, slug, produtora:producers(id, nome_artistico, nome_artistico_creditos, texto_creditos, texto_registro, texto_royalties))",
+      )
+      .eq("continuation_token", data.token)
+      .maybeSingle();
+    if (error) {
+      console.error("[purchases.licenseByToken]", error);
+      throw new Error("Erro ao carregar licença.");
+    }
+    if (!row) throw new Error("Licença não encontrada.");
+    return row;
+  });
+
 // ===== Public: create purchase =====
+
 
 const MIN_SUBMIT_SECONDS = 3; // anti-bot
 const createSchema = z.object({
