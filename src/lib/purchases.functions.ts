@@ -86,6 +86,10 @@ const createSchema = z.object({
     .nullable(),
   forma_pagamento: z.enum(["pix", "link"]),
   termos_aceitos: z.literal(true, { errorMap: () => ({ message: "Aceite os termos para continuar." }) }),
+  license_accepted: z.literal(true, {
+    errorMap: () => ({ message: "Aceite os termos de licenciamento da produtora para continuar." }),
+  }),
+  license_version: z.string().trim().min(1).max(40),
   // anti-spam
   website: z.string().max(0, "Bot").optional().default(""),
   started_at: z.number().int().positive().optional(),
