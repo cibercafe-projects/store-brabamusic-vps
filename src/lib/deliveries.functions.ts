@@ -230,10 +230,11 @@ export const listDeliveries = createServerFn({ method: "POST" })
     const admin = await assertAdmin(context.userId);
     const { data: rows, error } = await admin
       .from("purchase_deliveries")
-      .select("id, enviado_email, enviado_whatsapp, arquivos, enviado_em, observacao, enviado_por")
+      .select("id, enviado_email, enviado_whatsapp, arquivos, enviado_em, observacao, enviado_por, recipient_email, recipient_whatsapp")
       .eq("purchase_id", data.purchase_id)
       .order("enviado_em", { ascending: false });
     if (error) throw new Error(error.message);
+
 
     const userIds = Array.from(
       new Set((rows ?? []).map((r) => r.enviado_por).filter((v): v is string => !!v)),
