@@ -26,7 +26,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getPurchaseSettings, createPurchaseRequest } from "@/lib/purchases.functions";
+import {
+  getPurchaseSettings,
+  createPurchaseRequest,
+  getBeatLicenseInfo,
+} from "@/lib/purchases.functions";
+import { CURRENT_LICENSE_VERSION } from "@/lib/licenses.constants";
 
 type Method = "pix" | "link";
 type Step = "form" | "receipt";
