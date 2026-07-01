@@ -26,7 +26,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { getPurchaseSettings, createPurchaseRequest } from "@/lib/purchases.functions";
+import {
+  getPurchaseSettings,
+  createPurchaseRequest,
+  getBeatLicenseInfo,
+} from "@/lib/purchases.functions";
+import { CURRENT_LICENSE_VERSION } from "@/lib/licenses.constants";
 
 type Method = "pix" | "link";
 type Step = "form" | "receipt";
@@ -60,6 +65,7 @@ export function PurchaseDialog({
   const [whatsapp, setWhatsapp] = useState("");
   const [instagram, setInstagram] = useState("");
   const [aceito, setAceito] = useState(false);
+  const [licenseAccepted, setLicenseAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [website, setWebsite] = useState(""); // honeypot
@@ -68,12 +74,20 @@ export function PurchaseDialog({
 
   const loadSettings = useServerFn(getPurchaseSettings);
   const createFn = useServerFn(createPurchaseRequest);
+  const loadLicense = useServerFn(getBeatLicenseInfo);
 
   const settings = useQuery({
     queryKey: ["purchase-settings"],
     queryFn: () => loadSettings(),
     staleTime: 60_000,
     enabled: open,
+  });
+
+  const license = useQuery({
+    queryKey: ["beat-license", beatId],
+    queryFn: () => loadLicense({ data: { beat_id: beatId } }),
+    staleTime: 60_000,
+    enabled: open && !!beatId,
   });
 
   useEffect(() => {
@@ -86,6 +100,7 @@ export function PurchaseDialog({
       setWhatsapp("");
       setInstagram("");
       setAceito(false);
+      setLicenseAccepted(false);
       setSubmitting(false);
       setToken(null);
     }
@@ -105,6 +120,7 @@ export function PurchaseDialog({
     /.+@.+\..+/.test(email) &&
     digitsOnly(whatsapp).length >= 8 &&
     aceito &&
+    licenseAccepted &&
     !submitting;
 
   async function handleSubmit() {
@@ -121,6 +137,8 @@ export function PurchaseDialog({
           instagram: instagram.trim() || undefined,
           forma_pagamento: method,
           termos_aceitos: true,
+          license_accepted: true,
+          license_version: CURRENT_LICENSE_VERSION,
           website,
           started_at: startedAt,
         },
@@ -135,6 +153,7 @@ export function PurchaseDialog({
       setSubmitting(false);
     }
   }
+
 
   function copy(value: string, label: string) {
     if (!value) return;
@@ -179,6 +198,66 @@ export function PurchaseDialog({
                 )}
                 <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
               </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Licenciamento da produtora
+                  </p>
+                  <p className="text-sm mt-1">
+                    prod.{" "}
+                    <strong>
+                      {license.data?.nome_artistico_creditos ??
+                        license.data?.produtora_nome ??
+                        produtora ??
+                        "—"}
+                    </strong>
+                  </p>
+                </div>
+
+                {license.isLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Carregando termos...
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {(
+                      [
+                        { label: "Créditos", value: license.data?.texto_creditos },
+                        { label: "Registro", value: license.data?.texto_registro },
+                        { label: "Royalties", value: license.data?.texto_royalties },
+                      ] as const
+                    ).map((item) => (
+                      <div key={item.label}>
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+                          {item.label}
+                        </p>
+                        {item.value ? (
+                          <p className="text-sm whitespace-pre-wrap">{item.value}</p>
+                        ) : (
+                          <p className="text-sm italic text-muted-foreground">
+                            — não informado pela produtora —
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <label className="flex items-start gap-2 text-sm pt-1">
+                  <Checkbox
+                    checked={licenseAccepted}
+                    onCheckedChange={(v) => setLicenseAccepted(v === true)}
+                    className="mt-0.5"
+                    disabled={license.isLoading}
+                  />
+                  <span>
+                    Li e concordo com os termos de licenciamento acima da produtora.
+                  </span>
+                </label>
+              </div>
+
+
 
               <div className="space-y-2">
                 <Label>Forma de pagamento</Label>
