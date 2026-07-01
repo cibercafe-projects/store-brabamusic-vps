@@ -43,6 +43,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
 import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
+import { Route as AdminProtectedComprasIdLicencaRouteImport } from './routes/admin/_protected/compras.$id.licenca'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -221,6 +222,12 @@ const AdminProtectedComprasIdRoute = AdminProtectedComprasIdRouteImport.update({
   path: '/compras/$id',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
+const AdminProtectedComprasIdLicencaRoute =
+  AdminProtectedComprasIdLicencaRouteImport.update({
+    id: '/licenca',
+    path: '/licenca',
+    getParentRoute: () => AdminProtectedComprasIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -249,13 +256,14 @@ export interface FileRoutesByFullPath {
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
-  '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
+  '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
+  '/admin/compras/$id/licenca': typeof AdminProtectedComprasIdLicencaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -283,13 +291,14 @@ export interface FileRoutesByTo {
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
-  '/admin/compras/$id': typeof AdminProtectedComprasIdRoute
+  '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/compras': typeof AdminProtectedComprasIndexRoute
   '/admin/lancamentos': typeof AdminProtectedLancamentosIndexRoute
+  '/admin/compras/$id/licenca': typeof AdminProtectedComprasIdLicencaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -320,13 +329,14 @@ export interface FileRoutesById {
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
-  '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRoute
+  '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
   '/admin/_protected/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/_protected/compras/': typeof AdminProtectedComprasIndexRoute
   '/admin/_protected/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
+  '/admin/_protected/compras/$id/licenca': typeof AdminProtectedComprasIdLicencaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/send'
     | '/admin/compras/'
     | '/admin/lancamentos/'
+    | '/admin/compras/$id/licenca'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -398,6 +409,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/send'
     | '/admin/compras'
     | '/admin/lancamentos'
+    | '/admin/compras/$id/licenca'
   id:
     | '__root__'
     | '/'
@@ -434,6 +446,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/send'
     | '/admin/_protected/compras/'
     | '/admin/_protected/lancamentos/'
+    | '/admin/_protected/compras/$id/licenca'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -699,8 +712,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedComprasIdRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/compras/$id/licenca': {
+      id: '/admin/_protected/compras/$id/licenca'
+      path: '/licenca'
+      fullPath: '/admin/compras/$id/licenca'
+      preLoaderRoute: typeof AdminProtectedComprasIdLicencaRouteImport
+      parentRoute: typeof AdminProtectedComprasIdRoute
+    }
   }
 }
+
+interface AdminProtectedComprasIdRouteChildren {
+  AdminProtectedComprasIdLicencaRoute: typeof AdminProtectedComprasIdLicencaRoute
+}
+
+const AdminProtectedComprasIdRouteChildren: AdminProtectedComprasIdRouteChildren =
+  {
+    AdminProtectedComprasIdLicencaRoute: AdminProtectedComprasIdLicencaRoute,
+  }
+
+const AdminProtectedComprasIdRouteWithChildren =
+  AdminProtectedComprasIdRoute._addFileChildren(
+    AdminProtectedComprasIdRouteChildren,
+  )
 
 interface AdminProtectedRouteRouteChildren {
   AdminProtectedBeatsRoute: typeof AdminProtectedBeatsRoute
@@ -709,7 +743,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
   AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
-  AdminProtectedComprasIdRoute: typeof AdminProtectedComprasIdRoute
+  AdminProtectedComprasIdRoute: typeof AdminProtectedComprasIdRouteWithChildren
   AdminProtectedLancamentosIdRoute: typeof AdminProtectedLancamentosIdRoute
   AdminProtectedComprasIndexRoute: typeof AdminProtectedComprasIndexRoute
   AdminProtectedLancamentosIndexRoute: typeof AdminProtectedLancamentosIndexRoute
@@ -722,7 +756,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
   AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
-  AdminProtectedComprasIdRoute: AdminProtectedComprasIdRoute,
+  AdminProtectedComprasIdRoute: AdminProtectedComprasIdRouteWithChildren,
   AdminProtectedLancamentosIdRoute: AdminProtectedLancamentosIdRoute,
   AdminProtectedComprasIndexRoute: AdminProtectedComprasIndexRoute,
   AdminProtectedLancamentosIndexRoute: AdminProtectedLancamentosIndexRoute,

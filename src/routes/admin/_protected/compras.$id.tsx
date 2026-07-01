@@ -145,7 +145,14 @@ function PurchaseDetailPage() {
             </p>
           </div>
         </div>
-        <Badge>{PURCHASE_STATUS_LABELS[p.status as PurchaseStatus]}</Badge>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/admin/compras/$id/licenca" params={{ id }}>
+              Ver licença
+            </Link>
+          </Button>
+          <Badge>{PURCHASE_STATUS_LABELS[p.status as PurchaseStatus]}</Badge>
+        </div>
       </header>
 
       <div className="grid gap-6 md:grid-cols-2">
