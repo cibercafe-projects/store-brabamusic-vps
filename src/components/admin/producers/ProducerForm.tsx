@@ -89,6 +89,14 @@ export type ProducerFormInitial = {
   status?: "ativa" | "inativa";
   foto_perfil_path?: string | null;
   foto_perfil_signed_url?: string | null;
+  nome_civil?: string | null;
+  cpf?: string | null;
+  nome_artistico_creditos?: string | null;
+  email_comercial?: string | null;
+  email_royalties?: string | null;
+  texto_creditos?: string | null;
+  texto_registro?: string | null;
+  texto_royalties?: string | null;
 };
 
 type Props = {
