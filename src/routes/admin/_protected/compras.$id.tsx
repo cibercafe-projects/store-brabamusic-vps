@@ -456,7 +456,7 @@ function DeliveryCard({
       const res = await deliverFn({
         data: {
           purchase_id: purchase.id,
-          arquivos: available,
+          arquivos: arquivosParaEnviar,
           canal_email: channel === "email",
           canal_whatsapp: channel === "whatsapp",
           email_mode: channel === "email" ? "mailto" : "auto",
