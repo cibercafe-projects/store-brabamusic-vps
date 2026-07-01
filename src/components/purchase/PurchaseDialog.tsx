@@ -199,6 +199,66 @@ export function PurchaseDialog({
                 <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
               </div>
 
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Licenciamento da produtora
+                  </p>
+                  <p className="text-sm mt-1">
+                    prod.{" "}
+                    <strong>
+                      {license.data?.nome_artistico_creditos ??
+                        license.data?.produtora_nome ??
+                        produtora ??
+                        "—"}
+                    </strong>
+                  </p>
+                </div>
+
+                {license.isLoading ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Carregando termos...
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {(
+                      [
+                        { label: "Créditos", value: license.data?.texto_creditos },
+                        { label: "Registro", value: license.data?.texto_registro },
+                        { label: "Royalties", value: license.data?.texto_royalties },
+                      ] as const
+                    ).map((item) => (
+                      <div key={item.label}>
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
+                          {item.label}
+                        </p>
+                        {item.value ? (
+                          <p className="text-sm whitespace-pre-wrap">{item.value}</p>
+                        ) : (
+                          <p className="text-sm italic text-muted-foreground">
+                            — não informado pela produtora —
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <label className="flex items-start gap-2 text-sm pt-1">
+                  <Checkbox
+                    checked={licenseAccepted}
+                    onCheckedChange={(v) => setLicenseAccepted(v === true)}
+                    className="mt-0.5"
+                    disabled={license.isLoading}
+                  />
+                  <span>
+                    Li e concordo com os termos de licenciamento acima da produtora.
+                  </span>
+                </label>
+              </div>
+
+
+
               <div className="space-y-2">
                 <Label>Forma de pagamento</Label>
                 <RadioGroup
