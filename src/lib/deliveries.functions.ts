@@ -37,8 +37,9 @@ type FileLink = { kind: BeatPrivateKind; label: string; url: string };
 const LABEL: Record<BeatPrivateKind, string> = {
   wav: "WAV Master",
   stems: "STEMS",
-  license: "Licença (PDF)",
+  license: "Licença",
 };
+
 
 export const deliverPurchase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
