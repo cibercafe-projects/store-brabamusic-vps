@@ -65,6 +65,7 @@ export function PurchaseDialog({
   const [whatsapp, setWhatsapp] = useState("");
   const [instagram, setInstagram] = useState("");
   const [aceito, setAceito] = useState(false);
+  const [licenseAccepted, setLicenseAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [website, setWebsite] = useState(""); // honeypot
