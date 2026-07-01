@@ -548,13 +548,19 @@ function DeliveryCard({
         </div>
 
         <div className="rounded-md border p-3 text-xs space-y-1">
-          <p className="text-muted-foreground">Arquivos cadastrados no beat:</p>
+          <p className="text-muted-foreground">Arquivos que serão enviados:</p>
           <ul className="space-y-0.5">
             <li>WAV: {beat?.wav_path ? "✅ disponível" : "❌ não cadastrado"}</li>
             <li>STEMS: {beat?.stems_path ? "✅ disponível" : "❌ não cadastrado"}</li>
-            <li>Licença: {beat?.license_path ? "✅ disponível" : "❌ não cadastrada"}</li>
+            <li>
+              Licença:{" "}
+              {beat?.license_path
+                ? "✅ PDF cadastrado"
+                : "✅ documento HTML público (link)"}
+            </li>
           </ul>
         </div>
+
 
         {!canDeliver && (
           <p className="text-xs text-muted-foreground">
