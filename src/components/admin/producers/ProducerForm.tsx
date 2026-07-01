@@ -125,6 +125,14 @@ export function ProducerForm({ initial, onDone }: Props) {
       cidade: initial?.cidade ?? "",
       bio: initial?.bio ?? "",
       status: initial?.status ?? "ativa",
+      nome_civil: initial?.nome_civil ?? "",
+      cpf: formatCpf(initial?.cpf ?? ""),
+      nome_artistico_creditos: initial?.nome_artistico_creditos ?? "",
+      email_comercial: initial?.email_comercial ?? "",
+      email_royalties: initial?.email_royalties ?? "",
+      texto_creditos: initial?.texto_creditos ?? "",
+      texto_registro: initial?.texto_registro ?? "",
+      texto_royalties: initial?.texto_royalties ?? "",
     },
   });
 
@@ -149,6 +157,14 @@ export function ProducerForm({ initial, onDone }: Props) {
         bio: values.bio || "",
         status: values.status,
         foto_perfil_path: avatarPath,
+        nome_civil: values.nome_civil || "",
+        cpf: values.cpf || "",
+        nome_artistico_creditos: values.nome_artistico_creditos || "",
+        email_comercial: values.email_comercial || "",
+        email_royalties: values.email_royalties || "",
+        texto_creditos: values.texto_creditos || "",
+        texto_registro: values.texto_registro || "",
+        texto_royalties: values.texto_royalties || "",
       };
       if (isEdit && initial?.id) {
         return update({ data: { id: initial.id, ...payload } });
