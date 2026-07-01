@@ -58,7 +58,47 @@ export const getPurchaseSettings = createServerFn({ method: "GET" }).handler(asy
   };
 });
 
+// ===== Public: license info per beat =====
+export const getBeatLicenseInfo = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z.object({ beat_id: z.string().uuid("Beat inválido") }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("beats")
+      .select(
+        "id, status, produtora:producers(id, nome_artistico, nome_artistico_creditos, texto_creditos, texto_registro, texto_royalties)",
+      )
+      .eq("id", data.beat_id)
+      .maybeSingle();
+    if (error) {
+      console.error("[purchases.licenseInfo]", error);
+      return null;
+    }
+    if (!row || row.status !== "ativo") return null;
+    const p = (row as { produtora?: unknown }).produtora as
+      | {
+          id: string;
+          nome_artistico: string | null;
+          nome_artistico_creditos: string | null;
+          texto_creditos: string | null;
+          texto_registro: string | null;
+          texto_royalties: string | null;
+        }
+      | null;
+    return {
+      produtora_nome: p?.nome_artistico ?? null,
+      nome_artistico_creditos: p?.nome_artistico_creditos ?? null,
+      texto_creditos: p?.texto_creditos ?? null,
+      texto_registro: p?.texto_registro ?? null,
+      texto_royalties: p?.texto_royalties ?? null,
+      license_version: CURRENT_LICENSE_VERSION,
+    };
+  });
+
 // ===== Public: create purchase =====
+
 const MIN_SUBMIT_SECONDS = 3; // anti-bot
 const createSchema = z.object({
   beat_id: z.string().uuid("Beat inválido"),
