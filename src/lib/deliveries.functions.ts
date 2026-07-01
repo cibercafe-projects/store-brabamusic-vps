@@ -146,16 +146,18 @@ export const deliverPurchase = createServerFn({ method: "POST" })
         ? `https://wa.me/${purchase.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappText ?? "")}`
         : null;
 
-    // Registra a entrega
+    // Registra a entrega (Sprint 11D: guarda também o destinatário usado).
     const { data: delivery, error: insErr } = await admin
       .from("purchase_deliveries")
       .insert({
         purchase_id: purchase.id,
         enviado_email: data.canal_email && emailSent,
         enviado_whatsapp: !!data.canal_whatsapp,
-        arquivos: data.arquivos,
+        arquivos,
         enviado_por: context.userId,
         observacao: data.observacao ?? null,
+        recipient_email: data.canal_email ? purchase.email : null,
+        recipient_whatsapp: data.canal_whatsapp ? purchase.whatsapp : null,
       })
       .select("id, enviado_em")
       .single();
@@ -163,6 +165,7 @@ export const deliverPurchase = createServerFn({ method: "POST" })
       console.error("[deliveries.insert]", insErr);
       throw new Error("Erro ao registrar entrega.");
     }
+
 
     // Atualiza status da compra
     const { error: updErr } = await admin
