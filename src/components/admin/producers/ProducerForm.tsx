@@ -313,6 +313,137 @@ export function ProducerForm({ initial, onDone }: Props) {
           )}
         />
 
+        <div className="space-y-4 rounded-md border p-4">
+          <div>
+            <h3 className="text-sm font-semibold">Informações Jurídicas</h3>
+            <p className="text-xs text-muted-foreground">
+              Usado para créditos, registro e royalties. Preencha quando disponível.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="nome_civil"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome civil</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Nome completo" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cpf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CPF</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      inputMode="numeric"
+                      placeholder="000.000.000-00"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(formatCpf(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="nome_artistico_creditos"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome artístico para créditos</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Como deve aparecer nos créditos" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="email_comercial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email comercial</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} placeholder="comercial@exemplo.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email_royalties"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email de royalties</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} placeholder="royalties@exemplo.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="texto_creditos"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Texto de créditos</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} placeholder="Texto padrão de créditos..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="texto_registro"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Texto de registro</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} placeholder="Texto padrão de registro..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="texto_royalties"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Texto de royalties</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} placeholder="Texto padrão de royalties..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+
+
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onDone}>
             Cancelar
