@@ -428,14 +428,18 @@ function DeliveryCard({
   const deliverFn = useServerFn(deliverPurchase);
   const listFn = useServerFn(listDeliveries);
 
-  const available = (["wav", "stems", "license"] as const).filter(
+  // WAV/STEMS dependem de arquivos cadastrados; a licença é sempre enviada
+  // (PDF se existir, senão link público HTML — Sprint 11D).
+  const available = (["wav", "stems"] as const).filter(
     (k) => !!beat?.[`${k}_path` as const],
   );
+  const arquivosParaEnviar = [...available, "license" as const];
 
   const history = useQuery({
     queryKey: ["admin", "deliveries", purchase.id],
     queryFn: () => listFn({ data: { purchase_id: purchase.id } }),
   });
+
 
   const [busyChannel, setBusyChannel] = useState<"whatsapp" | "email" | null>(null);
 
@@ -452,7 +456,7 @@ function DeliveryCard({
       const res = await deliverFn({
         data: {
           purchase_id: purchase.id,
-          arquivos: available,
+          arquivos: arquivosParaEnviar,
           canal_email: channel === "email",
           canal_whatsapp: channel === "whatsapp",
           email_mode: channel === "email" ? "mailto" : "auto",
@@ -544,13 +548,19 @@ function DeliveryCard({
         </div>
 
         <div className="rounded-md border p-3 text-xs space-y-1">
-          <p className="text-muted-foreground">Arquivos cadastrados no beat:</p>
+          <p className="text-muted-foreground">Arquivos que serão enviados:</p>
           <ul className="space-y-0.5">
             <li>WAV: {beat?.wav_path ? "✅ disponível" : "❌ não cadastrado"}</li>
             <li>STEMS: {beat?.stems_path ? "✅ disponível" : "❌ não cadastrado"}</li>
-            <li>Licença: {beat?.license_path ? "✅ disponível" : "❌ não cadastrada"}</li>
+            <li>
+              Licença:{" "}
+              {beat?.license_path
+                ? "✅ PDF cadastrado"
+                : "✅ documento HTML público (link)"}
+            </li>
           </ul>
         </div>
+
 
         {!canDeliver && (
           <p className="text-xs text-muted-foreground">
@@ -613,26 +623,40 @@ function DeliveryCard({
             <p className="text-xs font-semibold inline-flex items-center gap-1">
               <History className="h-3.5 w-3.5" /> Histórico de entregas
             </p>
-            <div className="space-y-1 text-xs rounded-md border p-2 max-h-40 overflow-auto">
-              {history.data!.slice(0, 5).map((d) => (
-                <div key={d.id} className="flex justify-between gap-2">
-                  <span>
-                    {new Date(d.enviado_em).toLocaleString("pt-BR", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </span>
-                  <span className="text-muted-foreground truncate">
-                    {(d.arquivos as string[]).join(", ")} ·{" "}
-                    {[d.enviado_email && "email", d.enviado_whatsapp && "whats"]
-                      .filter(Boolean)
-                      .join(" + ")}
-                    {d.enviado_por_email ? ` · ${d.enviado_por_email}` : ""}
-                  </span>
-                </div>
-              ))}
+            <div className="space-y-2 text-xs rounded-md border p-2 max-h-56 overflow-auto">
+              {history.data!.slice(0, 5).map((d) => {
+                const dd = d as typeof d & {
+                  recipient_email?: string | null;
+                  recipient_whatsapp?: string | null;
+                };
+                return (
+                  <div key={d.id} className="space-y-0.5">
+                    <div className="flex justify-between gap-2">
+                      <span className="font-medium">
+                        {new Date(d.enviado_em).toLocaleString("pt-BR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                      <span className="text-muted-foreground truncate">
+                        {(d.arquivos as string[]).join(", ")} ·{" "}
+                        {[d.enviado_email && "email", d.enviado_whatsapp && "whats"]
+                          .filter(Boolean)
+                          .join(" + ")}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate">
+                      {dd.recipient_email && `→ ${dd.recipient_email}`}
+                      {dd.recipient_email && dd.recipient_whatsapp && " · "}
+                      {dd.recipient_whatsapp && `WA ${dd.recipient_whatsapp}`}
+                      {d.enviado_por_email ? ` · por ${d.enviado_por_email}` : ""}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
+
         )}
       </CardContent>
     </Card>

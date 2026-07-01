@@ -6,6 +6,8 @@ import { sendAppEmail } from "@/lib/email/send.server";
 
 const FILE_KINDS = ["wav", "stems", "license"] as const;
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 dias
+const PUBLIC_SITE_URL = "https://brababeats.app";
+
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -35,8 +37,9 @@ type FileLink = { kind: BeatPrivateKind; label: string; url: string };
 const LABEL: Record<BeatPrivateKind, string> = {
   wav: "WAV Master",
   stems: "STEMS",
-  license: "Licença (PDF)",
+  license: "Licença",
 };
+
 
 export const deliverPurchase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -50,7 +53,7 @@ export const deliverPurchase = createServerFn({ method: "POST" })
     const { data: purchase, error: pErr } = await admin
       .from("purchase_requests")
       .select(
-        "id, status, nome_cliente, email, whatsapp, beat:beats(id, nome, wav_path, stems_path, license_path)",
+        "id, status, nome_cliente, email, whatsapp, continuation_token, beat:beats(id, nome, wav_path, stems_path, license_path)",
       )
       .eq("id", data.purchase_id)
       .maybeSingle();
@@ -74,9 +77,21 @@ export const deliverPurchase = createServerFn({ method: "POST" })
     } | null;
     if (!beat) throw new Error("Beat associado não encontrado.");
 
-    // Gera signed URLs (7 dias) para cada arquivo solicitado.
+    // Sprint 11D: sempre incluir a licença na entrega.
+    const arquivos = Array.from(new Set<(typeof FILE_KINDS)[number]>([...data.arquivos, "license"]));
+
+    // Gera links (7 dias para arquivos privados; link público para licença HTML quando não há PDF).
     const links: FileLink[] = [];
-    for (const kind of data.arquivos) {
+    for (const kind of arquivos) {
+      if (kind === "license" && !beat.license_path) {
+        // Fallback: documento HTML público via token.
+        links.push({
+          kind,
+          label: "Licença (documento online)",
+          url: `${PUBLIC_SITE_URL}/licenca/${purchase.continuation_token}`,
+        });
+        continue;
+      }
       const path = beat[`${kind}_path` as const];
       if (!path) {
         throw new Error(`Arquivo ${LABEL[kind]} não cadastrado no beat.`);
@@ -89,8 +104,13 @@ export const deliverPurchase = createServerFn({ method: "POST" })
         console.error("[deliveries.sign]", error);
         throw new Error(`Erro ao gerar link de ${LABEL[kind]}.`);
       }
-      links.push({ kind, label: LABEL[kind], url: signed.signedUrl });
+      links.push({
+        kind,
+        label: kind === "license" ? "Licença (PDF)" : LABEL[kind],
+        url: signed.signedUrl,
+      });
     }
+
 
     // Email: envia transacional só quando email_mode = 'auto'.
     let emailSent = false;
@@ -126,16 +146,18 @@ export const deliverPurchase = createServerFn({ method: "POST" })
         ? `https://wa.me/${purchase.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappText ?? "")}`
         : null;
 
-    // Registra a entrega
+    // Registra a entrega (Sprint 11D: guarda também o destinatário usado).
     const { data: delivery, error: insErr } = await admin
       .from("purchase_deliveries")
       .insert({
         purchase_id: purchase.id,
         enviado_email: data.canal_email && emailSent,
         enviado_whatsapp: !!data.canal_whatsapp,
-        arquivos: data.arquivos,
+        arquivos,
         enviado_por: context.userId,
         observacao: data.observacao ?? null,
+        recipient_email: data.canal_email ? purchase.email : null,
+        recipient_whatsapp: data.canal_whatsapp ? purchase.whatsapp : null,
       })
       .select("id, enviado_em")
       .single();
@@ -143,6 +165,7 @@ export const deliverPurchase = createServerFn({ method: "POST" })
       console.error("[deliveries.insert]", insErr);
       throw new Error("Erro ao registrar entrega.");
     }
+
 
     // Atualiza status da compra
     const { error: updErr } = await admin
@@ -207,10 +230,11 @@ export const listDeliveries = createServerFn({ method: "POST" })
     const admin = await assertAdmin(context.userId);
     const { data: rows, error } = await admin
       .from("purchase_deliveries")
-      .select("id, enviado_email, enviado_whatsapp, arquivos, enviado_em, observacao, enviado_por")
+      .select("id, enviado_email, enviado_whatsapp, arquivos, enviado_em, observacao, enviado_por, recipient_email, recipient_whatsapp")
       .eq("purchase_id", data.purchase_id)
       .order("enviado_em", { ascending: false });
     if (error) throw new Error(error.message);
+
 
     const userIds = Array.from(
       new Set((rows ?? []).map((r) => r.enviado_por).filter((v): v is string => !!v)),
