@@ -31,6 +31,28 @@ const handle = z
   .or(z.literal(""))
   .refine((v) => !v || /^@?[A-Za-z0-9._-]{1,40}$/.test(v), "Use apenas letras, números, . _ -");
 
+const optStr = (max: number) =>
+  z.string().trim().max(max).optional().or(z.literal(""));
+
+const optEmail = z
+  .string()
+  .trim()
+  .max(255)
+  .optional()
+  .or(z.literal(""))
+  .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Email inválido");
+
+const optCpf = z
+  .string()
+  .trim()
+  .max(20)
+  .optional()
+  .or(z.literal(""))
+  .refine((v) => {
+    if (!v) return true;
+    return v.replace(/\D+/g, "").length === 11;
+  }, "CPF deve ter 11 dígitos");
+
 const schema = z.object({
   nome_artistico: z.string().trim().min(1, "Obrigatório").max(120),
   slug: z
@@ -44,6 +66,14 @@ const schema = z.object({
   cidade: z.string().trim().max(80).optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
   status: z.enum(["ativa", "inativa"]),
+  nome_civil: optStr(160),
+  cpf: optCpf,
+  nome_artistico_creditos: optStr(160),
+  email_comercial: optEmail,
+  email_royalties: optEmail,
+  texto_creditos: optStr(4000),
+  texto_registro: optStr(4000),
+  texto_royalties: optStr(4000),
 });
 
 type FormValues = z.infer<typeof schema>;
