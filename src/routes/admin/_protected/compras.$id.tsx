@@ -623,26 +623,40 @@ function DeliveryCard({
             <p className="text-xs font-semibold inline-flex items-center gap-1">
               <History className="h-3.5 w-3.5" /> Histórico de entregas
             </p>
-            <div className="space-y-1 text-xs rounded-md border p-2 max-h-40 overflow-auto">
-              {history.data!.slice(0, 5).map((d) => (
-                <div key={d.id} className="flex justify-between gap-2">
-                  <span>
-                    {new Date(d.enviado_em).toLocaleString("pt-BR", {
-                      dateStyle: "short",
-                      timeStyle: "short",
-                    })}
-                  </span>
-                  <span className="text-muted-foreground truncate">
-                    {(d.arquivos as string[]).join(", ")} ·{" "}
-                    {[d.enviado_email && "email", d.enviado_whatsapp && "whats"]
-                      .filter(Boolean)
-                      .join(" + ")}
-                    {d.enviado_por_email ? ` · ${d.enviado_por_email}` : ""}
-                  </span>
-                </div>
-              ))}
+            <div className="space-y-2 text-xs rounded-md border p-2 max-h-56 overflow-auto">
+              {history.data!.slice(0, 5).map((d) => {
+                const dd = d as typeof d & {
+                  recipient_email?: string | null;
+                  recipient_whatsapp?: string | null;
+                };
+                return (
+                  <div key={d.id} className="space-y-0.5">
+                    <div className="flex justify-between gap-2">
+                      <span className="font-medium">
+                        {new Date(d.enviado_em).toLocaleString("pt-BR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                      <span className="text-muted-foreground truncate">
+                        {(d.arquivos as string[]).join(", ")} ·{" "}
+                        {[d.enviado_email && "email", d.enviado_whatsapp && "whats"]
+                          .filter(Boolean)
+                          .join(" + ")}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground truncate">
+                      {dd.recipient_email && `→ ${dd.recipient_email}`}
+                      {dd.recipient_email && dd.recipient_whatsapp && " · "}
+                      {dd.recipient_whatsapp && `WA ${dd.recipient_whatsapp}`}
+                      {d.enviado_por_email ? ` · por ${d.enviado_por_email}` : ""}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
+
         )}
       </CardContent>
     </Card>
