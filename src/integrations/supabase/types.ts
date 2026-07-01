@@ -259,43 +259,67 @@ export type Database = {
         Row: {
           bio: string | null
           cidade: string | null
+          cpf: string | null
           created_at: string
+          email_comercial: string | null
+          email_royalties: string | null
           foto_perfil_path: string | null
           foto_perfil_url: string | null
           id: string
           instagram: string | null
           nome_artistico: string
+          nome_artistico_creditos: string | null
+          nome_civil: string | null
           slug: string
           spotify: string | null
           status: Database["public"]["Enums"]["producer_status"]
+          texto_creditos: string | null
+          texto_registro: string | null
+          texto_royalties: string | null
           updated_at: string
         }
         Insert: {
           bio?: string | null
           cidade?: string | null
+          cpf?: string | null
           created_at?: string
+          email_comercial?: string | null
+          email_royalties?: string | null
           foto_perfil_path?: string | null
           foto_perfil_url?: string | null
           id?: string
           instagram?: string | null
           nome_artistico: string
+          nome_artistico_creditos?: string | null
+          nome_civil?: string | null
           slug: string
           spotify?: string | null
           status?: Database["public"]["Enums"]["producer_status"]
+          texto_creditos?: string | null
+          texto_registro?: string | null
+          texto_royalties?: string | null
           updated_at?: string
         }
         Update: {
           bio?: string | null
           cidade?: string | null
+          cpf?: string | null
           created_at?: string
+          email_comercial?: string | null
+          email_royalties?: string | null
           foto_perfil_path?: string | null
           foto_perfil_url?: string | null
           id?: string
           instagram?: string | null
           nome_artistico?: string
+          nome_artistico_creditos?: string | null
+          nome_civil?: string | null
           slug?: string
           spotify?: string | null
           status?: Database["public"]["Enums"]["producer_status"]
+          texto_creditos?: string | null
+          texto_registro?: string | null
+          texto_royalties?: string | null
           updated_at?: string
         }
         Relationships: []
