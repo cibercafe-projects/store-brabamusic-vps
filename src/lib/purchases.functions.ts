@@ -110,7 +110,9 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
 
     const { data: beat, error: beatErr } = await supabaseAdmin
       .from("beats")
-      .select("id, nome, preco, status")
+      .select(
+        "id, nome, preco, status, produtora:producers(id, nome_artistico, nome_civil, nome_artistico_creditos, texto_creditos, texto_registro, texto_royalties)",
+      )
       .eq("id", data.beat_id)
       .maybeSingle();
     if (beatErr) {
@@ -120,6 +122,29 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
     if (!beat || beat.status !== "ativo") {
       throw new Error("Beat indisponível para compra.");
     }
+
+    const produtora = (beat as { produtora?: unknown }).produtora as
+      | {
+          id: string;
+          nome_artistico: string | null;
+          nome_civil: string | null;
+          nome_artistico_creditos: string | null;
+          texto_creditos: string | null;
+          texto_registro: string | null;
+          texto_royalties: string | null;
+        }
+      | null;
+
+    const licenseSnapshot = {
+      produtora_id: produtora?.id ?? null,
+      produtora_nome: produtora?.nome_artistico ?? null,
+      nome_civil: produtora?.nome_civil ?? null,
+      nome_artistico_creditos: produtora?.nome_artistico_creditos ?? null,
+      texto_creditos: produtora?.texto_creditos ?? null,
+      texto_registro: produtora?.texto_registro ?? null,
+      texto_royalties: produtora?.texto_royalties ?? null,
+      captured_at: new Date().toISOString(),
+    };
 
     const { data: inserted, error } = await supabaseAdmin
       .from("purchase_requests")
@@ -134,6 +159,10 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
         termos_aceitos: data.termos_aceitos,
         valor: beat.preco,
         status: "aguardando_pagamento",
+        license_accepted: true,
+        license_accepted_at: new Date().toISOString(),
+        license_version: data.license_version,
+        license_snapshot: licenseSnapshot,
       })
       .select("id, continuation_token")
       .single();
