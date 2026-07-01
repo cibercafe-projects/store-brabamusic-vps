@@ -1,63 +1,71 @@
-## Plano de hardening de segurança
+## Sprint 11A — Modelagem Jurídica das Produtoras
 
-### Diagnóstico
+Adicionar uma seção "Informações Jurídicas" no cadastro de produtoras, sem tocar em fluxo de compra, geração de documentos ou telas públicas.
 
-Rodei o scanner de segurança e o linter do banco, revisei todas as `server functions` (`src/lib/*.functions.ts`), políticas RLS e GRANTs. A postura é boa em geral (RLS ativo em todas as tabelas, nenhum GRANT para `anon`, todas as leituras públicas passam por server functions com validação Zod), mas há lacunas relevantes.
+### Escopo
 
-### Achados
+Somente:
+- Migração de banco (novos campos em `producers`)
+- Server functions de produtoras (validação e persistência)
+- Formulário admin de produtora (nova seção no Sheet)
 
-**Críticos / médios**
+Fora de escopo (explicitamente): telas de compra, geração de PDF/documentos, catálogo público, e-mails automáticos.
 
-1. **Upload anônimo abusável (`getReleaseUploadUrl`)** — emite signed URLs para `release-covers`, `release-audio` e `release-photos` sem autenticação, sem honeypot e sem rate-limit. Permite a um bot consumir storage/banda à vontade.
-2. **Formulários públicos sem anti-bot** — `createLead` e `createPurchaseRequest` não exigem `started_at`/honeypot (só `submitRelease` tem). Vetor de spam que injeta PII (nome, e-mail, telefone, instagram) nas tabelas `leads` e `purchase_requests`.
-3. **PII desnecessário em retorno público (`getPurchaseByToken`)** — devolve `email` completo. Basta uma versão mascarada (`f***@dominio.com`) para confirmar ao cliente que abriu o link correto.
-4. **SECURITY DEFINER expostos pelo PostgREST (linter WARN x2)** — `public.is_admin_active(uuid)` e `public.is_super_admin(uuid)` têm `EXECUTE` para `authenticated`, então qualquer usuário logado pode chamar via RPC e sondar se um `user_id` é admin. Vamos mover para um schema `private` (não exposto pela Data API) e ajustar as policies que os usam.
-5. **Proteção contra senhas vazadas (HIBP)** — não está ativada no Auth. Habilitar via `configure_auth`.
+### 1. Banco de dados
 
-**Boas práticas / verificações**
+Migração adicionando colunas em `public.producers` (todas nullable, sem default, para não quebrar produtoras existentes):
 
-6. `bootstrapFirstAdmin` é público mas só funciona enquanto não existir admin — manter, mas adicionar log de auditoria.
-7. Confirmar que CPF (`releases.cpf`) e `continuation_token` não são logados nem retornados fora do admin.
-8. Garantir que o e-mail enviado ao WhatsApp com `Link do lançamento: /admin/lancamentos/<id>` permanece exigindo login admin (já exige — sem mudança).
+```text
+nome_civil               text
+cpf                      text        -- armazenado só com dígitos
+nome_artistico_creditos  text
+email_comercial          text
+email_royalties          text
+texto_creditos           text
+texto_registro           text
+texto_royalties          text
+```
 
-### Mudanças a implementar
+Sem constraints UNIQUE — CPF pode ficar em branco em várias linhas. Sem alteração de RLS/GRANT (a tabela já é admin-only, políticas continuam valendo). Sem trigger novo.
 
-**Banco (uma migration)**
+### 2. Server functions (`src/lib/producers.functions.ts`)
 
-- Criar schema `private`. Mover `is_admin_active` e `is_super_admin` para `private.*`, `REVOKE ALL ... FROM PUBLIC, authenticated`, `GRANT EXECUTE TO postgres, service_role`.
-- Atualizar policies que referenciam essas funções para chamarem `private.is_admin_active(...)` / `private.is_super_admin(...)`:
-  - `app_settings`, `leads`, `purchase_deliveries`, `purchase_requests` (usam `is_admin_active`)
-  - `user_roles` (usa `is_super_admin`)
-- Manter `public.has_role` como está (já não tem grant para `authenticated`).
+Estender `producerInputSchema` (usado tanto em `createProducer` quanto no `.partial()` do `updateProducer`) com os novos campos:
 
-**Auth**
+- Strings livres com `.trim().max(...)` e transformação `"" → null`:
+  - `nome_civil` (max 160)
+  - `nome_artistico_creditos` (max 160)
+  - `texto_creditos`, `texto_registro`, `texto_royalties` (max 4000 cada)
+- `cpf`: aceita entrada com ou sem máscara; regex normaliza para 11 dígitos ou `null`; validação leve de formato (11 dígitos). Sem validação de dígito verificador nesta sprint.
+- `email_comercial`, `email_royalties`: `.email().max(255)` opcional, `"" → null`.
 
-- `supabase--configure_auth` → `password_hibp_enabled: true`.
+Persistir os campos no `insert` do `createProducer` e no `patch` do `updateProducer`. `listProducers` e `getProducer` já usam `select("*")`, então os campos passam automaticamente para o frontend.
 
-**Server functions**
+Nenhuma outra função (`beats`, `purchases`, `releases`) é alterada.
 
-- `src/lib/releases.functions.ts` (`getReleaseUploadUrl`): exigir `started_at` (≥4s) e honeypot `website` (igual a `submitRelease`); validar `contentType` vs `ext` já existe.
-- `src/lib/leads.functions.ts` (`createLead`): adicionar campos `started_at` + honeypot `website`, com mesma checagem mínima de 4s.
-- `src/lib/purchases.functions.ts` (`createPurchaseRequest`): mesmo padrão honeypot + `started_at`.
-- `src/lib/purchases.functions.ts` (`getPurchaseByToken`): mascarar `email` no retorno (`f***@dominio.com`).
+### 3. UI — `src/components/admin/producers/ProducerForm.tsx`
 
-**Frontend (acompanhar mudanças de schema das mutations)**
+Estender o schema Zod local do form com os mesmos campos (mesmas regras de validação e mensagens em pt-BR).
 
-- `src/routes/enviar-lancamento.tsx`: já envia `started_at`/`website`; só ajustar a chamada de upload para passar `started_at`/`website` (a `submitRelease` já passa).
-- `src/components/InterestForm.tsx` (lead) e `src/components/purchase/PurchaseDialog.tsx`: incluir hidden input honeypot `website` e `startedAt` (capturado no mount).
-- `src/routes/enviar-comprovante.$token.tsx` / consumidores de `getPurchaseByToken`: usar `email` já mascarado (campo continua string).
+Adicionar bloco visual **"Informações Jurídicas"** depois da seção de status, com título e descrição curta ("Usado para créditos, registro e royalties. Preencha quando disponível."):
 
-### Detalhes técnicos
+- Grid 2 colunas (md+): Nome Civil | CPF (com máscara de exibição `000.000.000-00`, mas envio só dos dígitos)
+- Nome Artístico para Créditos (linha única)
+- Grid 2 colunas: Email Comercial | Email Royalties
+- Textarea (rows=3): Texto de Créditos
+- Textarea (rows=3): Texto de Registro
+- Textarea (rows=3): Texto de Royalties
 
-- Não vou criar GRANTs novos para `anon` — todo acesso público continua via service_role em server functions (intencional).
-- O schema `private` não é exposto pelo PostgREST porque não está em `db.schemas`; policies podem referenciá-lo (RLS resolve sob `SECURITY DEFINER` independente do `search_path` do cliente).
-- Os honeypots usam o mesmo padrão já validado em `submitRelease` (`website: z.string().max(0)` + `started_at: z.number().int().positive()` com `MIN_SUBMIT_SECONDS = 4`).
-- Para o e-mail mascarado: manter `email` original na tabela; mascarar somente no DTO de `getPurchaseByToken`.
-- Após aplicar, re-rodo `security--run_security_scan` e `supabase--linter` para confirmar que os 2 WARNs desaparecem.
+`defaultValues` carregam do `initial` (`ProducerFormInitial` ganha os novos campos opcionais). Payload de submit inclui os novos campos, com strings vazias enviadas como `""` (o schema server transforma em `null`).
 
-### O que NÃO vou mexer
+### 4. Tipagem
 
-- Estrutura de RLS das tabelas (já correta).
-- `src/integrations/supabase/*` (arquivos gerados).
-- Buckets de Storage e suas políticas (todos privados, acesso via signed URL — ok).
-- Fluxos funcionais (login, compra, lançamento) — só endurecimento.
+`src/integrations/supabase/types.ts` é auto-gerado — será atualizado após a migração ser aprovada. Depois disso, ajustar `ProducerFormInitial` e qualquer cast local necessário.
+
+### 5. Teste de aceitação
+
+1. Abrir `/admin/produtoras`
+2. Criar "Ayla" com todos os campos jurídicos preenchidos → salvar
+3. Criar "Anônima Beats" preenchendo só o mínimo (nome artístico) + alguns campos jurídicos vazios → salvar
+4. Reabrir cada uma em modo edição → todos os campos vêm preenchidos corretamente
+5. Nenhuma tela de compra, catálogo público ou geração de documento muda de comportamento

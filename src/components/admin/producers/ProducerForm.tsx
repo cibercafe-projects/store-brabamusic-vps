@@ -23,6 +23,20 @@ import { createProducer, updateProducer } from "@/lib/producers.functions";
 import { slugify } from "@/lib/slug";
 import { ProducerAvatarUploader } from "./ProducerAvatarUploader";
 
+function formatCpf(v: string | null | undefined): string {
+  if (!v) return "";
+  const d = v.replace(/\D+/g, "").slice(0, 11);
+  const p1 = d.slice(0, 3);
+  const p2 = d.slice(3, 6);
+  const p3 = d.slice(6, 9);
+  const p4 = d.slice(9, 11);
+  let out = p1;
+  if (p2) out += "." + p2;
+  if (p3) out += "." + p3;
+  if (p4) out += "-" + p4;
+  return out;
+}
+
 const handle = z
   .string()
   .trim()
@@ -30,6 +44,28 @@ const handle = z
   .optional()
   .or(z.literal(""))
   .refine((v) => !v || /^@?[A-Za-z0-9._-]{1,40}$/.test(v), "Use apenas letras, números, . _ -");
+
+const optStr = (max: number) =>
+  z.string().trim().max(max).optional().or(z.literal(""));
+
+const optEmail = z
+  .string()
+  .trim()
+  .max(255)
+  .optional()
+  .or(z.literal(""))
+  .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Email inválido");
+
+const optCpf = z
+  .string()
+  .trim()
+  .max(20)
+  .optional()
+  .or(z.literal(""))
+  .refine((v) => {
+    if (!v) return true;
+    return v.replace(/\D+/g, "").length === 11;
+  }, "CPF deve ter 11 dígitos");
 
 const schema = z.object({
   nome_artistico: z.string().trim().min(1, "Obrigatório").max(120),
@@ -44,6 +80,14 @@ const schema = z.object({
   cidade: z.string().trim().max(80).optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
   status: z.enum(["ativa", "inativa"]),
+  nome_civil: optStr(160),
+  cpf: optCpf,
+  nome_artistico_creditos: optStr(160),
+  email_comercial: optEmail,
+  email_royalties: optEmail,
+  texto_creditos: optStr(4000),
+  texto_registro: optStr(4000),
+  texto_royalties: optStr(4000),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -59,6 +103,14 @@ export type ProducerFormInitial = {
   status?: "ativa" | "inativa";
   foto_perfil_path?: string | null;
   foto_perfil_signed_url?: string | null;
+  nome_civil?: string | null;
+  cpf?: string | null;
+  nome_artistico_creditos?: string | null;
+  email_comercial?: string | null;
+  email_royalties?: string | null;
+  texto_creditos?: string | null;
+  texto_registro?: string | null;
+  texto_royalties?: string | null;
 };
 
 type Props = {
@@ -87,6 +139,14 @@ export function ProducerForm({ initial, onDone }: Props) {
       cidade: initial?.cidade ?? "",
       bio: initial?.bio ?? "",
       status: initial?.status ?? "ativa",
+      nome_civil: initial?.nome_civil ?? "",
+      cpf: formatCpf(initial?.cpf ?? ""),
+      nome_artistico_creditos: initial?.nome_artistico_creditos ?? "",
+      email_comercial: initial?.email_comercial ?? "",
+      email_royalties: initial?.email_royalties ?? "",
+      texto_creditos: initial?.texto_creditos ?? "",
+      texto_registro: initial?.texto_registro ?? "",
+      texto_royalties: initial?.texto_royalties ?? "",
     },
   });
 
@@ -111,6 +171,14 @@ export function ProducerForm({ initial, onDone }: Props) {
         bio: values.bio || "",
         status: values.status,
         foto_perfil_path: avatarPath,
+        nome_civil: values.nome_civil || "",
+        cpf: values.cpf || "",
+        nome_artistico_creditos: values.nome_artistico_creditos || "",
+        email_comercial: values.email_comercial || "",
+        email_royalties: values.email_royalties || "",
+        texto_creditos: values.texto_creditos || "",
+        texto_registro: values.texto_registro || "",
+        texto_royalties: values.texto_royalties || "",
       };
       if (isEdit && initial?.id) {
         return update({ data: { id: initial.id, ...payload } });
@@ -244,6 +312,137 @@ export function ProducerForm({ initial, onDone }: Props) {
             </FormItem>
           )}
         />
+
+        <div className="space-y-4 rounded-md border p-4">
+          <div>
+            <h3 className="text-sm font-semibold">Informações Jurídicas</h3>
+            <p className="text-xs text-muted-foreground">
+              Usado para créditos, registro e royalties. Preencha quando disponível.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="nome_civil"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome civil</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Nome completo" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cpf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>CPF</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      inputMode="numeric"
+                      placeholder="000.000.000-00"
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(formatCpf(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="nome_artistico_creditos"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome artístico para créditos</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Como deve aparecer nos créditos" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="email_comercial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email comercial</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} placeholder="comercial@exemplo.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email_royalties"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email de royalties</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} placeholder="royalties@exemplo.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="texto_creditos"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Texto de créditos</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} placeholder="Texto padrão de créditos..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="texto_registro"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Texto de registro</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} placeholder="Texto padrão de registro..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="texto_royalties"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Texto de royalties</FormLabel>
+                <FormControl>
+                  <Textarea rows={3} {...field} placeholder="Texto padrão de royalties..." />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onDone}>

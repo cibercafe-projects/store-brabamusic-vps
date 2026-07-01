@@ -18,6 +18,33 @@ const handleSchema = z
     return "@" + cleaned;
   });
 
+const optionalText = (max: number) =>
+  z.string().trim().max(max).optional().nullable().transform((v) => (v ? v : null));
+
+const optionalEmail = z
+  .string()
+  .trim()
+  .max(255)
+  .optional()
+  .nullable()
+  .or(z.literal(""))
+  .transform((v) => (v ? v : null))
+  .refine((v) => v === null || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Email inválido");
+
+const optionalCpf = z
+  .string()
+  .trim()
+  .max(20)
+  .optional()
+  .nullable()
+  .or(z.literal(""))
+  .transform((v) => {
+    if (!v) return null;
+    const digits = v.replace(/\D+/g, "");
+    return digits || null;
+  })
+  .refine((v) => v === null || /^\d{11}$/.test(v), "CPF deve ter 11 dígitos");
+
 const producerInputSchema = z.object({
   nome_artistico: z.string().trim().min(1).max(120),
   slug: z
@@ -31,7 +58,16 @@ const producerInputSchema = z.object({
   bio: z.string().trim().max(2000).optional().transform((v) => v || null),
   status: z.enum(["ativa", "inativa"]).default("ativa"),
   foto_perfil_path: z.string().max(300).optional().nullable(),
+  nome_civil: optionalText(160),
+  cpf: optionalCpf,
+  nome_artistico_creditos: optionalText(160),
+  email_comercial: optionalEmail,
+  email_royalties: optionalEmail,
+  texto_creditos: optionalText(4000),
+  texto_registro: optionalText(4000),
+  texto_royalties: optionalText(4000),
 });
+
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -139,6 +175,14 @@ export const createProducer = createServerFn({ method: "POST" })
         bio: data.bio,
         status: data.status,
         foto_perfil_path: data.foto_perfil_path ?? null,
+        nome_civil: data.nome_civil,
+        cpf: data.cpf,
+        nome_artistico_creditos: data.nome_artistico_creditos,
+        email_comercial: data.email_comercial,
+        email_royalties: data.email_royalties,
+        texto_creditos: data.texto_creditos,
+        texto_registro: data.texto_registro,
+        texto_royalties: data.texto_royalties,
       })
       .select("*")
       .single();
