@@ -1,71 +1,34 @@
-## Sprint 11A — Modelagem Jurídica das Produtoras
+## Sprint 11A — Situação atual e entrega restante
 
-Adicionar uma seção "Informações Jurídicas" no cadastro de produtoras, sem tocar em fluxo de compra, geração de documentos ou telas públicas.
+A modelagem e o CRUD desta sprint **já foram implementados** na iteração anterior. Verificação rápida do estado atual:
 
-### Escopo
+- Migração aplicada em `public.producers` com as 8 colunas: `nome_civil`, `cpf`, `nome_artistico_creditos`, `email_comercial`, `email_royalties`, `texto_creditos`, `texto_registro`, `texto_royalties` (todas `text`, nullable, sem default).
+- `src/lib/producers.functions.ts` — schema Zod expandido (CPF normalizado para 11 dígitos, emails validados, textos até 4000 chars, "" → null). `createProducer` e `updateProducer` persistem os novos campos.
+- `src/components/admin/producers/ProducerForm.tsx` — nova seção "Informações Jurídicas" com todos os campos, máscara `000.000.000-00` no CPF e helper `formatCpf`.
+- `src/routes/admin/_protected/produtoras.tsx` — botão Editar hidrata `ProducerFormInitial` com os novos campos.
+- Nada de fluxo de compra, PDF, entregas ou documentos foi tocado.
+- `tsgo --noEmit` passou sem erros.
 
-Somente:
-- Migração de banco (novos campos em `producers`)
-- Server functions de produtoras (validação e persistência)
-- Formulário admin de produtora (nova seção no Sheet)
+### O que falta nesta sprint
 
-Fora de escopo (explicitamente): telas de compra, geração de PDF/documentos, catálogo público, e-mails automáticos.
+Apenas a entrega documental: gerar o **relatório da sprint**.
 
-### 1. Banco de dados
+### Plano
 
-Migração adicionando colunas em `public.producers` (todas nullable, sem default, para não quebrar produtoras existentes):
+Criar `SPRINT_11A_REPORT.md` na raiz (mesma convenção dos relatórios anteriores — `SPRINT_10_REPORT.md`, etc.) contendo:
 
-```text
-nome_civil               text
-cpf                      text        -- armazenado só com dígitos
-nome_artistico_creditos  text
-email_comercial          text
-email_royalties          text
-texto_creditos           text
-texto_registro           text
-texto_royalties          text
-```
+1. **Objetivo** — expandir cadastro de produtoras com seção jurídica, base para o licenciamento automático futuro.
+2. **Entregas**
+   - Banco: 8 colunas novas em `producers`, todas opcionais, sem alteração de RLS/GRANT (tabela já é admin-only).
+   - Server functions: validação Zod dos novos campos, CPF normalizado, emails validados, persistência em create/update.
+   - UI: nova seção "Informações Jurídicas" no `Sheet` de produtora, com máscara de CPF e textareas para os textos padrão.
+   - Página `/admin/produtoras`: hidratação dos campos em modo edição.
+3. **Fora do escopo (mantido intacto)**: compras, PDFs, entregas, documentos, catálogo público, emails automáticos.
+4. **Testes de aceitação** — criar Ayla (todos os campos), criar Anônima Beats (mínimo + parciais), reabrir em modo edição e confirmar persistência.
+5. **Dívidas / notas**
+   - CPF só valida quantidade de dígitos; validação de dígito verificador fica para futura sprint se necessário.
+   - Sem UNIQUE em CPF (produtoras podem ficar sem preencher).
+   - Campos ainda não expostos em nenhuma tela pública nem em geração de documentos — próxima sprint (11B) deverá consumir esses dados no licenciamento automático.
+6. **Próximos passos sugeridos (Sprint 11B)** — usar os textos e dados jurídicos na geração dinâmica do PDF de licença e substituir os campos hoje hardcoded.
 
-Sem constraints UNIQUE — CPF pode ficar em branco em várias linhas. Sem alteração de RLS/GRANT (a tabela já é admin-only, políticas continuam valendo). Sem trigger novo.
-
-### 2. Server functions (`src/lib/producers.functions.ts`)
-
-Estender `producerInputSchema` (usado tanto em `createProducer` quanto no `.partial()` do `updateProducer`) com os novos campos:
-
-- Strings livres com `.trim().max(...)` e transformação `"" → null`:
-  - `nome_civil` (max 160)
-  - `nome_artistico_creditos` (max 160)
-  - `texto_creditos`, `texto_registro`, `texto_royalties` (max 4000 cada)
-- `cpf`: aceita entrada com ou sem máscara; regex normaliza para 11 dígitos ou `null`; validação leve de formato (11 dígitos). Sem validação de dígito verificador nesta sprint.
-- `email_comercial`, `email_royalties`: `.email().max(255)` opcional, `"" → null`.
-
-Persistir os campos no `insert` do `createProducer` e no `patch` do `updateProducer`. `listProducers` e `getProducer` já usam `select("*")`, então os campos passam automaticamente para o frontend.
-
-Nenhuma outra função (`beats`, `purchases`, `releases`) é alterada.
-
-### 3. UI — `src/components/admin/producers/ProducerForm.tsx`
-
-Estender o schema Zod local do form com os mesmos campos (mesmas regras de validação e mensagens em pt-BR).
-
-Adicionar bloco visual **"Informações Jurídicas"** depois da seção de status, com título e descrição curta ("Usado para créditos, registro e royalties. Preencha quando disponível."):
-
-- Grid 2 colunas (md+): Nome Civil | CPF (com máscara de exibição `000.000.000-00`, mas envio só dos dígitos)
-- Nome Artístico para Créditos (linha única)
-- Grid 2 colunas: Email Comercial | Email Royalties
-- Textarea (rows=3): Texto de Créditos
-- Textarea (rows=3): Texto de Registro
-- Textarea (rows=3): Texto de Royalties
-
-`defaultValues` carregam do `initial` (`ProducerFormInitial` ganha os novos campos opcionais). Payload de submit inclui os novos campos, com strings vazias enviadas como `""` (o schema server transforma em `null`).
-
-### 4. Tipagem
-
-`src/integrations/supabase/types.ts` é auto-gerado — será atualizado após a migração ser aprovada. Depois disso, ajustar `ProducerFormInitial` e qualquer cast local necessário.
-
-### 5. Teste de aceitação
-
-1. Abrir `/admin/produtoras`
-2. Criar "Ayla" com todos os campos jurídicos preenchidos → salvar
-3. Criar "Anônima Beats" preenchendo só o mínimo (nome artístico) + alguns campos jurídicos vazios → salvar
-4. Reabrir cada uma em modo edição → todos os campos vêm preenchidos corretamente
-5. Nenhuma tela de compra, catálogo público ou geração de documento muda de comportamento
+Nenhuma outra alteração de código será feita nesta sprint.
