@@ -53,7 +53,7 @@ export const deliverPurchase = createServerFn({ method: "POST" })
     const { data: purchase, error: pErr } = await admin
       .from("purchase_requests")
       .select(
-        "id, status, nome_cliente, email, whatsapp, beat:beats(id, nome, wav_path, stems_path, license_path)",
+        "id, status, nome_cliente, email, whatsapp, continuation_token, beat:beats(id, nome, wav_path, stems_path, license_path)",
       )
       .eq("id", data.purchase_id)
       .maybeSingle();
@@ -77,9 +77,21 @@ export const deliverPurchase = createServerFn({ method: "POST" })
     } | null;
     if (!beat) throw new Error("Beat associado não encontrado.");
 
-    // Gera signed URLs (7 dias) para cada arquivo solicitado.
+    // Sprint 11D: sempre incluir a licença na entrega.
+    const arquivos = Array.from(new Set<(typeof FILE_KINDS)[number]>([...data.arquivos, "license"]));
+
+    // Gera links (7 dias para arquivos privados; link público para licença HTML quando não há PDF).
     const links: FileLink[] = [];
-    for (const kind of data.arquivos) {
+    for (const kind of arquivos) {
+      if (kind === "license" && !beat.license_path) {
+        // Fallback: documento HTML público via token.
+        links.push({
+          kind,
+          label: "Licença (documento online)",
+          url: `${PUBLIC_SITE_URL}/licenca/${purchase.continuation_token}`,
+        });
+        continue;
+      }
       const path = beat[`${kind}_path` as const];
       if (!path) {
         throw new Error(`Arquivo ${LABEL[kind]} não cadastrado no beat.`);
@@ -92,8 +104,13 @@ export const deliverPurchase = createServerFn({ method: "POST" })
         console.error("[deliveries.sign]", error);
         throw new Error(`Erro ao gerar link de ${LABEL[kind]}.`);
       }
-      links.push({ kind, label: LABEL[kind], url: signed.signedUrl });
+      links.push({
+        kind,
+        label: kind === "license" ? "Licença (PDF)" : LABEL[kind],
+        url: signed.signedUrl,
+      });
     }
+
 
     // Email: envia transacional só quando email_mode = 'auto'.
     let emailSent = false;
