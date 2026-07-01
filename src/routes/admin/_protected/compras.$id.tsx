@@ -428,14 +428,18 @@ function DeliveryCard({
   const deliverFn = useServerFn(deliverPurchase);
   const listFn = useServerFn(listDeliveries);
 
-  const available = (["wav", "stems", "license"] as const).filter(
+  // WAV/STEMS dependem de arquivos cadastrados; a licença é sempre enviada
+  // (PDF se existir, senão link público HTML — Sprint 11D).
+  const available = (["wav", "stems"] as const).filter(
     (k) => !!beat?.[`${k}_path` as const],
   );
+  const arquivosParaEnviar = [...available, "license" as const];
 
   const history = useQuery({
     queryKey: ["admin", "deliveries", purchase.id],
     queryFn: () => listFn({ data: { purchase_id: purchase.id } }),
   });
+
 
   const [busyChannel, setBusyChannel] = useState<"whatsapp" | "email" | null>(null);
 
