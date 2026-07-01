@@ -335,6 +335,8 @@ export type Database = {
           id: string
           observacao: string | null
           purchase_id: string
+          recipient_email: string | null
+          recipient_whatsapp: string | null
           tipo: string
         }
         Insert: {
@@ -347,6 +349,8 @@ export type Database = {
           id?: string
           observacao?: string | null
           purchase_id: string
+          recipient_email?: string | null
+          recipient_whatsapp?: string | null
           tipo?: string
         }
         Update: {
@@ -359,6 +363,8 @@ export type Database = {
           id?: string
           observacao?: string | null
           purchase_id?: string
+          recipient_email?: string | null
+          recipient_whatsapp?: string | null
           tipo?: string
         }
         Relationships: [
