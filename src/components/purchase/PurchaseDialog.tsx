@@ -74,12 +74,20 @@ export function PurchaseDialog({
 
   const loadSettings = useServerFn(getPurchaseSettings);
   const createFn = useServerFn(createPurchaseRequest);
+  const loadLicense = useServerFn(getBeatLicenseInfo);
 
   const settings = useQuery({
     queryKey: ["purchase-settings"],
     queryFn: () => loadSettings(),
     staleTime: 60_000,
     enabled: open,
+  });
+
+  const license = useQuery({
+    queryKey: ["beat-license", beatId],
+    queryFn: () => loadLicense({ data: { beat_id: beatId } }),
+    staleTime: 60_000,
+    enabled: open && !!beatId,
   });
 
   useEffect(() => {
@@ -92,6 +100,7 @@ export function PurchaseDialog({
       setWhatsapp("");
       setInstagram("");
       setAceito(false);
+      setLicenseAccepted(false);
       setSubmitting(false);
       setToken(null);
     }
@@ -111,6 +120,7 @@ export function PurchaseDialog({
     /.+@.+\..+/.test(email) &&
     digitsOnly(whatsapp).length >= 8 &&
     aceito &&
+    licenseAccepted &&
     !submitting;
 
   async function handleSubmit() {
@@ -127,6 +137,8 @@ export function PurchaseDialog({
           instagram: instagram.trim() || undefined,
           forma_pagamento: method,
           termos_aceitos: true,
+          license_accepted: true,
+          license_version: CURRENT_LICENSE_VERSION,
           website,
           started_at: startedAt,
         },
@@ -141,6 +153,7 @@ export function PurchaseDialog({
       setSubmitting(false);
     }
   }
+
 
   function copy(value: string, label: string) {
     if (!value) return;
