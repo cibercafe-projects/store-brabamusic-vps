@@ -22,7 +22,7 @@ type Props = {
     valor: number | string | null;
     continuation_token: string;
     forma_pagamento: string;
-    beat: { nome?: string | null } | null;
+    beat: { id?: string | null; nome?: string | null } | null;
   };
 };
 
