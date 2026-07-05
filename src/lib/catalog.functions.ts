@@ -185,6 +185,12 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
       .select("id, slug, nome_artistico, cidade, bio, instagram, spotify, foto_perfil_path, status")
       .eq("id", row.produtora_id)
       .maybeSingle();
+    const typesMap = await getBeatTypesMap(admin, [row.beat_type_id]);
+    const legacyTipo = (row.tipo ?? "fechado") as "fechado" | "aberto";
+    const { tipo_nome, inclui_stems } = deriveTipoNome(
+      row.beat_type_id ? typesMap.get(row.beat_type_id) : undefined,
+      legacyTipo,
+    );
 
     return {
       beat: {
@@ -196,7 +202,9 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
         tom: row.tom,
         mood: row.mood,
         preco: row.preco != null ? Number(row.preco) : null,
-        tipo: (row.tipo ?? "fechado") as "fechado" | "aberto",
+        tipo: legacyTipo,
+        tipo_nome,
+        inclui_stems,
         descricao: row.descricao,
         produtora_id: row.produtora_id,
         produtora_nome: prod?.nome_artistico ?? "—",
