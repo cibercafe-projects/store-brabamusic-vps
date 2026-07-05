@@ -184,6 +184,8 @@ export function BeatForm({ initial, onDone }: Props) {
         mood: values.mood || "",
         preco: values.preco ? Number(String(values.preco).replace(",", ".")) : null,
         tipo: values.tipo,
+        beat_type_id: values.beat_type_id || null,
+
         descricao: values.descricao || "",
         status: values.status,
         capa_url: "",
