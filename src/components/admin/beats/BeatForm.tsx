@@ -111,6 +111,7 @@ export function BeatForm({ initial, onDone }: Props) {
   const create = useServerFn(createBeat);
   const update = useServerFn(updateBeat);
   const listProducers = useServerFn(listProducersForSelect);
+  const listTypes = useServerFn(listBeatTypesForBeatForm);
   const isEdit = !!initial?.id;
 
   const [coverPreview, setCoverPreview] = useState<string | null>(
@@ -125,6 +126,13 @@ export function BeatForm({ initial, onDone }: Props) {
     queryFn: () => listProducers(),
     staleTime: 30_000,
   });
+
+  const beatTypesQuery = useQuery({
+    queryKey: ["admin", "beat-types", "form-select"],
+    queryFn: () => listTypes(),
+    staleTime: 30_000,
+  });
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
