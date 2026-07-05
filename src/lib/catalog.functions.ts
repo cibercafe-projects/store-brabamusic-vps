@@ -22,6 +22,33 @@ async function sign(
   return data.signedUrl;
 }
 
+type BeatTypeInfo = { nome: string; inclui_stems: boolean };
+async function getBeatTypesMap(
+  admin: Awaited<ReturnType<typeof getAdmin>>,
+  ids: (string | null | undefined)[],
+): Promise<Map<string, BeatTypeInfo>> {
+  const clean = Array.from(new Set(ids.filter((x): x is string => !!x)));
+  const map = new Map<string, BeatTypeInfo>();
+  if (!clean.length) return map;
+  const { data } = await admin
+    .from("beat_types")
+    .select("id, nome, inclui_stems")
+    .in("id", clean);
+  data?.forEach((t) => map.set(t.id, { nome: t.nome, inclui_stems: !!t.inclui_stems }));
+  return map;
+}
+
+function deriveTipoNome(
+  bt: BeatTypeInfo | undefined,
+  legacy: "aberto" | "fechado",
+): { tipo_nome: string; inclui_stems: boolean } {
+  if (bt) return { tipo_nome: bt.nome, inclui_stems: bt.inclui_stems };
+  return {
+    tipo_nome: legacy === "aberto" ? "Beat Aberto" : "Beat Fechado",
+    inclui_stems: legacy === "aberto",
+  };
+}
+
 const escapeIlike = (s: string) => s.replace(/[%_,()]/g, " ").trim();
 
 const listInput = z
@@ -58,7 +85,7 @@ export const listPublicBeats = createServerFn({ method: "POST" })
     let q = admin
       .from("beats")
       .select(
-        "id,slug,nome,genero,bpm,tom,mood,preco,tipo,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
+        "id,slug,nome,genero,bpm,tom,mood,preco,tipo,beat_type_id,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
         { count: "exact" },
       )
       .eq("status", "ativo")
@@ -99,29 +126,40 @@ export const listPublicBeats = createServerFn({ method: "POST" })
       ps?.forEach((p) => prodMap.set(p.id, { nome_artistico: p.nome_artistico, slug: p.slug }));
     }
 
+    const typesMap = await getBeatTypesMap(admin, (rows ?? []).map((r) => r.beat_type_id));
+
     const enriched = await Promise.all(
-      (rows ?? []).map(async (r) => ({
-        id: r.id,
-        slug: r.slug,
-        nome: r.nome,
-        genero: r.genero,
-        bpm: r.bpm,
-        tom: r.tom,
-        mood: r.mood,
-        preco: r.preco != null ? Number(r.preco) : null,
-        tipo: (r.tipo ?? "fechado") as "fechado" | "aberto",
-        descricao: r.descricao,
-        produtora_id: r.produtora_id,
-        produtora_nome: prodMap.get(r.produtora_id)?.nome_artistico ?? "—",
-        produtora_slug: prodMap.get(r.produtora_id)?.slug ?? "",
-        capa_url: r.capa_path
-          ? await sign(admin, COVER_BUCKET, r.capa_path)
-          : (r.capa_url ?? null),
-        preview_url: r.preview_path
-          ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
-          : (r.preview_url ?? null),
-        plays_count: r.plays_count ?? 0,
-      })),
+      (rows ?? []).map(async (r) => {
+        const legacy = (r.tipo ?? "fechado") as "fechado" | "aberto";
+        const { tipo_nome, inclui_stems } = deriveTipoNome(
+          r.beat_type_id ? typesMap.get(r.beat_type_id) : undefined,
+          legacy,
+        );
+        return {
+          id: r.id,
+          slug: r.slug,
+          nome: r.nome,
+          genero: r.genero,
+          bpm: r.bpm,
+          tom: r.tom,
+          mood: r.mood,
+          preco: r.preco != null ? Number(r.preco) : null,
+          tipo: legacy,
+          tipo_nome,
+          inclui_stems,
+          descricao: r.descricao,
+          produtora_id: r.produtora_id,
+          produtora_nome: prodMap.get(r.produtora_id)?.nome_artistico ?? "—",
+          produtora_slug: prodMap.get(r.produtora_id)?.slug ?? "",
+          capa_url: r.capa_path
+            ? await sign(admin, COVER_BUCKET, r.capa_path)
+            : (r.capa_url ?? null),
+          preview_url: r.preview_path
+            ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
+            : (r.preview_url ?? null),
+          plays_count: r.plays_count ?? 0,
+        };
+      }),
     );
 
     return { rows: enriched, total: count ?? 0 };
@@ -147,6 +185,12 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
       .select("id, slug, nome_artistico, cidade, bio, instagram, spotify, foto_perfil_path, status")
       .eq("id", row.produtora_id)
       .maybeSingle();
+    const typesMap = await getBeatTypesMap(admin, [row.beat_type_id]);
+    const legacyTipo = (row.tipo ?? "fechado") as "fechado" | "aberto";
+    const { tipo_nome, inclui_stems } = deriveTipoNome(
+      row.beat_type_id ? typesMap.get(row.beat_type_id) : undefined,
+      legacyTipo,
+    );
 
     return {
       beat: {
@@ -158,7 +202,9 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
         tom: row.tom,
         mood: row.mood,
         preco: row.preco != null ? Number(row.preco) : null,
-        tipo: (row.tipo ?? "fechado") as "fechado" | "aberto",
+        tipo: legacyTipo,
+        tipo_nome,
+        inclui_stems,
         descricao: row.descricao,
         produtora_id: row.produtora_id,
         produtora_nome: prod?.nome_artistico ?? "—",
@@ -233,35 +279,46 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
     const { data: beats } = await admin
       .from("beats")
       .select(
-        "id,slug,nome,genero,bpm,tom,mood,preco,tipo,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
+        "id,slug,nome,genero,bpm,tom,mood,preco,tipo,beat_type_id,descricao,capa_url,capa_path,preview_url,preview_path,produtora_id,created_at,plays_count",
       )
       .eq("produtora_id", prod.id)
       .eq("status", "ativo")
       .order("created_at", { ascending: false });
 
+    const typesMap = await getBeatTypesMap(admin, (beats ?? []).map((r) => r.beat_type_id));
+
     const enrichedBeats = await Promise.all(
-      (beats ?? []).map(async (r) => ({
-        id: r.id,
-        slug: r.slug,
-        nome: r.nome,
-        genero: r.genero,
-        bpm: r.bpm,
-        tom: r.tom,
-        mood: r.mood,
-        preco: r.preco != null ? Number(r.preco) : null,
-        tipo: (r.tipo ?? "fechado") as "fechado" | "aberto",
-        descricao: r.descricao,
-        produtora_id: r.produtora_id,
-        produtora_nome: prod.nome_artistico,
-        produtora_slug: prod.slug,
-        capa_url: r.capa_path
-          ? await sign(admin, COVER_BUCKET, r.capa_path)
-          : (r.capa_url ?? null),
-        preview_url: r.preview_path
-          ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
-          : (r.preview_url ?? null),
-        plays_count: r.plays_count ?? 0,
-      })),
+      (beats ?? []).map(async (r) => {
+        const legacy = (r.tipo ?? "fechado") as "fechado" | "aberto";
+        const { tipo_nome, inclui_stems } = deriveTipoNome(
+          r.beat_type_id ? typesMap.get(r.beat_type_id) : undefined,
+          legacy,
+        );
+        return {
+          id: r.id,
+          slug: r.slug,
+          nome: r.nome,
+          genero: r.genero,
+          bpm: r.bpm,
+          tom: r.tom,
+          mood: r.mood,
+          preco: r.preco != null ? Number(r.preco) : null,
+          tipo: legacy,
+          tipo_nome,
+          inclui_stems,
+          descricao: r.descricao,
+          produtora_id: r.produtora_id,
+          produtora_nome: prod.nome_artistico,
+          produtora_slug: prod.slug,
+          capa_url: r.capa_path
+            ? await sign(admin, COVER_BUCKET, r.capa_path)
+            : (r.capa_url ?? null),
+          preview_url: r.preview_path
+            ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
+            : (r.preview_url ?? null),
+          plays_count: r.plays_count ?? 0,
+        };
+      }),
     );
 
     return {

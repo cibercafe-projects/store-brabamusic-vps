@@ -8,6 +8,8 @@ export type PublicBeat = {
   mood: string | null;
   preco: number | null;
   tipo: "fechado" | "aberto";
+  tipo_nome: string;
+  inclui_stems: boolean;
   descricao: string | null;
   produtora_id: string;
   produtora_nome: string;
