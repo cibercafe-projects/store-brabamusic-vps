@@ -39,9 +39,10 @@ export function ResendInstructionsCard({ purchase }: Props) {
   const listFn = useServerFn(listResendInstructions);
   const settingsFn = useServerFn(getPurchaseSettings);
 
+  const beatId = purchase.beat?.id ?? undefined;
   const settings = useQuery({
-    queryKey: ["purchase-settings"],
-    queryFn: () => settingsFn(),
+    queryKey: ["purchase-settings", beatId ?? "global"],
+    queryFn: () => settingsFn(beatId ? { data: { beat_id: beatId } } : undefined),
     staleTime: 60_000,
   });
 
