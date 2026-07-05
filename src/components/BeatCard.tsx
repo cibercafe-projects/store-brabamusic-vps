@@ -55,7 +55,7 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
             </span>
           )}
           <span className="rounded-full bg-accent/80 backdrop-blur px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent-foreground font-semibold">
-            {beat.tipo === "aberto" ? "Aberto" : "Fechado"}
+            {beat.tipo_nome}
           </span>
         </div>
         <span
