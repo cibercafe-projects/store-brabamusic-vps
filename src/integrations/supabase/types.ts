@@ -32,6 +32,48 @@ export type Database = {
         }
         Relationships: []
       }
+      beat_types: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string
+          id: string
+          inclui_stems: boolean
+          link_pagamento: string
+          nome: string
+          ordem: number
+          slug: string
+          updated_at: string
+          valor_padrao: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          inclui_stems?: boolean
+          link_pagamento?: string
+          nome: string
+          ordem?: number
+          slug: string
+          updated_at?: string
+          valor_padrao?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string
+          id?: string
+          inclui_stems?: boolean
+          link_pagamento?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+          updated_at?: string
+          valor_padrao?: number
+        }
+        Relationships: []
+      }
       beats: {
         Row: {
           bpm: number | null
