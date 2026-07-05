@@ -82,8 +82,7 @@ const schema = z.object({
   ativo: z.boolean(),
   ordem: z
     .string()
-    .refine((v) => v === "" || Number.isInteger(Number(v)), "Número inteiro")
-    .default("0"),
+    .refine((v) => v === "" || Number.isInteger(Number(v)), "Número inteiro"),
 });
 
 type FormValues = z.infer<typeof schema>;
