@@ -77,10 +77,10 @@ export function PurchaseDialog({
   const loadLicense = useServerFn(getBeatLicenseInfo);
 
   const settings = useQuery({
-    queryKey: ["purchase-settings"],
-    queryFn: () => loadSettings(),
+    queryKey: ["purchase-settings", beatId],
+    queryFn: () => loadSettings({ data: { beat_id: beatId } }),
     staleTime: 60_000,
-    enabled: open,
+    enabled: open && !!beatId,
   });
 
   const license = useQuery({
