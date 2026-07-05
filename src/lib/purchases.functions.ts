@@ -667,19 +667,15 @@ export const logResendInstructions = createServerFn({ method: "POST" })
       const { data: row } = await admin
         .from("purchase_requests")
         .select(
-          "id, email, nome_cliente, valor, forma_pagamento, continuation_token, beat:beats(nome)",
+          "id, email, nome_cliente, valor, forma_pagamento, continuation_token, beat_id, beat:beats(nome)",
         )
         .eq("id", data.id)
         .maybeSingle();
       if (row?.email) {
-        const { data: settingsRows } = await admin
-          .from("app_settings")
-          .select("key, value")
-          .in("key", ["pix_key", "payment_link"]);
-        const map: Record<string, string> = {};
-        (settingsRows ?? []).forEach((r) => {
-          map[r.key] = r.value ?? "";
-        });
+        const [pixRow, resolved] = await Promise.all([
+          admin.from("app_settings").select("value").eq("key", "pix_key").maybeSingle(),
+          resolveBeatPayment(admin, row.beat_id),
+        ]);
         const result = await sendAppEmailSafe({
           templateName: "purchase-created",
           recipientEmail: row.email,
@@ -689,8 +685,8 @@ export const logResendInstructions = createServerFn({ method: "POST" })
             beatNome: (row.beat as { nome?: string } | null)?.nome ?? "—",
             valor: row.valor,
             formaPagamento: row.forma_pagamento,
-            pixKey: map.pix_key ?? "",
-            paymentLink: map.payment_link ?? "",
+            pixKey: pixRow.data?.value ?? "",
+            paymentLink: resolved.paymentLink,
             receiptUrl: `${PUBLIC_SITE_URL}/enviar-comprovante/${row.continuation_token}`,
           },
         });
