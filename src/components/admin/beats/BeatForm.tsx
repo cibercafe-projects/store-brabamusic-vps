@@ -27,6 +27,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   createBeat,
+  listBeatTypesForBeatForm,
   listProducersForSelect,
   updateBeat,
 } from "@/lib/beats.functions";
@@ -34,6 +35,7 @@ import { slugify } from "@/lib/slug";
 import { BeatCoverUploader } from "./BeatCoverUploader";
 import { BeatPreviewUploader } from "./BeatPreviewUploader";
 import { BeatPrivateFileUploader } from "./BeatPrivateFileUploader";
+
 
 const urlOpt = z
   .string()
