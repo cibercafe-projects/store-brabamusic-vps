@@ -385,6 +385,9 @@ function BeatsPage() {
                           mood: b.mood,
                           preco: b.preco,
                           tipo: (b as { tipo?: "fechado" | "aberto" }).tipo ?? "fechado",
+                          beat_type_id:
+                            (b as { beat_type_id?: string | null }).beat_type_id ?? null,
+
                           descricao: b.descricao,
                           status: b.status as BeatStatus,
                           capa_url: b.capa_url,
