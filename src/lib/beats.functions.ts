@@ -40,7 +40,8 @@ const beatInputSchema = z.object({
   tom: z.string().trim().max(60).optional().transform((v) => v || null),
   mood: z.string().trim().max(60).optional().transform((v) => v || null),
   preco: z.number().min(0).max(99999.99).optional().nullable(),
-  tipo: z.enum(["fechado", "aberto"]).default("fechado"),
+  tipo: z.enum(["fechado", "aberto"]).optional(),
+  beat_type_id: z.string().uuid().optional().nullable(),
   descricao: z.string().trim().max(2000).optional().transform((v) => v || null),
   status: z.enum(["rascunho", "ativo", "vendido"]).default("rascunho"),
   capa_url: urlField,
@@ -53,6 +54,23 @@ const beatInputSchema = z.object({
   stems_path: pathField,
   license_path: pathField,
 });
+
+async function resolveTipoFromBeatType(
+  supabaseAdmin: Awaited<ReturnType<typeof assertAdmin>>,
+  beatTypeId: string,
+): Promise<"fechado" | "aberto" | null> {
+  const { data, error } = await supabaseAdmin
+    .from("beat_types")
+    .select("inclui_stems, slug")
+    .eq("id", beatTypeId)
+    .maybeSingle();
+  if (error || !data) return null;
+  if (data.slug === "aberto" || data.slug === "fechado") {
+    return data.slug as "aberto" | "fechado";
+  }
+  return data.inclui_stems ? "aberto" : "fechado";
+}
+
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
