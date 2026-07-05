@@ -76,6 +76,7 @@ export type Database = {
       }
       beats: {
         Row: {
+          beat_type_id: string | null
           bpm: number | null
           capa_path: string | null
           capa_url: string | null
@@ -102,6 +103,7 @@ export type Database = {
           wav_url: string | null
         }
         Insert: {
+          beat_type_id?: string | null
           bpm?: number | null
           capa_path?: string | null
           capa_url?: string | null
@@ -128,6 +130,7 @@ export type Database = {
           wav_url?: string | null
         }
         Update: {
+          beat_type_id?: string | null
           bpm?: number | null
           capa_path?: string | null
           capa_url?: string | null
@@ -154,6 +157,13 @@ export type Database = {
           wav_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "beats_beat_type_id_fkey"
+            columns: ["beat_type_id"]
+            isOneToOne: false
+            referencedRelation: "beat_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "beats_produtora_id_fkey"
             columns: ["produtora_id"]
