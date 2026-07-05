@@ -293,17 +293,16 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
 
     // Notificações (não bloqueiam a resposta) -----------------------------------
     try {
-      const [settingsRows, adminEmail] = await Promise.all([
+      const [pixRow, adminEmail, resolved] = await Promise.all([
         supabaseAdmin
           .from("app_settings")
-          .select("key, value")
-          .in("key", ["pix_key", "payment_link"]),
+          .select("value")
+          .eq("key", "pix_key")
+          .maybeSingle(),
         getAdminNotificationEmail(),
+        resolveBeatPayment(supabaseAdmin, data.beat_id),
       ]);
-      const settingsMap: Record<string, string> = {};
-      (settingsRows.data ?? []).forEach((r) => {
-        settingsMap[r.key] = r.value ?? "";
-      });
+      const pixKey = pixRow.data?.value ?? "";
       const receiptUrl = `${PUBLIC_SITE_URL}/enviar-comprovante/${inserted.continuation_token}`;
 
       // Cliente
@@ -317,8 +316,8 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
           beatNome: beat.nome,
           valor: beat.preco,
           formaPagamento: data.forma_pagamento,
-          pixKey: settingsMap.pix_key ?? "",
-          paymentLink: settingsMap.payment_link ?? "",
+          pixKey,
+          paymentLink: resolved.paymentLink,
           receiptUrl,
         },
       });
