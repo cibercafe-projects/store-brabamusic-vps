@@ -560,3 +560,21 @@ export const getAdminMetrics = createServerFn({ method: "POST" })
     };
   });
 
+
+/** Lista tipos ativos para uso no formulário de beats (admin). */
+export const listBeatTypesForBeatForm = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("beat_types")
+      .select("id, nome, slug, valor_padrao, inclui_stems, ativo, ordem")
+      .eq("ativo", true)
+      .order("ordem", { ascending: true })
+      .order("nome", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => ({
+      ...r,
+      valor_padrao: Number(r.valor_padrao ?? 0),
+    }));
+  });
