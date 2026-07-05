@@ -335,42 +335,66 @@ export function BeatForm({ initial, onDone }: Props) {
           />
           <FormField
             control={form.control}
-            name="tipo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo do beat *</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={(v) => {
-                    const next = v as "fechado" | "aberto";
-                    const current = form.getValues("preco");
-                    const isDefault =
-                      !current || current === "100,00" || current === "150,00";
-                    field.onChange(next);
-                    if (isDefault) {
-                      form.setValue("preco", next === "aberto" ? "150,00" : "100,00", {
-                        shouldDirty: true,
-                      });
-                    }
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="fechado">Fechado (WAV)</SelectItem>
-                    <SelectItem value="aberto">Aberto (WAV + Stems)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Fechado entrega só WAV. Aberto entrega WAV + Stems.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+            name="beat_type_id"
+            render={({ field }) => {
+              const types = beatTypesQuery.data ?? [];
+              return (
+                <FormItem>
+                  <FormLabel>Tipo do beat *</FormLabel>
+                  <Select
+                    value={field.value || ""}
+                    onValueChange={(v) => {
+                      field.onChange(v);
+                      const t = types.find((x) => x.id === v);
+                      if (!t) return;
+                      // Espelha o legado `tipo` para compatibilidade.
+                      const legacyTipo: "fechado" | "aberto" =
+                        t.slug === "aberto" || t.slug === "fechado"
+                          ? (t.slug as "aberto" | "fechado")
+                          : t.inclui_stems
+                            ? "aberto"
+                            : "fechado";
+                      form.setValue("tipo", legacyTipo, { shouldDirty: true });
+                      // Preenche preço padrão se o campo estiver vazio ou em um default conhecido.
+                      const current = form.getValues("preco");
+                      const isDefault =
+                        !current || current === "100,00" || current === "150,00" || current === "200,00";
+                      if (isDefault && t.valor_padrao > 0) {
+                        form.setValue(
+                          "preco",
+                          t.valor_padrao.toFixed(2).replace(".", ","),
+                          { shouldDirty: true },
+                        );
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            beatTypesQuery.isLoading ? "Carregando..." : "Selecione o tipo"
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {types.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.nome}
+                          {t.inclui_stems ? " (WAV + Stems)" : " (WAV)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Cadastre novos tipos em <span className="font-mono">/admin/tipos-beat</span>.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
+
           <FormField
             control={form.control}
             name="preco"
