@@ -85,6 +85,7 @@ export type BeatFormInitial = {
   mood?: string | null;
   preco?: number | string | null;
   tipo?: "fechado" | "aberto";
+  beat_type_id?: string | null;
   descricao?: string | null;
   status?: "rascunho" | "ativo" | "vendido";
   capa_url?: string | null;
