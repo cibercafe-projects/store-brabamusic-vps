@@ -22,6 +22,33 @@ async function sign(
   return data.signedUrl;
 }
 
+type BeatTypeInfo = { nome: string; inclui_stems: boolean };
+async function getBeatTypesMap(
+  admin: Awaited<ReturnType<typeof getAdmin>>,
+  ids: (string | null | undefined)[],
+): Promise<Map<string, BeatTypeInfo>> {
+  const clean = Array.from(new Set(ids.filter((x): x is string => !!x)));
+  const map = new Map<string, BeatTypeInfo>();
+  if (!clean.length) return map;
+  const { data } = await admin
+    .from("beat_types")
+    .select("id, nome, inclui_stems")
+    .in("id", clean);
+  data?.forEach((t) => map.set(t.id, { nome: t.nome, inclui_stems: !!t.inclui_stems }));
+  return map;
+}
+
+function deriveTipoNome(
+  bt: BeatTypeInfo | undefined,
+  legacy: "aberto" | "fechado",
+): { tipo_nome: string; inclui_stems: boolean } {
+  if (bt) return { tipo_nome: bt.nome, inclui_stems: bt.inclui_stems };
+  return {
+    tipo_nome: legacy === "aberto" ? "Beat Aberto" : "Beat Fechado",
+    inclui_stems: legacy === "aberto",
+  };
+}
+
 const escapeIlike = (s: string) => s.replace(/[%_,()]/g, " ").trim();
 
 const listInput = z
