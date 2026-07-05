@@ -219,6 +219,10 @@ export const createBeat = createServerFn({ method: "POST" })
     await assertProducerActive(supabaseAdmin, data.produtora_id);
     const baseSlug = data.slug || slugify(data.nome);
     const slug = await uniqueSlug(supabaseAdmin, baseSlug);
+    const derivedTipo = data.beat_type_id
+      ? await resolveTipoFromBeatType(supabaseAdmin, data.beat_type_id)
+      : null;
+    const tipo = derivedTipo ?? data.tipo ?? "fechado";
     const { data: inserted, error } = await supabaseAdmin
       .from("beats")
       .insert({
@@ -229,8 +233,9 @@ export const createBeat = createServerFn({ method: "POST" })
         bpm: data.bpm ?? null,
         tom: data.tom,
         mood: data.mood,
-        preco: data.preco ?? (data.tipo === "aberto" ? 150 : 100),
-        tipo: data.tipo,
+        preco: data.preco ?? (tipo === "aberto" ? 150 : 100),
+        tipo,
+        beat_type_id: data.beat_type_id ?? null,
         descricao: data.descricao,
         status: data.status,
         capa_url: data.capa_url,
@@ -259,11 +264,16 @@ export const updateBeat = createServerFn({ method: "POST" })
     const { id, ...rest } = data;
     if (rest.produtora_id) await assertProducerActive(supabaseAdmin, rest.produtora_id);
 
-    const patch = { ...rest } as typeof rest & { slug?: string };
+    const patch = { ...rest } as typeof rest & { slug?: string; tipo?: "fechado" | "aberto" };
     if (rest.slug !== undefined) {
       const base = rest.slug || (rest.nome ? slugify(rest.nome) : "");
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
     }
+    if (rest.beat_type_id !== undefined && rest.beat_type_id !== null) {
+      const derived = await resolveTipoFromBeatType(supabaseAdmin, rest.beat_type_id);
+      if (derived) patch.tipo = derived;
+    }
+
 
     const privateFields = ["capa_path", "preview_path", "wav_path", "stems_path", "license_path"] as const;
     const anyPrivateChanged = privateFields.some((f) => rest[f] !== undefined);
