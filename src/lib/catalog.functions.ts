@@ -126,29 +126,40 @@ export const listPublicBeats = createServerFn({ method: "POST" })
       ps?.forEach((p) => prodMap.set(p.id, { nome_artistico: p.nome_artistico, slug: p.slug }));
     }
 
+    const typesMap = await getBeatTypesMap(admin, (rows ?? []).map((r) => r.beat_type_id));
+
     const enriched = await Promise.all(
-      (rows ?? []).map(async (r) => ({
-        id: r.id,
-        slug: r.slug,
-        nome: r.nome,
-        genero: r.genero,
-        bpm: r.bpm,
-        tom: r.tom,
-        mood: r.mood,
-        preco: r.preco != null ? Number(r.preco) : null,
-        tipo: (r.tipo ?? "fechado") as "fechado" | "aberto",
-        descricao: r.descricao,
-        produtora_id: r.produtora_id,
-        produtora_nome: prodMap.get(r.produtora_id)?.nome_artistico ?? "—",
-        produtora_slug: prodMap.get(r.produtora_id)?.slug ?? "",
-        capa_url: r.capa_path
-          ? await sign(admin, COVER_BUCKET, r.capa_path)
-          : (r.capa_url ?? null),
-        preview_url: r.preview_path
-          ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
-          : (r.preview_url ?? null),
-        plays_count: r.plays_count ?? 0,
-      })),
+      (rows ?? []).map(async (r) => {
+        const legacy = (r.tipo ?? "fechado") as "fechado" | "aberto";
+        const { tipo_nome, inclui_stems } = deriveTipoNome(
+          r.beat_type_id ? typesMap.get(r.beat_type_id) : undefined,
+          legacy,
+        );
+        return {
+          id: r.id,
+          slug: r.slug,
+          nome: r.nome,
+          genero: r.genero,
+          bpm: r.bpm,
+          tom: r.tom,
+          mood: r.mood,
+          preco: r.preco != null ? Number(r.preco) : null,
+          tipo: legacy,
+          tipo_nome,
+          inclui_stems,
+          descricao: r.descricao,
+          produtora_id: r.produtora_id,
+          produtora_nome: prodMap.get(r.produtora_id)?.nome_artistico ?? "—",
+          produtora_slug: prodMap.get(r.produtora_id)?.slug ?? "",
+          capa_url: r.capa_path
+            ? await sign(admin, COVER_BUCKET, r.capa_path)
+            : (r.capa_url ?? null),
+          preview_url: r.preview_path
+            ? await sign(admin, PREVIEW_BUCKET, r.preview_path)
+            : (r.preview_url ?? null),
+          plays_count: r.plays_count ?? 0,
+        };
+      }),
     );
 
     return { rows: enriched, total: count ?? 0 };
