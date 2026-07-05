@@ -1,45 +1,54 @@
-# Sprint 11B — Licenciamento Dinâmico
+# Sprint Go Live — Tipos de Beat Configuráveis
 
-A Sprint 11B já foi implementada em rodada anterior. Este plano confirma o escopo entregue e o que falta apenas validar.
+Vamos entregar em **7 fases, uma por vez, com aprovação entre cada uma**. Cada fase é pequena, testável e não quebra o que já existe. Este documento é o plano macro; cada fase terá seu próprio plano detalhado antes de executar.
 
-## Já entregue
+## Estratégia geral
 
-**Banco (`public.purchase_requests`)** — colunas novas:
-- `license_accepted` (bool)
-- `license_accepted_at` (timestamptz)
-- `license_version` (text)
-- `license_snapshot` (jsonb) — snapshot server-side dos textos exibidos
+- Introduzir tabela `beat_types` como fonte única de: nome exibido, valor padrão, link de pagamento, "entrega inclui stems".
+- Manter a coluna atual `beats.tipo` (enum `aberto`/`fechado`) durante toda a migração como **fallback**, e adicionar `beats.beat_type_id` (FK). Backfill preenche os dois lados. Só removemos o enum depois que todo o código estiver lendo pela FK — provavelmente em uma fase futura fora deste sprint.
+- Toda leitura de "link de pagamento" e "preço padrão" passa a ir por **um único helper** (`getBeatPayment(beat)`), eliminando `if tipo == "aberto"`.
+- O campo global `app_settings.payment_link` continua existindo como fallback legado até a Fase 5 concluir, e depois é aposentado (mantido no schema, deixa de ser lido).
 
-**Constante** — `src/lib/licenses.constants.ts` com `CURRENT_LICENSE_VERSION = "2026-07-01.v1"`.
+## Fases
 
-**Server functions (`src/lib/purchases.functions.ts`)**:
-- `getBeatLicenseInfo` — join Beat → Produtora, retorna Créditos, Registro, Royalties, nome artístico e versão.
-- `createPurchaseRequest` — schema exige `license_accepted: true` + `license_version`; handler recarrega textos da produtora, grava `license_snapshot` server-side (fonte da verdade) e `license_accepted_at = now()`.
+### Fase 1 — Cadastro de Tipos de Beat (backoffice)
+- Migration cria `public.beat_types` (id, nome, slug único, descricao, valor_padrao numeric, link_pagamento text, inclui_stems bool, ativo bool, ordem int, timestamps) + GRANTs + RLS (admin gerencia, leitura autenticada).
+- Seed: `Beat Fechado` (R$100, inclui_stems=false, slug=`fechado`) e `Beat Aberto` (R$200, inclui_stems=true, slug=`aberto`). Link inicial copiado de `app_settings.payment_link` para os dois; admin edita depois.
+- Nova rota `/admin/_protected/tipos-beat` com listagem + form (criar/editar/ativar/desativar/reordenar). Item no sidebar dentro de "Configurações".
+- Server fns em `src/lib/beat-types.functions.ts`.
+- **Não toca em beats/compras/exibição ainda.**
 
-**UI (`src/components/purchase/PurchaseDialog.tsx`)**:
-- Seção "Licenciamento da produtora" após seleção do beat, carrega via `useQuery(getBeatLicenseInfo)`.
-- 3 blocos read-only: Créditos / Registro / Royalties (fallback quando produtora não tem texto).
-- Checkbox obrigatório "Li e concordo" específico dos termos da produtora (separado do checkbox de licença da plataforma).
-- `canSubmit` exige ambos os checkboxes.
+### Fase 2 — FK no Beat
+- Migration adiciona `beats.beat_type_id uuid references beat_types(id)`; backfill por `tipo` → slug; **não** dropar `tipo` ainda.
+- `BeatForm`: substitui o Select "Tipo" atual por um Select carregado de `beat_types` (só ativos). Ao salvar, grava `beat_type_id`; grava `tipo` legado derivado de `inclui_stems` para compatibilidade.
+- Sem mudança na compra ainda.
 
-**Relatório** — `SPRINT_11B_REPORT.md`.
+### Fase 3 — Fluxo de Compra usa o link do tipo
+- Criar helper único `resolveBeatPayment(beat)` server-side: retorna `{ valor, paymentLink, tipoNome, inclui_stems }` lendo por `beat_type_id`; fallback para `app_settings.payment_link` só se o tipo não tiver link.
+- `startPurchase`, `getPurchaseSettings`, `resendPurchaseInstructions` passam a usar o helper (hoje leem `app_settings.payment_link` direto).
 
-## Fora de escopo (mantido)
-- Geração de PDF
-- Templates de e-mail
-- Entregas / catálogo público / compras admin
+### Fase 4 — Exibição pública
+- `BeatCard` e `/beat/$slug` mostram `beat_type.nome` (dinâmico) em vez de "Aberto/Fechado" hardcoded. `catalog.functions` retorna `tipo_nome` e `inclui_stems`.
 
-## O que fazer agora
+### Fase 5 — Mensagens (WhatsApp, e-mail, popup, reenvio, copiar)
+- Todos os pontos que hoje montam texto com `payment_link` passam pelo helper. Confirmar: `PurchaseDialog`, e-mail `purchase-created`, `ResendInstructionsCard`, WhatsApp deeplink.
+- Após esta fase, `app_settings.payment_link` deixa de ser lido (mantido no banco por segurança).
 
-Nada de código novo — apenas rodar o teste de aceitação manual:
+### Fase 6 — Preço padrão automático e editável
+- No `BeatForm`, ao trocar o tipo, autopreencher `preco` com `valor_padrao` do tipo (permanece editável). Remover os defaults hardcoded (`150`/`100`) em `beats.functions.ts` — passa a usar `valor_padrao` do tipo quando `preco` vier vazio.
 
-1. Comprar um beat da **Ayla** (produtora com textos preenchidos) → conferir os 3 blocos com o texto real.
-2. Comprar um beat da **Anônima Beats** (textos parciais/vazios) → conferir fallback.
-3. Verificar no DB que `license_accepted`, `license_accepted_at`, `license_version` e `license_snapshot` foram gravados na `purchase_requests`.
+### Fase 7 — Limpeza arquitetural
+- Varredura por `=== "aberto"` / `=== "fechado"` em src/. Substituir usos remanescentes (uploader de stems no `BeatForm`, badges, cópias de rótulo) por `inclui_stems` / `tipo_nome` vindos do tipo.
+- Atualizar `catalog.types.ts` e types Supabase.
+- Enum `beat_tipo` e coluna `beats.tipo` permanecem no banco (deprecated) — remoção fica para uma sprint futura de cleanup depois de observação em produção.
 
-Se o teste passar, seguimos para Sprint 11C. Se algo falhar, abro correção pontual.
+## Fora de escopo (não mexemos)
+Compras, comprovantes, dashboard, lançamentos, uploads, segurança, entrega de arquivos, licença jurídica (Sprint 11).
 
-## Próximos passos (Sprint 11C, referência)
-- Usar `license_snapshot` para gerar PDF dinâmico da licença.
-- Bump de `CURRENT_LICENSE_VERSION` quando admin editar textos jurídicos.
-- Exibição de auditoria no admin (quem aceitou o quê, quando, qual versão).
+## Casos de teste (final da sprint)
+1. Beat Fechado → R$100 + link do tipo Fechado nas mensagens.
+2. Beat Aberto → R$200 + link do tipo Aberto.
+3. Criar tipo "Exclusive License" (R$500, link novo), associar a um beat → fluxo completo sem alterar código.
+
+## Ritmo
+Peço aprovação após cada fase. Antes de executar cada uma, envio um **plano detalhado** com SQL exato, arquivos tocados e como testar. Começo pela Fase 1 assim que aprovar este plano macro.
