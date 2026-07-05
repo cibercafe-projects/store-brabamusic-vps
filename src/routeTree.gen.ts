@@ -32,6 +32,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AdminProtectedUsuariosRouteImport } from './routes/admin/_protected/usuarios'
+import { Route as AdminProtectedTiposBeatRouteImport } from './routes/admin/_protected/tipos-beat'
 import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
 import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
 import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
@@ -160,6 +161,11 @@ const AdminProtectedUsuariosRoute = AdminProtectedUsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
+const AdminProtectedTiposBeatRoute = AdminProtectedTiposBeatRouteImport.update({
+  id: '/tipos-beat',
+  path: '/tipos-beat',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
 const AdminProtectedProdutorasRoute =
   AdminProtectedProdutorasRouteImport.update({
     id: '/produtoras',
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
@@ -297,6 +304,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/admin/_protected/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/_protected/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
@@ -375,6 +384,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/tipos-beat'
     | '/admin/usuarios'
     | '/lovable/email/suppression'
     | '/admin/compras/$id'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/tipos-beat'
     | '/admin/usuarios'
     | '/lovable/email/suppression'
     | '/admin/compras/$id'
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/dashboard'
     | '/admin/_protected/leads'
     | '/admin/_protected/produtoras'
+    | '/admin/_protected/tipos-beat'
     | '/admin/_protected/usuarios'
     | '/lovable/email/suppression'
     | '/admin/_protected/compras/$id'
@@ -648,6 +660,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedUsuariosRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/tipos-beat': {
+      id: '/admin/_protected/tipos-beat'
+      path: '/tipos-beat'
+      fullPath: '/admin/tipos-beat'
+      preLoaderRoute: typeof AdminProtectedTiposBeatRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/produtoras': {
       id: '/admin/_protected/produtoras'
       path: '/produtoras'
@@ -762,6 +781,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedDashboardRoute: typeof AdminProtectedDashboardRoute
   AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
   AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
+  AdminProtectedTiposBeatRoute: typeof AdminProtectedTiposBeatRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
   AdminProtectedComprasIdRoute: typeof AdminProtectedComprasIdRouteWithChildren
   AdminProtectedLancamentosIdRoute: typeof AdminProtectedLancamentosIdRoute
@@ -775,6 +795,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedDashboardRoute: AdminProtectedDashboardRoute,
   AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
   AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
+  AdminProtectedTiposBeatRoute: AdminProtectedTiposBeatRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
   AdminProtectedComprasIdRoute: AdminProtectedComprasIdRouteWithChildren,
   AdminProtectedLancamentosIdRoute: AdminProtectedLancamentosIdRoute,

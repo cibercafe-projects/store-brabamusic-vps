@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Disc3,
   ShoppingCart,
+  Tags,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,6 +35,7 @@ const items = [
   { title: "Leads", url: "/admin/leads", icon: Inbox },
   { title: "Lançamentos", url: "/admin/lancamentos", icon: Disc3 },
   { title: "Compras", url: "/admin/compras", icon: ShoppingCart },
+  { title: "Tipos de Beat", url: "/admin/tipos-beat", icon: Tags },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
 ] as const;
 
