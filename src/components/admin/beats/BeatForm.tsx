@@ -27,6 +27,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   createBeat,
+  listBeatTypesForBeatForm,
   listProducersForSelect,
   updateBeat,
 } from "@/lib/beats.functions";
@@ -34,6 +35,7 @@ import { slugify } from "@/lib/slug";
 import { BeatCoverUploader } from "./BeatCoverUploader";
 import { BeatPreviewUploader } from "./BeatPreviewUploader";
 import { BeatPrivateFileUploader } from "./BeatPrivateFileUploader";
+
 
 const urlOpt = z
   .string()
@@ -57,7 +59,8 @@ const schema = z.object({
   tom: z.string().trim().max(60).optional().or(z.literal("")),
   mood: z.string().trim().max(60).optional().or(z.literal("")),
   preco: z.string().optional().or(z.literal("")),
-  tipo: z.enum(["fechado", "aberto"]),
+  tipo: z.enum(["fechado", "aberto"]).optional(),
+  beat_type_id: z.string().uuid("Selecione um tipo de beat"),
   descricao: z.string().trim().max(2000).optional().or(z.literal("")),
   status: z.enum(["rascunho", "ativo", "vendido"]),
   capa_path: z.string().max(300).optional().or(z.literal("")),
@@ -82,6 +85,7 @@ export type BeatFormInitial = {
   mood?: string | null;
   preco?: number | string | null;
   tipo?: "fechado" | "aberto";
+  beat_type_id?: string | null;
   descricao?: string | null;
   status?: "rascunho" | "ativo" | "vendido";
   capa_url?: string | null;
@@ -107,6 +111,7 @@ export function BeatForm({ initial, onDone }: Props) {
   const create = useServerFn(createBeat);
   const update = useServerFn(updateBeat);
   const listProducers = useServerFn(listProducersForSelect);
+  const listTypes = useServerFn(listBeatTypesForBeatForm);
   const isEdit = !!initial?.id;
 
   const [coverPreview, setCoverPreview] = useState<string | null>(
@@ -121,6 +126,13 @@ export function BeatForm({ initial, onDone }: Props) {
     queryFn: () => listProducers(),
     staleTime: 30_000,
   });
+
+  const beatTypesQuery = useQuery({
+    queryKey: ["admin", "beat-types", "form-select"],
+    queryFn: () => listTypes(),
+    staleTime: 30_000,
+  });
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -137,6 +149,8 @@ export function BeatForm({ initial, onDone }: Props) {
           ? String(initial.preco).replace(".", ",")
           : "100,00",
       tipo: initial?.tipo ?? "fechado",
+      beat_type_id: initial?.beat_type_id ?? "",
+
       descricao: initial?.descricao ?? "",
       status: initial?.status ?? "rascunho",
       capa_path: initial?.capa_path ?? "",
@@ -170,6 +184,8 @@ export function BeatForm({ initial, onDone }: Props) {
         mood: values.mood || "",
         preco: values.preco ? Number(String(values.preco).replace(",", ".")) : null,
         tipo: values.tipo,
+        beat_type_id: values.beat_type_id || null,
+
         descricao: values.descricao || "",
         status: values.status,
         capa_url: "",
@@ -319,42 +335,66 @@ export function BeatForm({ initial, onDone }: Props) {
           />
           <FormField
             control={form.control}
-            name="tipo"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo do beat *</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={(v) => {
-                    const next = v as "fechado" | "aberto";
-                    const current = form.getValues("preco");
-                    const isDefault =
-                      !current || current === "100,00" || current === "150,00";
-                    field.onChange(next);
-                    if (isDefault) {
-                      form.setValue("preco", next === "aberto" ? "150,00" : "100,00", {
-                        shouldDirty: true,
-                      });
-                    }
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="fechado">Fechado (WAV)</SelectItem>
-                    <SelectItem value="aberto">Aberto (WAV + Stems)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Fechado entrega só WAV. Aberto entrega WAV + Stems.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
+            name="beat_type_id"
+            render={({ field }) => {
+              const types = beatTypesQuery.data ?? [];
+              return (
+                <FormItem>
+                  <FormLabel>Tipo do beat *</FormLabel>
+                  <Select
+                    value={field.value || ""}
+                    onValueChange={(v) => {
+                      field.onChange(v);
+                      const t = types.find((x) => x.id === v);
+                      if (!t) return;
+                      // Espelha o legado `tipo` para compatibilidade.
+                      const legacyTipo: "fechado" | "aberto" =
+                        t.slug === "aberto" || t.slug === "fechado"
+                          ? (t.slug as "aberto" | "fechado")
+                          : t.inclui_stems
+                            ? "aberto"
+                            : "fechado";
+                      form.setValue("tipo", legacyTipo, { shouldDirty: true });
+                      // Preenche preço padrão se o campo estiver vazio ou em um default conhecido.
+                      const current = form.getValues("preco");
+                      const isDefault =
+                        !current || current === "100,00" || current === "150,00" || current === "200,00";
+                      if (isDefault && t.valor_padrao > 0) {
+                        form.setValue(
+                          "preco",
+                          t.valor_padrao.toFixed(2).replace(".", ","),
+                          { shouldDirty: true },
+                        );
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            beatTypesQuery.isLoading ? "Carregando..." : "Selecione o tipo"
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {types.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.nome}
+                          {t.inclui_stems ? " (WAV + Stems)" : " (WAV)"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Cadastre novos tipos em <span className="font-mono">/admin/tipos-beat</span>.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
+
           <FormField
             control={form.control}
             name="preco"

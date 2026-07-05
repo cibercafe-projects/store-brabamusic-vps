@@ -40,7 +40,8 @@ const beatInputSchema = z.object({
   tom: z.string().trim().max(60).optional().transform((v) => v || null),
   mood: z.string().trim().max(60).optional().transform((v) => v || null),
   preco: z.number().min(0).max(99999.99).optional().nullable(),
-  tipo: z.enum(["fechado", "aberto"]).default("fechado"),
+  tipo: z.enum(["fechado", "aberto"]).optional(),
+  beat_type_id: z.string().uuid().optional().nullable(),
   descricao: z.string().trim().max(2000).optional().transform((v) => v || null),
   status: z.enum(["rascunho", "ativo", "vendido"]).default("rascunho"),
   capa_url: urlField,
@@ -53,6 +54,23 @@ const beatInputSchema = z.object({
   stems_path: pathField,
   license_path: pathField,
 });
+
+async function resolveTipoFromBeatType(
+  supabaseAdmin: Awaited<ReturnType<typeof assertAdmin>>,
+  beatTypeId: string,
+): Promise<"fechado" | "aberto" | null> {
+  const { data, error } = await supabaseAdmin
+    .from("beat_types")
+    .select("inclui_stems, slug")
+    .eq("id", beatTypeId)
+    .maybeSingle();
+  if (error || !data) return null;
+  if (data.slug === "aberto" || data.slug === "fechado") {
+    return data.slug as "aberto" | "fechado";
+  }
+  return data.inclui_stems ? "aberto" : "fechado";
+}
+
 
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -201,6 +219,10 @@ export const createBeat = createServerFn({ method: "POST" })
     await assertProducerActive(supabaseAdmin, data.produtora_id);
     const baseSlug = data.slug || slugify(data.nome);
     const slug = await uniqueSlug(supabaseAdmin, baseSlug);
+    const derivedTipo = data.beat_type_id
+      ? await resolveTipoFromBeatType(supabaseAdmin, data.beat_type_id)
+      : null;
+    const tipo = derivedTipo ?? data.tipo ?? "fechado";
     const { data: inserted, error } = await supabaseAdmin
       .from("beats")
       .insert({
@@ -211,8 +233,9 @@ export const createBeat = createServerFn({ method: "POST" })
         bpm: data.bpm ?? null,
         tom: data.tom,
         mood: data.mood,
-        preco: data.preco ?? (data.tipo === "aberto" ? 150 : 100),
-        tipo: data.tipo,
+        preco: data.preco ?? (tipo === "aberto" ? 150 : 100),
+        tipo,
+        beat_type_id: data.beat_type_id ?? null,
         descricao: data.descricao,
         status: data.status,
         capa_url: data.capa_url,
@@ -241,11 +264,16 @@ export const updateBeat = createServerFn({ method: "POST" })
     const { id, ...rest } = data;
     if (rest.produtora_id) await assertProducerActive(supabaseAdmin, rest.produtora_id);
 
-    const patch = { ...rest } as typeof rest & { slug?: string };
+    const patch = { ...rest } as typeof rest & { slug?: string; tipo?: "fechado" | "aberto" };
     if (rest.slug !== undefined) {
       const base = rest.slug || (rest.nome ? slugify(rest.nome) : "");
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
     }
+    if (rest.beat_type_id !== undefined && rest.beat_type_id !== null) {
+      const derived = await resolveTipoFromBeatType(supabaseAdmin, rest.beat_type_id);
+      if (derived) patch.tipo = derived;
+    }
+
 
     const privateFields = ["capa_path", "preview_path", "wav_path", "stems_path", "license_path"] as const;
     const anyPrivateChanged = privateFields.some((f) => rest[f] !== undefined);
@@ -532,3 +560,21 @@ export const getAdminMetrics = createServerFn({ method: "POST" })
     };
   });
 
+
+/** Lista tipos ativos para uso no formulário de beats (admin). */
+export const listBeatTypesForBeatForm = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const { data, error } = await supabaseAdmin
+      .from("beat_types")
+      .select("id, nome, slug, valor_padrao, inclui_stems, ativo, ordem")
+      .eq("ativo", true)
+      .order("ordem", { ascending: true })
+      .order("nome", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r) => ({
+      ...r,
+      valor_padrao: Number(r.valor_padrao ?? 0),
+    }));
+  });
