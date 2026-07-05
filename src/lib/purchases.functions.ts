@@ -36,27 +36,83 @@ async function assertAdmin(userId: string) {
   return supabaseAdmin;
 }
 
-// ===== Public: settings =====
-export const getPurchaseSettings = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("app_settings")
-    .select("key, value")
-    .in("key", ["pix_key", "payment_link", "commercial_whatsapp"]);
-  if (error) {
-    console.error("[purchases.settings]", error);
-    throw new Error("Erro ao carregar dados de pagamento.");
+// ===== Internal helper: resolve payment info for a beat =====
+// Fonte única para "qual link/valor/rótulo usar em uma compra deste beat".
+// Prioriza o tipo configurado (beat_types.link_pagamento / valor_padrao) e cai
+// para o app_settings.payment_link e beat.preco como fallback legado.
+export type ResolvedBeatPayment = {
+  valor: number | null;
+  paymentLink: string;
+  tipoNome: string | null;
+  incluiStems: boolean;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolveBeatPayment(admin: any, beatId: string): Promise<ResolvedBeatPayment> {
+  const { data: beat } = await admin
+    .from("beats")
+    .select(
+      "preco, tipo, beat_type:beat_types(nome, valor_padrao, link_pagamento, inclui_stems)",
+    )
+    .eq("id", beatId)
+    .maybeSingle();
+
+  const bt = (beat as { beat_type?: unknown } | null)?.beat_type as
+    | { nome: string; valor_padrao: number | string; link_pagamento: string; inclui_stems: boolean }
+    | null;
+
+  let paymentLink = bt?.link_pagamento?.trim() ?? "";
+  if (!paymentLink) {
+    const { data: settingRow } = await admin
+      .from("app_settings")
+      .select("value")
+      .eq("key", "payment_link")
+      .maybeSingle();
+    paymentLink = settingRow?.value ?? "";
   }
-  const map: Record<string, string> = {};
-  (data ?? []).forEach((r) => {
-    map[r.key] = r.value ?? "";
+
+  const preco = beat?.preco != null ? Number(beat.preco) : null;
+  const valor =
+    preco ?? (bt?.valor_padrao != null ? Number(bt.valor_padrao) : null);
+
+  const incluiStems = bt ? !!bt.inclui_stems : beat?.tipo === "aberto";
+  const tipoNome = bt?.nome ?? (beat?.tipo === "aberto" ? "Beat Aberto" : beat?.tipo === "fechado" ? "Beat Fechado" : null);
+
+  return { valor, paymentLink, tipoNome, incluiStems };
+}
+
+// ===== Public: settings =====
+const settingsInput = z.object({ beat_id: z.string().uuid().optional() }).optional();
+
+export const getPurchaseSettings = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => settingsInput.parse(input) ?? {})
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("app_settings")
+      .select("key, value")
+      .in("key", ["pix_key", "payment_link", "commercial_whatsapp"]);
+    if (error) {
+      console.error("[purchases.settings]", error);
+      throw new Error("Erro ao carregar dados de pagamento.");
+    }
+    const map: Record<string, string> = {};
+    (rows ?? []).forEach((r) => {
+      map[r.key] = r.value ?? "";
+    });
+
+    let paymentLink = map.payment_link ?? "";
+    if (data?.beat_id) {
+      const resolved = await resolveBeatPayment(supabaseAdmin, data.beat_id);
+      if (resolved.paymentLink) paymentLink = resolved.paymentLink;
+    }
+
+    return {
+      pix_key: map.pix_key ?? "",
+      payment_link: paymentLink,
+      commercial_whatsapp: map.commercial_whatsapp ?? "+5511913401000",
+    };
   });
-  return {
-    pix_key: map.pix_key ?? "",
-    payment_link: map.payment_link ?? "",
-    commercial_whatsapp: map.commercial_whatsapp ?? "+5511913401000",
-  };
-});
 
 // ===== Public: license info per beat =====
 export const getBeatLicenseInfo = createServerFn({ method: "GET" })
@@ -237,17 +293,16 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
 
     // Notificações (não bloqueiam a resposta) -----------------------------------
     try {
-      const [settingsRows, adminEmail] = await Promise.all([
+      const [pixRow, adminEmail, resolved] = await Promise.all([
         supabaseAdmin
           .from("app_settings")
-          .select("key, value")
-          .in("key", ["pix_key", "payment_link"]),
+          .select("value")
+          .eq("key", "pix_key")
+          .maybeSingle(),
         getAdminNotificationEmail(),
+        resolveBeatPayment(supabaseAdmin, data.beat_id),
       ]);
-      const settingsMap: Record<string, string> = {};
-      (settingsRows.data ?? []).forEach((r) => {
-        settingsMap[r.key] = r.value ?? "";
-      });
+      const pixKey = pixRow.data?.value ?? "";
       const receiptUrl = `${PUBLIC_SITE_URL}/enviar-comprovante/${inserted.continuation_token}`;
 
       // Cliente
@@ -261,8 +316,8 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
           beatNome: beat.nome,
           valor: beat.preco,
           formaPagamento: data.forma_pagamento,
-          pixKey: settingsMap.pix_key ?? "",
-          paymentLink: settingsMap.payment_link ?? "",
+          pixKey,
+          paymentLink: resolved.paymentLink,
           receiptUrl,
         },
       });
@@ -612,19 +667,15 @@ export const logResendInstructions = createServerFn({ method: "POST" })
       const { data: row } = await admin
         .from("purchase_requests")
         .select(
-          "id, email, nome_cliente, valor, forma_pagamento, continuation_token, beat:beats(nome)",
+          "id, email, nome_cliente, valor, forma_pagamento, continuation_token, beat_id, beat:beats(nome)",
         )
         .eq("id", data.id)
         .maybeSingle();
       if (row?.email) {
-        const { data: settingsRows } = await admin
-          .from("app_settings")
-          .select("key, value")
-          .in("key", ["pix_key", "payment_link"]);
-        const map: Record<string, string> = {};
-        (settingsRows ?? []).forEach((r) => {
-          map[r.key] = r.value ?? "";
-        });
+        const [pixRow, resolved] = await Promise.all([
+          admin.from("app_settings").select("value").eq("key", "pix_key").maybeSingle(),
+          resolveBeatPayment(admin, row.beat_id),
+        ]);
         const result = await sendAppEmailSafe({
           templateName: "purchase-created",
           recipientEmail: row.email,
@@ -634,8 +685,8 @@ export const logResendInstructions = createServerFn({ method: "POST" })
             beatNome: (row.beat as { nome?: string } | null)?.nome ?? "—",
             valor: row.valor,
             formaPagamento: row.forma_pagamento,
-            pixKey: map.pix_key ?? "",
-            paymentLink: map.payment_link ?? "",
+            pixKey: pixRow.data?.value ?? "",
+            paymentLink: resolved.paymentLink,
             receiptUrl: `${PUBLIC_SITE_URL}/enviar-comprovante/${row.continuation_token}`,
           },
         });

@@ -365,7 +365,7 @@ function PurchaseDetailPage() {
               valor: p.valor as number | string | null,
               continuation_token: p.continuation_token as string,
               forma_pagamento: p.forma_pagamento,
-              beat: beat ? { nome: beat.nome } : null,
+              beat: beat ? { id: beat.id, nome: beat.nome } : null,
             }}
           />
         )}
