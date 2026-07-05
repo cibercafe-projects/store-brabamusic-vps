@@ -157,7 +157,7 @@ function BeatDetail() {
           )}
 
           <div className="mt-3 flex w-fit items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
-            {beat.tipo === "aberto" ? "Aberto · WAV + Stems" : "Fechado · WAV"}
+            {beat.tipo_nome} · {beat.inclui_stems ? "WAV + Stems" : "WAV"}
           </div>
 
           <dl className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
