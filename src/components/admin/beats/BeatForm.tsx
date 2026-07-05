@@ -355,15 +355,12 @@ export function BeatForm({ initial, onDone }: Props) {
                             ? "aberto"
                             : "fechado";
                       form.setValue("tipo", legacyTipo, { shouldDirty: true });
-                      // Preenche preço padrão se o campo estiver vazio ou em um default conhecido.
-                      const current = form.getValues("preco");
-                      const isDefault =
-                        !current || current === "100,00" || current === "150,00" || current === "200,00";
-                      if (isDefault && t.valor_padrao > 0) {
+                      // Sempre atualiza o preço com o valor padrão do tipo selecionado.
+                      if (t.valor_padrao > 0) {
                         form.setValue(
                           "preco",
                           t.valor_padrao.toFixed(2).replace(".", ","),
-                          { shouldDirty: true },
+                          { shouldDirty: true, shouldValidate: true },
                         );
                       }
                     }}
