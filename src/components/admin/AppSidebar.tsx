@@ -29,6 +29,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { checkAdminRole } from "@/lib/admin.functions";
 import { countNewReleases } from "@/lib/releases.functions";
+import { getFeedbackStats } from "@/lib/feedback.functions";
 
 const items = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
@@ -37,6 +38,7 @@ const items = [
   { title: "Leads", url: "/admin/leads", icon: Inbox },
   { title: "Lançamentos", url: "/admin/lancamentos", icon: Disc3 },
   { title: "Compras", url: "/admin/compras", icon: ShoppingCart },
+  { title: "Ajuda e Feedback", url: "/admin/feedback", icon: MessageSquare },
   { title: "Tipos de Beat", url: "/admin/tipos-beat", icon: Tags },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
   { title: "Textos Jurídicos", url: "/admin/textos-juridicos", icon: FileText },
