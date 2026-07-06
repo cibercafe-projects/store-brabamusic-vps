@@ -47,6 +47,7 @@ import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lova
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
+import { Route as AdminProtectedFeedbackIdRouteImport } from './routes/admin/_protected/feedback.$id'
 import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
 import { Route as AdminProtectedComprasIdLicencaRouteImport } from './routes/admin/_protected/compras.$id.licenca'
 
@@ -249,6 +250,12 @@ const AdminProtectedLancamentosIdRoute =
     path: '/lancamentos/$id',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedFeedbackIdRoute =
+  AdminProtectedFeedbackIdRouteImport.update({
+    id: '/feedback/$id',
+    path: '/feedback/$id',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
 const AdminProtectedComprasIdRoute = AdminProtectedComprasIdRouteImport.update({
   id: '/compras/$id',
   path: '/compras/$id',
@@ -293,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
+  '/admin/feedback/$id': typeof AdminProtectedFeedbackIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -333,6 +341,7 @@ export interface FileRoutesByTo {
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
+  '/admin/feedback/$id': typeof AdminProtectedFeedbackIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -376,6 +385,7 @@ export interface FileRoutesById {
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
+  '/admin/_protected/feedback/$id': typeof AdminProtectedFeedbackIdRoute
   '/admin/_protected/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/lovable/email/suppression'
     | '/admin/compras/$id'
+    | '/admin/feedback/$id'
     | '/admin/lancamentos/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -459,6 +470,7 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/lovable/email/suppression'
     | '/admin/compras/$id'
+    | '/admin/feedback/$id'
     | '/admin/lancamentos/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -501,6 +513,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/usuarios'
     | '/lovable/email/suppression'
     | '/admin/_protected/compras/$id'
+    | '/admin/_protected/feedback/$id'
     | '/admin/_protected/lancamentos/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -804,6 +817,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedLancamentosIdRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/feedback/$id': {
+      id: '/admin/_protected/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/admin/feedback/$id'
+      preLoaderRoute: typeof AdminProtectedFeedbackIdRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/compras/$id': {
       id: '/admin/_protected/compras/$id'
       path: '/compras/$id'
@@ -845,6 +865,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedTiposBeatRoute: typeof AdminProtectedTiposBeatRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
   AdminProtectedComprasIdRoute: typeof AdminProtectedComprasIdRouteWithChildren
+  AdminProtectedFeedbackIdRoute: typeof AdminProtectedFeedbackIdRoute
   AdminProtectedLancamentosIdRoute: typeof AdminProtectedLancamentosIdRoute
   AdminProtectedComprasIndexRoute: typeof AdminProtectedComprasIndexRoute
   AdminProtectedFeedbackIndexRoute: typeof AdminProtectedFeedbackIndexRoute
@@ -861,6 +882,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedTiposBeatRoute: AdminProtectedTiposBeatRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
   AdminProtectedComprasIdRoute: AdminProtectedComprasIdRouteWithChildren,
+  AdminProtectedFeedbackIdRoute: AdminProtectedFeedbackIdRoute,
   AdminProtectedLancamentosIdRoute: AdminProtectedLancamentosIdRoute,
   AdminProtectedComprasIndexRoute: AdminProtectedComprasIndexRoute,
   AdminProtectedFeedbackIndexRoute: AdminProtectedFeedbackIndexRoute,
