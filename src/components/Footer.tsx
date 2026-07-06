@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram, MessageCircle, Mail } from "lucide-react";
+import { Instagram, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Placeholders configuráveis — virão do backoffice na Sprint 1
