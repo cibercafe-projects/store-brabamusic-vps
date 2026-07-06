@@ -164,7 +164,7 @@ export const getPurchaseLicenseByToken = createServerFn({ method: "GET" })
     const { data: row, error } = await supabaseAdmin
       .from("purchase_requests")
       .select(
-        "id, created_at, nome_cliente, nome_artistico, email, whatsapp, instagram, valor, forma_pagamento, status, termos_aceitos, license_accepted, license_accepted_at, license_version, license_snapshot, beat:beats(id, nome, slug, produtora:producers(id, nome_artistico, nome_artistico_creditos, texto_creditos, texto_registro, texto_royalties))",
+        "id, created_at, nome_cliente, nome_artistico, email, whatsapp, instagram, valor, forma_pagamento, status, termos_aceitos, license_accepted, license_accepted_at, license_version, license_snapshot, beat:beats(id, nome, slug, produtora:producers(id, nome_artistico, nome_artistico_creditos))",
       )
       .eq("continuation_token", data.token)
       .maybeSingle();
