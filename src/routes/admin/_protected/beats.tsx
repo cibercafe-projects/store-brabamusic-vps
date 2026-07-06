@@ -385,10 +385,25 @@ function BeatsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[b.status as BeatStatus]}>
-                      {statusLabel[b.status as BeatStatus]}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={statusVariant[b.status as BeatStatus]}>
+                        {statusLabel[b.status as BeatStatus]}
+                      </Badge>
+                      {b.status === "reservado" && (
+                        <ReservationInfo
+                          reservedAt={(b as { reserved_at?: string | null }).reserved_at ?? null}
+                          expiresAt={
+                            (b as { reservation_expires_at?: string | null }).reservation_expires_at ?? null
+                          }
+                          cliente={
+                            (b as { reserved_by?: { nome_cliente: string } | null }).reserved_by
+                              ?.nome_cliente ?? null
+                          }
+                        />
+                      )}
+                    </div>
                   </TableCell>
+
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
