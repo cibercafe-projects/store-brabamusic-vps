@@ -66,6 +66,7 @@ export function Footer() {
                 <li><Link to="/feedback" search={{ type: "problema" }} className={linkClass}>Reportar problema</Link></li>
                 <li><Link to="/feedback" search={{ type: "suporte" }} className={linkClass}>Suporte</Link></li>
               </ul>
+            </div>
 
             {/* Coluna 4 — Plataforma */}
             <div>
