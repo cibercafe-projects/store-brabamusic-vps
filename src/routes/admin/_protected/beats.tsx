@@ -64,6 +64,7 @@ import {
   getAdminMetrics,
   listBeats,
   listProducersForSelect,
+  releaseBeatReservation,
   setBeatStatus,
 } from "@/lib/beats.functions";
 import { BeatForm, type BeatFormInitial } from "@/components/admin/beats/BeatForm";
@@ -74,19 +75,23 @@ export const Route = createFileRoute("/admin/_protected/beats")({
 });
 
 type Row = Awaited<ReturnType<typeof listBeats>>["rows"][number];
-type BeatStatus = "rascunho" | "ativo" | "vendido";
+type BeatStatus = "rascunho" | "ativo" | "reservado" | "vendido";
 
 const statusLabel: Record<BeatStatus, string> = {
   rascunho: "Rascunho",
-  ativo: "Ativo",
+  ativo: "Disponível",
+  reservado: "Reservado",
   vendido: "Vendido",
 };
 
 const statusVariant: Record<BeatStatus, "default" | "secondary" | "outline"> = {
   ativo: "default",
+  reservado: "secondary",
   rascunho: "outline",
   vendido: "secondary",
 };
+
+
 
 const extFromPath = (p: string | null | undefined) => {
   if (!p) return null;
@@ -126,8 +131,37 @@ const formatPrice = (v: number | string | null | undefined) => {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 };
 
+function ReservationInfo({
+  reservedAt,
+  expiresAt,
+  cliente,
+}: {
+  reservedAt: string | null;
+  expiresAt: string | null;
+  cliente: string | null;
+}) {
+  const remaining = useMemo(() => {
+    if (!expiresAt) return null;
+    const ms = new Date(expiresAt).getTime() - Date.now();
+    if (ms <= 0) return "expirada";
+    const h = Math.floor(ms / 3_600_000);
+    const m = Math.floor((ms % 3_600_000) / 60_000);
+    return `${h}h ${m}m`;
+  }, [expiresAt]);
+  const fmt = (v: string | null) =>
+    v ? new Date(v).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
+  return (
+    <div className="text-[10px] leading-tight text-muted-foreground max-w-[220px]">
+      {cliente && <div className="truncate">Cliente: {cliente}</div>}
+      <div>Reservado: {fmt(reservedAt)}</div>
+      <div>Expira: {fmt(expiresAt)}{remaining ? ` (${remaining})` : ""}</div>
+    </div>
+  );
+}
+
 function BeatsPage() {
   const list = useServerFn(listBeats);
+
   const listProducers = useServerFn(listProducersForSelect);
   const getMetrics = useServerFn(getAdminMetrics);
   const changeStatus = useServerFn(setBeatStatus);
@@ -150,6 +184,7 @@ function BeatsPage() {
   const [editing, setEditing] = useState<BeatFormInitial | undefined>(undefined);
   const [sellConfirm, setSellConfirm] = useState<Row | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Row | null>(null);
+  const [releaseConfirm, setReleaseConfirm] = useState<Row | null>(null);
 
   const producersQuery = useQuery({
     queryKey: ["admin", "producers", "select"],
@@ -178,7 +213,7 @@ function BeatsPage() {
   );
 
   const mutateStatus = useMutation({
-    mutationFn: async (input: { id: string; status: BeatStatus }) =>
+    mutationFn: async (input: { id: string; status: "rascunho" | "ativo" | "vendido" }) =>
       changeStatus({ data: input }),
     onSuccess: () => {
       toast.success("Status atualizado.");
@@ -186,6 +221,18 @@ function BeatsPage() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
     onSettled: () => setSellConfirm(null),
+  });
+
+  const releaseReservation = useServerFn(releaseBeatReservation);
+  const mutateRelease = useMutation({
+    mutationFn: async (id: string) => releaseReservation({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Beat liberado e devolvido ao catálogo.");
+      qc.invalidateQueries({ queryKey: ["admin", "beats"] });
+      qc.invalidateQueries({ queryKey: ["admin", "metrics"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao liberar"),
+    onSettled: () => setReleaseConfirm(null),
   });
 
   const mutateDelete = useMutation({
@@ -197,6 +244,7 @@ function BeatsPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao remover"),
     onSettled: () => setDeleteConfirm(null),
   });
+
 
   const producers = producersQuery.data ?? [];
   const noProducers = !producersQuery.isLoading && producers.length === 0;
@@ -271,7 +319,8 @@ function BeatsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todas">Todos status</SelectItem>
-            <SelectItem value="ativo">Ativo</SelectItem>
+            <SelectItem value="ativo">Disponível</SelectItem>
+            <SelectItem value="reservado">Reservado</SelectItem>
             <SelectItem value="rascunho">Rascunho</SelectItem>
             <SelectItem value="vendido">Vendido</SelectItem>
           </SelectContent>
@@ -365,10 +414,25 @@ function BeatsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[b.status as BeatStatus]}>
-                      {statusLabel[b.status as BeatStatus]}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={statusVariant[b.status as BeatStatus]}>
+                        {statusLabel[b.status as BeatStatus]}
+                      </Badge>
+                      {b.status === "reservado" && (
+                        <ReservationInfo
+                          reservedAt={(b as { reserved_at?: string | null }).reserved_at ?? null}
+                          expiresAt={
+                            (b as { reservation_expires_at?: string | null }).reservation_expires_at ?? null
+                          }
+                          cliente={
+                            (b as { reserved_by?: { nome_cliente: string } | null }).reserved_by
+                              ?.nome_cliente ?? null
+                          }
+                        />
+                      )}
+                    </div>
                   </TableCell>
+
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
@@ -389,7 +453,7 @@ function BeatsPage() {
                             (b as { beat_type_id?: string | null }).beat_type_id ?? null,
 
                           descricao: b.descricao,
-                          status: b.status as BeatStatus,
+                          status: (b.status === "reservado" ? "ativo" : b.status) as "rascunho" | "ativo" | "vendido",
                           capa_url: b.capa_url,
                           capa_path: b.capa_path,
                           capa_signed_url: b.capa_signed_url,
@@ -439,7 +503,13 @@ function BeatsPage() {
                         >
                           Marcar como vendido
                         </DropdownMenuItem>
+                        {b.status === "reservado" && (
+                          <DropdownMenuItem onClick={() => setReleaseConfirm(b)}>
+                            Liberar beat (cancelar reserva)
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
+
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           onClick={() => setDeleteConfirm(b)}
@@ -519,6 +589,30 @@ function BeatsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!releaseConfirm} onOpenChange={(o) => !o && setReleaseConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Liberar reserva do beat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O beat <strong>{releaseConfirm?.nome}</strong> voltará para o catálogo
+              como disponível e o cliente reservado deixará de ter prioridade.
+              Utilize quando a compra for cancelada ou o cliente desistir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => releaseConfirm && mutateRelease.mutate(releaseConfirm.id)}
+              disabled={mutateRelease.isPending}
+            >
+              {mutateRelease.isPending ? "Liberando..." : "Liberar beat"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => !o && setDeleteConfirm(null)}>
         <AlertDialogContent>

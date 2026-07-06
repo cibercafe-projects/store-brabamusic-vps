@@ -47,9 +47,41 @@ Regras:
   beat**, preço, capa, prévia (MP3 ≤ 30s) e arquivos definitivos (WAV;
   STEMS + documento se o tipo tiver `inclui_stems = true`).
 - Beats em status `ativo` aparecem no catálogo público. Demais status
-  (rascunho, pausado) ficam ocultos.
+  (rascunho, reservado, vendido) ficam ocultos.
+
+### 1.3 Ciclo de vida e reserva automática
+
+Todos os beats são exclusivos — cada beat é vendido **uma única vez**.
+Para evitar duas compras simultâneas, o beat percorre os estados:
+
+- 🟢 **Disponível** (`ativo`): aparece no catálogo e aceita novas compras.
+- 🟡 **Reservado**: automaticamente atribuído quando um cliente cria uma
+  compra. Fica oculto do catálogo por até **24 horas**. Nenhuma nova
+  compra pode ser iniciada nesse período.
+- 🔴 **Vendido**: aplicado automaticamente quando a administradora move a
+  compra para `pagamento_confirmado` ou `arquivos_enviados`. O beat
+  permanece permanentemente indisponível.
+
+Fluxos automáticos:
+
+- Ao **criar** uma compra: `ativo → reservado` (atômico; se falhar por
+  concorrência, o pedido é descartado e o cliente recebe "Beat
+  indisponível").
+- **Confirmação de pagamento**: `reservado → vendido`.
+- **Cancelamento da compra**: `reservado → ativo` (limpando reserva).
+- **Expiração** (job `pg_cron` a cada 5 min): reservas com
+  `reservation_expires_at < now()` voltam para `ativo`.
+- **Liberação manual** pela administradora (botão "Liberar beat"):
+  força o retorno para `ativo`, útil quando o cliente desiste antes das
+  24 horas.
+
+Ao acessar diretamente um beat reservado ou vendido, o cliente vê uma
+mensagem amigável de indisponibilidade e um CTA "Voltar ao catálogo" —
+sem opção de iniciar uma nova compra.
 
 ---
+
+
 
 ## 2. Compra e Checkout
 

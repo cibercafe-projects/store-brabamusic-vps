@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.expire_beat_reservations() FROM PUBLIC, anon, authenticated;
