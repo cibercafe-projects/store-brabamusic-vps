@@ -13,6 +13,55 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 15 — Reserva Automática de Beats Exclusivos
+
+### Added
+
+- **Novo status `reservado`** no enum `beat_status` e colunas
+  `reserved_at`, `reservation_expires_at`, `reserved_purchase_id` em
+  `public.beats` para controlar reservas temporárias.
+- **Função SQL `public.expire_beat_reservations()`** (SECURITY DEFINER,
+  restrita a super-usuários / cron) que devolve para `ativo` beats cuja
+  reserva expirou.
+- **Job `pg_cron` `expire-beat-reservations`** rodando a cada 5 minutos,
+  liberando automaticamente beats abandonados após 24h.
+- **Server function `releaseBeatReservation`** para o admin cancelar
+  manualmente uma reserva ativa.
+- **UI de reserva no admin de beats**: badge "Reservado", bloco com
+  cliente responsável, data da reserva, expiração e tempo restante,
+  além da ação "Liberar beat (cancelar reserva)".
+- **Página pública do beat** passa a exibir mensagem "Este beat não está
+  mais disponível para compra." + CTA "Voltar ao catálogo" quando o
+  beat está reservado ou vendido.
+
+### Changed
+
+- **`createPurchaseRequest`** agora reserva o beat de forma atômica logo
+  após criar o pedido (UPDATE condicional em `status='ativo'`). Se outro
+  cliente ganhou a corrida, o pedido é revertido e o usuário recebe
+  "Beat indisponível para compra." — eliminando o risco de duas compras
+  simultâneas para o mesmo beat exclusivo.
+- **`updatePurchaseStatus`** sincroniza automaticamente o beat:
+  - `pagamento_confirmado` / `arquivos_enviados` → beat vira `vendido`.
+  - `cancelado` → beat volta para `ativo` (apenas se ainda for o dono da
+    reserva), limpando `reserved_*`.
+- **`getPublicBeatBySlug`** passa a retornar beats `reservado`/`vendido`
+  com uma flag `available=false` (mantendo compartilhamento do link mas
+  bloqueando a compra).
+- **Listagem admin de beats** enriquecida com dados da reserva
+  (`reserved_by`, `reserved_at`, `reservation_expires_at`) e filtro de
+  status agora inclui "Reservado".
+
+### Docs
+
+- `docs/regras-de-negocio.md`: nova seção descrevendo o ciclo de vida do
+  beat (Disponível → Reservado → Vendido/Disponível) e regras da reserva
+  automática de 24h.
+
+---
+
+
+
 ## Sprint 14 — Central de Ajuda e Feedback
 
 ### Added
