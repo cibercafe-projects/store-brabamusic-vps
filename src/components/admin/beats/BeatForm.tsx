@@ -487,34 +487,43 @@ export function BeatForm({ initial, onDone }: Props) {
           </div>
         </div>
 
-        <div className="space-y-3 rounded-md border p-4">
-          <div>
-            <p className="text-sm font-medium">Arquivos privados para entrega</p>
-            <p className="text-xs text-muted-foreground">
-              {form.watch("tipo") === "aberto"
-                ? "Beat aberto: áudio master (WAV/MP3) + stems (ZIP) + documento."
-                : "Beat fechado: apenas o áudio master (WAV/MP3)."}
-              {" "}Enviados ao comprador após confirmação do pagamento. Links assinados, válidos por 7 dias.
-            </p>
-          </div>
-          {((form.watch("tipo") === "aberto"
+        {(() => {
+          const selectedTypeId = form.watch("beat_type_id");
+          const selectedType = (beatTypesQuery.data ?? []).find(
+            (t) => t.id === selectedTypeId,
+          );
+          const incluiStems = selectedType?.inclui_stems ?? false;
+          const kinds = incluiStems
             ? (["wav", "stems", "license"] as const)
-            : (["wav"] as const)
-          )).map((kind) => (
-            <BeatPrivateFileUploader
-              key={kind}
-              kind={kind}
-              beatId={initial?.id}
-              path={form.watch(`${kind}_path` as const) || null}
-              onUploaded={(path) =>
-                form.setValue(`${kind}_path` as const, path, { shouldDirty: true })
-              }
-              onClear={() =>
-                form.setValue(`${kind}_path` as const, "", { shouldDirty: true })
-              }
-            />
-          ))}
-        </div>
+            : (["wav"] as const);
+          return (
+            <div className="space-y-3 rounded-md border p-4">
+              <div>
+                <p className="text-sm font-medium">Arquivos privados para entrega</p>
+                <p className="text-xs text-muted-foreground">
+                  {incluiStems
+                    ? "Este tipo inclui stems: áudio master (WAV/MP3) + stems (ZIP) + documento."
+                    : "Este tipo entrega apenas o áudio master (WAV/MP3)."}
+                  {" "}Enviados ao comprador após confirmação do pagamento. Links assinados, válidos por 7 dias.
+                </p>
+              </div>
+              {kinds.map((kind) => (
+                <BeatPrivateFileUploader
+                  key={kind}
+                  kind={kind}
+                  beatId={initial?.id}
+                  path={form.watch(`${kind}_path` as const) || null}
+                  onUploaded={(path) =>
+                    form.setValue(`${kind}_path` as const, path, { shouldDirty: true })
+                  }
+                  onClear={() =>
+                    form.setValue(`${kind}_path` as const, "", { shouldDirty: true })
+                  }
+                />
+              ))}
+            </div>
+          );
+        })()}
 
 
         <div className="flex justify-end gap-2 pt-2">
