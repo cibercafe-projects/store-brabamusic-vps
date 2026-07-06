@@ -85,9 +85,6 @@ const schema = z.object({
   nome_artistico_creditos: optStr(160),
   email_comercial: optEmail,
   email_royalties: optEmail,
-  texto_creditos: optStr(4000),
-  texto_registro: optStr(4000),
-  texto_royalties: optStr(4000),
 });
 
 type FormValues = z.infer<typeof schema>;
