@@ -361,6 +361,30 @@ export const setBeatStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const releaseBeatReservation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const supabaseAdmin = await assertAdmin(context.userId);
+    const { data: updated, error } = await supabaseAdmin
+      .from("beats")
+      .update({
+        status: "ativo",
+        reserved_at: null,
+        reservation_expires_at: null,
+        reserved_purchase_id: null,
+      })
+      .eq("id", data.id)
+      .eq("status", "reservado")
+      .select("id");
+    if (error) throw new Error(error.message);
+    if (!updated || updated.length === 0) {
+      throw new Error("Este beat não está reservado.");
+    }
+    return { ok: true };
+  });
+
+
 export const deleteBeat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
