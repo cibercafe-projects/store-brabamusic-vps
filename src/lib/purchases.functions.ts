@@ -38,8 +38,8 @@ async function assertAdmin(userId: string) {
 
 // ===== Internal helper: resolve payment info for a beat =====
 // Fonte única para "qual link/valor/rótulo usar em uma compra deste beat".
-// Prioriza o tipo configurado (beat_types.link_pagamento / valor_padrao) e cai
-// para o app_settings.payment_link e beat.preco como fallback legado.
+// A partir da Fase 5 o link vem exclusivamente de beat_types.link_pagamento;
+// app_settings.payment_link foi aposentado como fonte de leitura.
 export type ResolvedBeatPayment = {
   valor: number | null;
   paymentLink: string;
@@ -61,15 +61,7 @@ async function resolveBeatPayment(admin: any, beatId: string): Promise<ResolvedB
     | { nome: string; valor_padrao: number | string; link_pagamento: string; inclui_stems: boolean }
     | null;
 
-  let paymentLink = bt?.link_pagamento?.trim() ?? "";
-  if (!paymentLink) {
-    const { data: settingRow } = await admin
-      .from("app_settings")
-      .select("value")
-      .eq("key", "payment_link")
-      .maybeSingle();
-    paymentLink = settingRow?.value ?? "";
-  }
+  const paymentLink = bt?.link_pagamento?.trim() ?? "";
 
   const preco = beat?.preco != null ? Number(beat.preco) : null;
   const valor =
@@ -91,7 +83,7 @@ export const getPurchaseSettings = createServerFn({ method: "GET" })
     const { data: rows, error } = await supabaseAdmin
       .from("app_settings")
       .select("key, value")
-      .in("key", ["pix_key", "payment_link", "commercial_whatsapp"]);
+      .in("key", ["pix_key", "commercial_whatsapp"]);
     if (error) {
       console.error("[purchases.settings]", error);
       throw new Error("Erro ao carregar dados de pagamento.");
@@ -101,10 +93,10 @@ export const getPurchaseSettings = createServerFn({ method: "GET" })
       map[r.key] = r.value ?? "";
     });
 
-    let paymentLink = map.payment_link ?? "";
+    let paymentLink = "";
     if (data?.beat_id) {
       const resolved = await resolveBeatPayment(supabaseAdmin, data.beat_id);
-      if (resolved.paymentLink) paymentLink = resolved.paymentLink;
+      paymentLink = resolved.paymentLink;
     }
 
     return {
@@ -113,6 +105,7 @@ export const getPurchaseSettings = createServerFn({ method: "GET" })
       commercial_whatsapp: map.commercial_whatsapp ?? "+5511913401000",
     };
   });
+
 
 // ===== Public: license info per beat =====
 export const getBeatLicenseInfo = createServerFn({ method: "GET" })
