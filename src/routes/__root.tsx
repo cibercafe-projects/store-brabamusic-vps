@@ -14,6 +14,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { PlayerBar } from "@/components/PlayerBar";
 import { Toaster } from "@/components/ui/sonner";
+import { usePresence } from "@/hooks/usePresence";
 
 function NotFoundComponent() {
   return (
@@ -88,6 +89,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
+  usePresence();
   return (
     <QueryClientProvider client={queryClient}>
       {isAdmin ? (

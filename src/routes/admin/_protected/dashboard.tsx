@@ -27,6 +27,8 @@ import { Button } from "@/components/ui/button";
 import { getAdminMetrics } from "@/lib/beats.functions";
 import { getPurchaseDashboardCounts } from "@/lib/purchases.functions";
 import { getFeedbackStats } from "@/lib/feedback.functions";
+import { OnlineVisitorsCard } from "@/components/admin/OnlineVisitorsCard";
+
 
 
 export const Route = createFileRoute("/admin/_protected/dashboard")({
@@ -127,7 +129,9 @@ function DashboardPage() {
 
           <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard label="Rascunhos" value={m.beatsRascunho} icon={FileEdit} />
+            <OnlineVisitorsCard />
           </section>
+
 
           <section>
             <div className="flex items-center justify-between mb-3">
