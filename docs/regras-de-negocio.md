@@ -63,6 +63,14 @@ Regras:
 - Licença e Termos são apresentados no checkout (links).
 - Após a entrega, ambos são reenviados nos e-mails de confirmação para o
   cliente.
+- Os textos jurídicos exibidos na licença (Créditos / Registro / Royalties)
+  são **globais** da plataforma, mantidos em **Admin → Textos Jurídicos**
+  (`app_settings.legal_text_creditos/registro/royalties`). No momento da
+  compra os três textos vigentes são **congelados** em
+  `license_snapshot`, garantindo que licenças já emitidas nunca mudem.
+  Alterações feitas em Textos Jurídicos passam a valer apenas para novas
+  compras, sem necessidade de deploy.
+
 
 ### 2.3 Janela de compra
 - Sem direcionamento automático para WhatsApp em nenhuma etapa pública.
