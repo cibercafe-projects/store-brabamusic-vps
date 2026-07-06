@@ -181,6 +181,23 @@ function DashboardPage() {
               />
             </div>
           </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display text-xl">Ajuda e Feedback</h2>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin/feedback">
+                  Ver feedbacks <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <MetricCard label="Total de Feedbacks" value={f?.total ?? 0} icon={MessageSquare} />
+              <MetricCard label="Pendentes" value={f?.pendentes ?? 0} icon={Inbox} hint="Novos + em análise" />
+              <MetricCard label="Nota Média" value={f?.notaMedia ? f.notaMedia.toFixed(2) : "—"} icon={Star} hint="Avaliações 1–5" />
+              <MetricCard label="Problemas em aberto" value={f?.problemas ?? 0} icon={AlertTriangle} />
+            </div>
+          </section>
         </>
       ) : null}
     </div>
