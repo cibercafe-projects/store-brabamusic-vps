@@ -35,25 +35,53 @@ export const Route = createFileRoute("/admin/_protected/dashboard")({
   component: DashboardPage,
 });
 
+type Tone = "default" | "primary" | "accent" | "destructive";
+
+const TONE_STYLES: Record<Tone, { card: string; icon: string; value: string }> = {
+  default: { card: "", icon: "text-muted-foreground", value: "" },
+  primary: {
+    card: "border-l-4 border-l-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)]",
+    icon: "text-primary",
+    value: "text-primary",
+  },
+  accent: {
+    card: "border-l-4 border-l-accent",
+    icon: "text-accent",
+    value: "",
+  },
+  destructive: {
+    card: "border-l-4 border-l-destructive",
+    icon: "text-destructive",
+    value: "text-destructive",
+  },
+};
+
 function MetricCard({
   label,
   value,
   icon: Icon,
   hint,
+  tone = "default",
+  highlight = false,
 }: {
   label: string;
   value: number | string;
   icon: typeof Users;
   hint?: string;
+  tone?: Tone;
+  highlight?: boolean;
 }) {
+  const t = TONE_STYLES[tone];
   return (
-    <Card>
+    <Card className={`${t.card} ${highlight ? "bg-card/80" : ""}`.trim()}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className={`h-4 w-4 ${t.icon}`} />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-display">{value}</div>
+        <div className={`font-display ${highlight ? "text-4xl" : "text-3xl"} ${t.value}`}>
+          {value}
+        </div>
         {hint ? <p className="text-xs text-muted-foreground mt-1">{hint}</p> : null}
       </CardContent>
     </Card>
