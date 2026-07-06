@@ -66,34 +66,6 @@ export function Footer() {
                 <li><Link to="/feedback" search={{ type: "problema" }} className={linkClass}>Reportar problema</Link></li>
                 <li><Link to="/feedback" search={{ type: "suporte" }} className={linkClass}>Suporte</Link></li>
               </ul>
-            </div>__PLACEHOLDER__
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${linkClass} inline-flex items-center gap-2`}
-                  >
-                    <Instagram className="size-4" /> Instagram Braba Music
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={CONTACT.whatsapp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${linkClass} inline-flex items-center gap-2`}
-                  >
-                    <MessageCircle className="size-4" /> WhatsApp Comercial
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={`mailto:${CONTACT.email}`}
-                    className={`${linkClass} inline-flex items-center gap-2`}
-                  >
-                    <Mail className="size-4" /> {CONTACT.email}
-                  </a>
-                </li>
-              </ul>
-            </div>
 
             {/* Coluna 4 — Plataforma */}
             <div>
