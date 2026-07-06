@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram, MessageCircle, Mail } from "lucide-react";
+import { Instagram, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Placeholders configuráveis — virão do backoffice na Sprint 1
@@ -61,7 +61,6 @@ export function Footer() {
               <ul className="mt-4 space-y-3">
                 <li><a href={CONTACT.instagram} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-2`}><Instagram className="size-4" /> Instagram Braba Music</a></li>
                 <li><a href={CONTACT.whatsapp} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-2`}><MessageCircle className="size-4" /> WhatsApp Comercial</a></li>
-                <li><a href={`mailto:${CONTACT.email}`} className={`${linkClass} inline-flex items-center gap-2`}><Mail className="size-4" /> {CONTACT.email}</a></li>
                 <li><Link to="/feedback" className={linkClass}>Ajuda e Feedback</Link></li>
                 <li><Link to="/feedback" search={{ type: "problema" }} className={linkClass}>Reportar problema</Link></li>
                 <li><Link to="/feedback" search={{ type: "suporte" }} className={linkClass}>Suporte</Link></li>
