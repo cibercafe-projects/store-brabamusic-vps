@@ -105,9 +105,6 @@ export type ProducerFormInitial = {
   nome_artistico_creditos?: string | null;
   email_comercial?: string | null;
   email_royalties?: string | null;
-  texto_creditos?: string | null;
-  texto_registro?: string | null;
-  texto_royalties?: string | null;
 };
 
 type Props = {
