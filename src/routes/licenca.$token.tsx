@@ -82,16 +82,13 @@ function PublicLicensePage() {
   const beat = p.beat as { nome: string; slug: string | null; produtora: {
     nome_artistico: string | null;
     nome_artistico_creditos: string | null;
-    texto_creditos: string | null;
-    texto_registro: string | null;
-    texto_royalties: string | null;
   } | null } | null;
   const snap = (p.license_snapshot as LicenseSnapshot | null) ?? {};
   const producer = beat?.produtora;
 
-  const creditos = snap.texto_creditos ?? producer?.texto_creditos ?? "—";
-  const registro = snap.texto_registro ?? producer?.texto_registro ?? "—";
-  const royalties = snap.texto_royalties ?? producer?.texto_royalties ?? "—";
+  const creditos = snap.texto_creditos ?? "—";
+  const registro = snap.texto_registro ?? "—";
+  const royalties = snap.texto_royalties ?? "—";
   const nomeArtisticoCreditos =
     snap.nome_artistico_creditos ??
     producer?.nome_artistico_creditos ??
