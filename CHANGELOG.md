@@ -46,9 +46,10 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
-
+## Sprint 13 — Textos Jurídicos globais
 
 ### Added
+
 
 - **Nova aba "Textos Jurídicos"** em `/admin/textos-juridicos` (sidebar,
   ícone `FileText`), com 3 campos editáveis (Créditos, Registro da Obra e
