@@ -164,7 +164,7 @@ export const getPurchaseLicenseByToken = createServerFn({ method: "GET" })
     const { data: row, error } = await supabaseAdmin
       .from("purchase_requests")
       .select(
-        "id, created_at, nome_cliente, nome_artistico, email, whatsapp, instagram, valor, forma_pagamento, status, termos_aceitos, license_accepted, license_accepted_at, license_version, license_snapshot, beat:beats(id, nome, slug, produtora:producers(id, nome_artistico, nome_artistico_creditos))",
+        "id, created_at, nome_cliente, nome_artistico, email, whatsapp, instagram, valor, forma_pagamento, status, termos_aceitos, license_accepted, license_accepted_at, license_version, license_snapshot, beat:beats!purchase_requests_beat_id_fkey(id, nome, slug, produtora:producers(id, nome_artistico, nome_artistico_creditos))",
       )
       .eq("continuation_token", data.token)
       .maybeSingle();
@@ -399,7 +399,7 @@ export const getPurchaseByToken = createServerFn({ method: "GET" })
     const { data: row, error } = await supabaseAdmin
       .from("purchase_requests")
       .select(
-        "id, nome_cliente, email, valor, status, receipt_path, forma_pagamento, created_at, beat:beats(id, nome, slug, capa_url, produtora:producers(nome_artistico))",
+        "id, nome_cliente, email, valor, status, receipt_path, forma_pagamento, created_at, beat:beats!purchase_requests_beat_id_fkey(id, nome, slug, capa_url, produtora:producers(nome_artistico))",
       )
       .eq("continuation_token", data.token)
       .maybeSingle();
@@ -437,7 +437,7 @@ export const uploadReceiptByToken = createServerFn({ method: "POST" })
     const { data: row, error: lookupErr } = await supabaseAdmin
       .from("purchase_requests")
       .select(
-        "id, status, receipt_path, nome_cliente, email, beat:beats(nome)",
+        "id, status, receipt_path, nome_cliente, email, beat:beats!purchase_requests_beat_id_fkey(nome)",
       )
       .eq("continuation_token", data.token)
       .maybeSingle();
@@ -539,7 +539,7 @@ export const listPurchases = createServerFn({ method: "GET" })
     let q = admin
       .from("purchase_requests")
       .select(
-        "id, nome_cliente, email, whatsapp, status, valor, receipt_path, created_at, forma_pagamento, beat:beats(id, nome, slug)",
+        "id, nome_cliente, email, whatsapp, status, valor, receipt_path, created_at, forma_pagamento, beat:beats!purchase_requests_beat_id_fkey(id, nome, slug)",
       )
       .order("created_at", { ascending: false })
       .limit(200);
@@ -566,7 +566,7 @@ export const getPurchase = createServerFn({ method: "GET" })
     const { data: row, error } = await admin
       .from("purchase_requests")
       .select(
-        "*, beat:beats(id, nome, slug, capa_url, preco, wav_path, stems_path, license_path, produtora:producers(id, nome_artistico, slug))",
+        "*, beat:beats!purchase_requests_beat_id_fkey(id, nome, slug, capa_url, preco, wav_path, stems_path, license_path, produtora:producers(id, nome_artistico, slug))",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -733,7 +733,7 @@ export const logResendInstructions = createServerFn({ method: "POST" })
       const { data: row } = await admin
         .from("purchase_requests")
         .select(
-          "id, email, nome_cliente, valor, forma_pagamento, continuation_token, beat_id, beat:beats(nome)",
+          "id, email, nome_cliente, valor, forma_pagamento, continuation_token, beat_id, beat:beats!purchase_requests_beat_id_fkey(nome)",
         )
         .eq("id", data.id)
         .maybeSingle();

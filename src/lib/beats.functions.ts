@@ -398,6 +398,18 @@ export const deleteBeat = createServerFn({ method: "POST" })
       .maybeSingle();
     if (getErr) throw new Error(getErr.message);
 
+    // Bloqueia exclusão se existirem compras associadas (FK RESTRICT).
+    const { count: purchasesCount, error: pcErr } = await supabaseAdmin
+      .from("purchase_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("beat_id", data.id);
+    if (pcErr) throw new Error(pcErr.message);
+    if ((purchasesCount ?? 0) > 0) {
+      throw new Error(
+        "Não é possível excluir este beat: existem compras associadas. Cancele/arquive as compras antes de excluir, ou apenas altere o status do beat.",
+      );
+    }
+
     const { error } = await supabaseAdmin.from("beats").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
 
