@@ -159,7 +159,9 @@ function ReservationInfo({
   );
 }
 
+function BeatsPage() {
   const list = useServerFn(listBeats);
+
   const listProducers = useServerFn(listProducersForSelect);
   const getMetrics = useServerFn(getAdminMetrics);
   const changeStatus = useServerFn(setBeatStatus);
