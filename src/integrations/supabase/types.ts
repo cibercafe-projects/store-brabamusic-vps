@@ -260,6 +260,81 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          area: Database["public"]["Enums"]["feedback_area"] | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_whatsapp: string | null
+          created_at: string
+          id: string
+          internal_notes: string | null
+          message: string
+          origin: Database["public"]["Enums"]["feedback_origin"]
+          purchase_request_id: string | null
+          rating: number | null
+          release_id: string | null
+          status: Database["public"]["Enums"]["feedback_status"]
+          type: Database["public"]["Enums"]["feedback_type"]
+          updated_at: string
+          user_agent: string | null
+          wants_reply: boolean
+        }
+        Insert: {
+          area?: Database["public"]["Enums"]["feedback_area"] | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          message: string
+          origin?: Database["public"]["Enums"]["feedback_origin"]
+          purchase_request_id?: string | null
+          rating?: number | null
+          release_id?: string | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          type: Database["public"]["Enums"]["feedback_type"]
+          updated_at?: string
+          user_agent?: string | null
+          wants_reply?: boolean
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["feedback_area"] | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_whatsapp?: string | null
+          created_at?: string
+          id?: string
+          internal_notes?: string | null
+          message?: string
+          origin?: Database["public"]["Enums"]["feedback_origin"]
+          purchase_request_id?: string | null
+          rating?: number | null
+          release_id?: string | null
+          status?: Database["public"]["Enums"]["feedback_status"]
+          type?: Database["public"]["Enums"]["feedback_type"]
+          updated_at?: string
+          user_agent?: string | null
+          wants_reply?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_purchase_request_id_fkey"
+            columns: ["purchase_request_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           beat_id: string
@@ -785,6 +860,23 @@ export type Database = {
       app_role: "admin"
       beat_status: "rascunho" | "ativo" | "vendido"
       beat_tipo: "fechado" | "aberto"
+      feedback_area:
+        | "catalogo"
+        | "compra"
+        | "pagamento"
+        | "comprovante"
+        | "entrega"
+        | "lancamentos"
+        | "backoffice"
+        | "outro"
+      feedback_origin: "geral" | "pos_compra" | "pos_lancamento"
+      feedback_status:
+        | "novo"
+        | "em_analise"
+        | "respondido"
+        | "resolvido"
+        | "arquivado"
+      feedback_type: "sugestao" | "problema" | "duvida" | "suporte" | "elogio"
       lead_status:
         | "novo"
         | "contatado"
@@ -933,6 +1025,25 @@ export const Constants = {
       app_role: ["admin"],
       beat_status: ["rascunho", "ativo", "vendido"],
       beat_tipo: ["fechado", "aberto"],
+      feedback_area: [
+        "catalogo",
+        "compra",
+        "pagamento",
+        "comprovante",
+        "entrega",
+        "lancamentos",
+        "backoffice",
+        "outro",
+      ],
+      feedback_origin: ["geral", "pos_compra", "pos_lancamento"],
+      feedback_status: [
+        "novo",
+        "em_analise",
+        "respondido",
+        "resolvido",
+        "arquivado",
+      ],
+      feedback_type: ["sugestao", "problema", "duvida", "suporte", "elogio"],
       lead_status: [
         "novo",
         "contatado",
