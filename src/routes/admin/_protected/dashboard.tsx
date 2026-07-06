@@ -35,25 +35,53 @@ export const Route = createFileRoute("/admin/_protected/dashboard")({
   component: DashboardPage,
 });
 
+type Tone = "default" | "primary" | "accent" | "destructive";
+
+const TONE_STYLES: Record<Tone, { card: string; icon: string; value: string }> = {
+  default: { card: "", icon: "text-muted-foreground", value: "" },
+  primary: {
+    card: "border-l-4 border-l-primary shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)]",
+    icon: "text-primary",
+    value: "text-primary",
+  },
+  accent: {
+    card: "border-l-4 border-l-accent",
+    icon: "text-accent",
+    value: "",
+  },
+  destructive: {
+    card: "border-l-4 border-l-destructive",
+    icon: "text-destructive",
+    value: "text-destructive",
+  },
+};
+
 function MetricCard({
   label,
   value,
   icon: Icon,
   hint,
+  tone = "default",
+  highlight = false,
 }: {
   label: string;
   value: number | string;
   icon: typeof Users;
   hint?: string;
+  tone?: Tone;
+  highlight?: boolean;
 }) {
+  const t = TONE_STYLES[tone];
   return (
-    <Card>
+    <Card className={`${t.card} ${highlight ? "bg-card/80" : ""}`.trim()}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <Icon className={`h-4 w-4 ${t.icon}`} />
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-display">{value}</div>
+        <div className={`font-display ${highlight ? "text-4xl" : "text-3xl"} ${t.value}`}>
+          {value}
+        </div>
         {hint ? <p className="text-xs text-muted-foreground mt-1">{hint}</p> : null}
       </CardContent>
     </Card>
@@ -121,10 +149,17 @@ function DashboardPage() {
               value={m.produtorasTotal}
               icon={Users}
               hint={`${m.produtorasAtivas} ativas`}
+              tone="accent"
             />
-            <MetricCard label="Total Beats" value={m.beatsTotal} icon={Music} />
-            <MetricCard label="Beats Ativos" value={m.beatsAtivos} icon={CheckCircle2} />
-            <MetricCard label="Beats Vendidos" value={m.beatsVendidos} icon={PackageCheck} />
+            <MetricCard label="Total Beats" value={m.beatsTotal} icon={Music} tone="primary" highlight />
+            <MetricCard label="Beats Ativos" value={m.beatsAtivos} icon={CheckCircle2} tone="accent" />
+            <MetricCard
+              label="Beats Vendidos"
+              value={m.beatsVendidos}
+              icon={PackageCheck}
+              tone="primary"
+              highlight
+            />
           </section>
 
           <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -144,13 +179,15 @@ function DashboardPage() {
             </div>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Total de Leads" value={m.leadsTotal} icon={Inbox} />
-              <MetricCard label="Leads Novos" value={m.leadsNovos} icon={MessageCircle} />
-              <MetricCard label="Em Negociação" value={m.leadsNegociacao} icon={Handshake} />
+              <MetricCard label="Leads Novos" value={m.leadsNovos} icon={MessageCircle} tone="accent" highlight />
+              <MetricCard label="Em Negociação" value={m.leadsNegociacao} icon={Handshake} tone="accent" />
               <MetricCard
                 label="Convertidos"
                 value={m.leadsConvertidos}
                 icon={Trophy}
                 hint="Pagos + entregues"
+                tone="primary"
+                highlight
               />
             </div>
           </section>
@@ -171,17 +208,22 @@ function DashboardPage() {
                 value={p?.pagamento_confirmado ?? 0}
                 icon={FileText}
                 hint="Pagamento confirmado, aguardando entrega"
+                tone="destructive"
+                highlight
               />
               <MetricCard
                 label="Arquivos enviados"
                 value={p?.arquivos_enviados ?? 0}
                 icon={Send}
+                tone="accent"
               />
               <MetricCard
                 label="Compras concluídas"
                 value={p?.arquivos_enviados ?? 0}
                 icon={CreditCard}
                 hint="Ciclo finalizado"
+                tone="primary"
+                highlight
               />
             </div>
           </section>
@@ -197,9 +239,28 @@ function DashboardPage() {
             </div>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Total de Feedbacks" value={f?.total ?? 0} icon={MessageSquare} />
-              <MetricCard label="Pendentes" value={f?.pendentes ?? 0} icon={Inbox} hint="Novos + em análise" />
-              <MetricCard label="Nota Média" value={f?.notaMedia ? f.notaMedia.toFixed(2) : "—"} icon={Star} hint="Avaliações 1–5" />
-              <MetricCard label="Problemas em aberto" value={f?.problemas ?? 0} icon={AlertTriangle} />
+              <MetricCard
+                label="Pendentes"
+                value={f?.pendentes ?? 0}
+                icon={Inbox}
+                hint="Novos + em análise"
+                tone="accent"
+                highlight
+              />
+              <MetricCard
+                label="Nota Média"
+                value={f?.notaMedia ? f.notaMedia.toFixed(2) : "—"}
+                icon={Star}
+                hint="Avaliações 1–5"
+                tone="primary"
+              />
+              <MetricCard
+                label="Problemas em aberto"
+                value={f?.problemas ?? 0}
+                icon={AlertTriangle}
+                tone="destructive"
+                highlight
+              />
             </div>
           </section>
         </>
