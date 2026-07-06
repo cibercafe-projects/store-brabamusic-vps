@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Tags,
   FileText,
+  MessageSquare,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
