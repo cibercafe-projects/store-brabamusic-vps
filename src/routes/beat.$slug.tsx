@@ -42,13 +42,14 @@ function BeatDetail() {
   const { slug } = Route.useParams();
   const { data } = useSuspenseQuery(beatQuery(slug));
   if (!data) return null;
-  const { beat, produtora } = data;
+  const { beat, produtora, available } = data;
 
   const { current, playing, play } = usePlayer();
   const isPlaying = current?.id === beat.id && playing;
   const hasPreview = !!beat.preview_url;
   const [copied, setCopied] = useState(false);
   const [purchaseOpen, setPurchaseOpen] = useState(false);
+
 
 
 
