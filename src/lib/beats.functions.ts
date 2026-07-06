@@ -55,21 +55,26 @@ const beatInputSchema = z.object({
   license_path: pathField,
 });
 
-async function resolveTipoFromBeatType(
+async function resolveBeatTypeInfo(
   supabaseAdmin: Awaited<ReturnType<typeof assertAdmin>>,
   beatTypeId: string,
-): Promise<"fechado" | "aberto" | null> {
+): Promise<{ tipo: "fechado" | "aberto" | null; valorPadrao: number | null }> {
   const { data, error } = await supabaseAdmin
     .from("beat_types")
-    .select("inclui_stems, slug")
+    .select("inclui_stems, slug, valor_padrao")
     .eq("id", beatTypeId)
     .maybeSingle();
-  if (error || !data) return null;
-  if (data.slug === "aberto" || data.slug === "fechado") {
-    return data.slug as "aberto" | "fechado";
-  }
-  return data.inclui_stems ? "aberto" : "fechado";
+  if (error || !data) return { tipo: null, valorPadrao: null };
+  const tipo: "aberto" | "fechado" =
+    data.slug === "aberto" || data.slug === "fechado"
+      ? (data.slug as "aberto" | "fechado")
+      : data.inclui_stems
+        ? "aberto"
+        : "fechado";
+  const valorPadrao = data.valor_padrao != null ? Number(data.valor_padrao) : null;
+  return { tipo, valorPadrao };
 }
+
 
 
 async function assertAdmin(userId: string) {
