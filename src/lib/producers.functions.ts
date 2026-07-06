@@ -177,9 +177,6 @@ export const createProducer = createServerFn({ method: "POST" })
         nome_artistico_creditos: data.nome_artistico_creditos,
         email_comercial: data.email_comercial,
         email_royalties: data.email_royalties,
-        texto_creditos: data.texto_creditos,
-        texto_registro: data.texto_registro,
-        texto_royalties: data.texto_royalties,
       })
       .select("*")
       .single();
