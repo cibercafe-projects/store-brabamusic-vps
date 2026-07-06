@@ -114,34 +114,42 @@ export const getBeatLicenseInfo = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin
-      .from("beats")
-      .select(
-        "id, status, produtora:producers(id, nome_artistico, nome_artistico_creditos, texto_creditos, texto_registro, texto_royalties)",
-      )
-      .eq("id", data.beat_id)
-      .maybeSingle();
-    if (error) {
-      console.error("[purchases.licenseInfo]", error);
+    const [beatRes, textsRes] = await Promise.all([
+      supabaseAdmin
+        .from("beats")
+        .select(
+          "id, status, produtora:producers(id, nome_artistico, nome_artistico_creditos)",
+        )
+        .eq("id", data.beat_id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("app_settings")
+        .select("key, value")
+        .in("key", ["legal_text_creditos", "legal_text_registro", "legal_text_royalties"]),
+    ]);
+    if (beatRes.error) {
+      console.error("[purchases.licenseInfo]", beatRes.error);
       return null;
     }
+    const row = beatRes.data;
     if (!row || row.status !== "ativo") return null;
     const p = (row as { produtora?: unknown }).produtora as
       | {
           id: string;
           nome_artistico: string | null;
           nome_artistico_creditos: string | null;
-          texto_creditos: string | null;
-          texto_registro: string | null;
-          texto_royalties: string | null;
         }
       | null;
+    const texts: Record<string, string> = {};
+    (textsRes.data ?? []).forEach((r) => {
+      texts[r.key] = r.value ?? "";
+    });
     return {
       produtora_nome: p?.nome_artistico ?? null,
       nome_artistico_creditos: p?.nome_artistico_creditos ?? null,
-      texto_creditos: p?.texto_creditos ?? null,
-      texto_registro: p?.texto_registro ?? null,
-      texto_royalties: p?.texto_royalties ?? null,
+      texto_creditos: texts.legal_text_creditos ?? null,
+      texto_registro: texts.legal_text_registro ?? null,
+      texto_royalties: texts.legal_text_royalties ?? null,
       license_version: CURRENT_LICENSE_VERSION,
     };
   });
