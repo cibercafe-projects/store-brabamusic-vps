@@ -394,7 +394,7 @@ function BeatsPage() {
                             (b as { beat_type_id?: string | null }).beat_type_id ?? null,
 
                           descricao: b.descricao,
-                          status: b.status as BeatStatus,
+                          status: (b.status === "reservado" ? "ativo" : b.status) as "rascunho" | "ativo" | "vendido",
                           capa_url: b.capa_url,
                           capa_path: b.capa_path,
                           capa_signed_url: b.capa_signed_url,
