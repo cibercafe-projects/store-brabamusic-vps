@@ -249,7 +249,7 @@ export const updateFeedback = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => updateInput.parse(input))
   .handler(async ({ context, data }) => {
     const admin = await assertAdmin(context.userId);
-    const patch: Record<string, unknown> = {};
+    const patch: { status?: FeedbackStatus; internal_notes?: string | null } = {};
     if (data.status !== undefined) patch.status = data.status;
     if (data.internal_notes !== undefined) patch.internal_notes = data.internal_notes;
     if (Object.keys(patch).length === 0) return { ok: true };
