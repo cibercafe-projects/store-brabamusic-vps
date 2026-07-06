@@ -147,7 +147,8 @@ export function BeatForm({ initial, onDone }: Props) {
       preco:
         initial?.preco != null
           ? String(initial.preco).replace(".", ",")
-          : "100,00",
+          : "",
+
       tipo: initial?.tipo ?? "fechado",
       beat_type_id: initial?.beat_type_id ?? "",
 

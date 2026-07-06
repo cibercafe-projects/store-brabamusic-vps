@@ -55,21 +55,26 @@ const beatInputSchema = z.object({
   license_path: pathField,
 });
 
-async function resolveTipoFromBeatType(
+async function resolveBeatTypeInfo(
   supabaseAdmin: Awaited<ReturnType<typeof assertAdmin>>,
   beatTypeId: string,
-): Promise<"fechado" | "aberto" | null> {
+): Promise<{ tipo: "fechado" | "aberto" | null; valorPadrao: number | null }> {
   const { data, error } = await supabaseAdmin
     .from("beat_types")
-    .select("inclui_stems, slug")
+    .select("inclui_stems, slug, valor_padrao")
     .eq("id", beatTypeId)
     .maybeSingle();
-  if (error || !data) return null;
-  if (data.slug === "aberto" || data.slug === "fechado") {
-    return data.slug as "aberto" | "fechado";
-  }
-  return data.inclui_stems ? "aberto" : "fechado";
+  if (error || !data) return { tipo: null, valorPadrao: null };
+  const tipo: "aberto" | "fechado" =
+    data.slug === "aberto" || data.slug === "fechado"
+      ? (data.slug as "aberto" | "fechado")
+      : data.inclui_stems
+        ? "aberto"
+        : "fechado";
+  const valorPadrao = data.valor_padrao != null ? Number(data.valor_padrao) : null;
+  return { tipo, valorPadrao };
 }
+
 
 
 async function assertAdmin(userId: string) {
@@ -219,10 +224,12 @@ export const createBeat = createServerFn({ method: "POST" })
     await assertProducerActive(supabaseAdmin, data.produtora_id);
     const baseSlug = data.slug || slugify(data.nome);
     const slug = await uniqueSlug(supabaseAdmin, baseSlug);
-    const derivedTipo = data.beat_type_id
-      ? await resolveTipoFromBeatType(supabaseAdmin, data.beat_type_id)
-      : null;
-    const tipo = derivedTipo ?? data.tipo ?? "fechado";
+    const btInfo = data.beat_type_id
+      ? await resolveBeatTypeInfo(supabaseAdmin, data.beat_type_id)
+      : { tipo: null, valorPadrao: null };
+    const tipo = btInfo.tipo ?? data.tipo ?? "fechado";
+    const precoFinal =
+      data.preco ?? btInfo.valorPadrao ?? (tipo === "aberto" ? 200 : 100);
     const { data: inserted, error } = await supabaseAdmin
       .from("beats")
       .insert({
@@ -233,9 +240,10 @@ export const createBeat = createServerFn({ method: "POST" })
         bpm: data.bpm ?? null,
         tom: data.tom,
         mood: data.mood,
-        preco: data.preco ?? (tipo === "aberto" ? 150 : 100),
+        preco: precoFinal,
         tipo,
         beat_type_id: data.beat_type_id ?? null,
+
         descricao: data.descricao,
         status: data.status,
         capa_url: data.capa_url,
@@ -270,9 +278,13 @@ export const updateBeat = createServerFn({ method: "POST" })
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
     }
     if (rest.beat_type_id !== undefined && rest.beat_type_id !== null) {
-      const derived = await resolveTipoFromBeatType(supabaseAdmin, rest.beat_type_id);
-      if (derived) patch.tipo = derived;
+      const info = await resolveBeatTypeInfo(supabaseAdmin, rest.beat_type_id);
+      if (info.tipo) patch.tipo = info.tipo;
+      if (patch.preco == null && info.valorPadrao != null) {
+        patch.preco = info.valorPadrao;
+      }
     }
+
 
 
     const privateFields = ["capa_path", "preview_path", "wav_path", "stems_path", "license_path"] as const;
