@@ -1,10 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, FileText, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Loader2,
+  Search,
+  FileText,
+  ExternalLink,
+  MoreVertical,
+  Archive,
+  ArchiveRestore,
+  Trash2,
+} from "lucide-react";
 import {
   listPurchases,
+  archivePurchase,
+  unarchivePurchase,
+  deletePurchase,
   PURCHASE_STATUS_LABELS,
   PURCHASE_STATUS_LIST,
   type PurchaseStatus,
@@ -26,6 +39,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/admin/_protected/compras/")({
   component: PurchasesListPage,
@@ -53,15 +83,26 @@ function fmtPrice(v: number | string | null | undefined) {
 function PurchasesListPage() {
   const [status, setStatus] = useState<PurchaseStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [archived, setArchived] = useState<"hide" | "only" | "all">("hide");
+  const [archiveConfirm, setArchiveConfirm] = useState<{ id: string; nome: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
   const listFn = useServerFn(listPurchases);
+  const archiveFn = useServerFn(archivePurchase);
+  const unarchiveFn = useServerFn(unarchivePurchase);
+  const deleteFn = useServerFn(deletePurchase);
+  const queryClient = useQueryClient();
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["admin", "purchases"] });
 
   const query = useQuery({
-    queryKey: ["admin", "purchases", status, search],
+    queryKey: ["admin", "purchases", status, search, archived],
     queryFn: () =>
       listFn({
         data: {
           status: status === "all" ? undefined : status,
           search: search.trim() || undefined,
+          archived,
         },
       }),
     staleTime: 15_000,
@@ -139,7 +180,7 @@ function PurchasesListPage() {
           )}
         </button>
         <Select value={status} onValueChange={(v) => setStatus(v as PurchaseStatus | "all")}>
-          <SelectTrigger className="w-[240px]">
+          <SelectTrigger className="w-[220px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -149,6 +190,16 @@ function PurchasesListPage() {
                 {PURCHASE_STATUS_LABELS[s]}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={archived} onValueChange={(v) => setArchived(v as "hide" | "only" | "all")}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="hide">Ocultar arquivadas</SelectItem>
+            <SelectItem value="only">Somente arquivadas</SelectItem>
+            <SelectItem value="all">Incluir arquivadas</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -223,6 +274,11 @@ function PurchasesListPage() {
                           Validar comprovante
                         </Badge>
                       )}
+                      {p.archived_at && (
+                        <Badge variant="outline" className="ml-1">
+                          Arquivada
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {p.receipt_path ? (
@@ -233,13 +289,57 @@ function PurchasesListPage() {
                     </TableCell>
                     <TableCell className="text-xs">{fmtDate(p.created_at)}</TableCell>
                     <TableCell className="text-right">
-                      <Link
-                        to="/admin/compras/$id"
-                        params={{ id: p.id }}
-                        className={`text-xs hover:underline ${pending || toValidate ? "font-semibold text-accent" : "text-accent"}`}
-                      >
-                        {pending ? "Entregar →" : toValidate ? "Validar →" : "Abrir"}
-                      </Link>
+                      <div className="inline-flex items-center gap-2">
+                        <Link
+                          to="/admin/compras/$id"
+                          params={{ id: p.id }}
+                          className={`text-xs hover:underline ${pending || toValidate ? "font-semibold text-accent" : "text-accent"}`}
+                        >
+                          {pending ? "Entregar →" : toValidate ? "Validar →" : "Abrir"}
+                        </Link>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="rounded p-1 hover:bg-muted">
+                            <MoreVertical className="h-4 w-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {p.archived_at ? (
+                              <DropdownMenuItem
+                                onClick={async () => {
+                                  try {
+                                    await unarchiveFn({ data: { id: p.id } });
+                                    toast.success("Compra desarquivada.");
+                                    invalidate();
+                                  } catch (e) {
+                                    toast.error(e instanceof Error ? e.message : "Erro");
+                                  }
+                                }}
+                              >
+                                <ArchiveRestore className="h-4 w-4" />
+                                Desarquivar
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setArchiveConfirm({ id: p.id, nome: p.nome_cliente })
+                                }
+                              >
+                                <Archive className="h-4 w-4" />
+                                Arquivar
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() =>
+                                setDeleteConfirm({ id: p.id, nome: p.nome_cliente })
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Excluir permanentemente
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -248,6 +348,77 @@ function PurchasesListPage() {
           </Table>
         </div>
       )}
+
+      <AlertDialog
+        open={!!archiveConfirm}
+        onOpenChange={(o) => !o && setArchiveConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arquivar compra?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A compra de <strong>{archiveConfirm?.nome}</strong> será ocultada da lista
+              padrão. Se o beat estiver reservado por esta compra, a reserva será
+              liberada e o beat voltará a ficar disponível. Você pode desarquivar a
+              qualquer momento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!archiveConfirm) return;
+                try {
+                  await archiveFn({ data: { id: archiveConfirm.id } });
+                  toast.success("Compra arquivada.");
+                  setArchiveConfirm(null);
+                  invalidate();
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Erro");
+                }
+              }}
+            >
+              Arquivar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={(o) => !o && setDeleteConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir compra permanentemente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A compra de <strong>{deleteConfirm?.nome}</strong> será removida
+              definitivamente, junto com entregas e comprovante associados. Esta ação
+              não pode ser desfeita. Se o beat estiver reservado por esta compra, a
+              reserva será liberada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteConfirm) return;
+                try {
+                  await deleteFn({ data: { id: deleteConfirm.id } });
+                  toast.success("Compra excluída.");
+                  setDeleteConfirm(null);
+                  invalidate();
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Erro");
+                }
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
