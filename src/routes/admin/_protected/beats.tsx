@@ -64,6 +64,7 @@ import {
   getAdminMetrics,
   listBeats,
   listProducersForSelect,
+  releaseBeatReservation,
   setBeatStatus,
 } from "@/lib/beats.functions";
 import { BeatForm, type BeatFormInitial } from "@/components/admin/beats/BeatForm";
@@ -74,7 +75,22 @@ export const Route = createFileRoute("/admin/_protected/beats")({
 });
 
 type Row = Awaited<ReturnType<typeof listBeats>>["rows"][number];
-type BeatStatus = "rascunho" | "ativo" | "vendido";
+type BeatStatus = "rascunho" | "ativo" | "reservado" | "vendido";
+
+const statusLabel: Record<BeatStatus, string> = {
+  rascunho: "Rascunho",
+  ativo: "Disponível",
+  reservado: "Reservado",
+  vendido: "Vendido",
+};
+
+const statusVariant: Record<BeatStatus, "default" | "secondary" | "outline"> = {
+  ativo: "default",
+  reservado: "secondary",
+  rascunho: "outline",
+  vendido: "secondary",
+};
+
 
 const statusLabel: Record<BeatStatus, string> = {
   rascunho: "Rascunho",
