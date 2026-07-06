@@ -131,7 +131,34 @@ const formatPrice = (v: number | string | null | undefined) => {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 };
 
-function BeatsPage() {
+function ReservationInfo({
+  reservedAt,
+  expiresAt,
+  cliente,
+}: {
+  reservedAt: string | null;
+  expiresAt: string | null;
+  cliente: string | null;
+}) {
+  const remaining = useMemo(() => {
+    if (!expiresAt) return null;
+    const ms = new Date(expiresAt).getTime() - Date.now();
+    if (ms <= 0) return "expirada";
+    const h = Math.floor(ms / 3_600_000);
+    const m = Math.floor((ms % 3_600_000) / 60_000);
+    return `${h}h ${m}m`;
+  }, [expiresAt]);
+  const fmt = (v: string | null) =>
+    v ? new Date(v).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "—";
+  return (
+    <div className="text-[10px] leading-tight text-muted-foreground max-w-[220px]">
+      {cliente && <div className="truncate">Cliente: {cliente}</div>}
+      <div>Reservado: {fmt(reservedAt)}</div>
+      <div>Expira: {fmt(expiresAt)}{remaining ? ` (${remaining})` : ""}</div>
+    </div>
+  );
+}
+
   const list = useServerFn(listBeats);
   const listProducers = useServerFn(listProducersForSelect);
   const getMetrics = useServerFn(getAdminMetrics);
