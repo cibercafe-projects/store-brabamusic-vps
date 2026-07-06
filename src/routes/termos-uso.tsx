@@ -104,13 +104,10 @@ function TermosUsoPage() {
             7. Contato
           </h2>
           <p className="mt-3">
-            Dúvidas sobre estes termos podem ser encaminhadas para{" "}
-            <a
-              href="mailto:contato@brabamusic.com.br"
-              className="text-primary hover:underline"
-            >
-              contato@brabamusic.com.br
-            </a>
+            Dúvidas sobre estes termos podem ser encaminhadas pela nossa{" "}
+            <Link to="/feedback" className="text-primary hover:underline">
+              central de ajuda e feedback
+            </Link>
             .
           </p>
         </section>
