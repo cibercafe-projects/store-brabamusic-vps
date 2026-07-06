@@ -1,10 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, Search, FileText, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Loader2,
+  Search,
+  FileText,
+  ExternalLink,
+  MoreVertical,
+  Archive,
+  ArchiveRestore,
+  Trash2,
+} from "lucide-react";
 import {
   listPurchases,
+  archivePurchase,
+  unarchivePurchase,
+  deletePurchase,
   PURCHASE_STATUS_LABELS,
   PURCHASE_STATUS_LIST,
   type PurchaseStatus,
@@ -26,6 +39,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/admin/_protected/compras/")({
   component: PurchasesListPage,
@@ -53,15 +83,26 @@ function fmtPrice(v: number | string | null | undefined) {
 function PurchasesListPage() {
   const [status, setStatus] = useState<PurchaseStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [archived, setArchived] = useState<"hide" | "only" | "all">("hide");
+  const [archiveConfirm, setArchiveConfirm] = useState<{ id: string; nome: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
   const listFn = useServerFn(listPurchases);
+  const archiveFn = useServerFn(archivePurchase);
+  const unarchiveFn = useServerFn(unarchivePurchase);
+  const deleteFn = useServerFn(deletePurchase);
+  const queryClient = useQueryClient();
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["admin", "purchases"] });
 
   const query = useQuery({
-    queryKey: ["admin", "purchases", status, search],
+    queryKey: ["admin", "purchases", status, search, archived],
     queryFn: () =>
       listFn({
         data: {
           status: status === "all" ? undefined : status,
           search: search.trim() || undefined,
+          archived,
         },
       }),
     staleTime: 15_000,
