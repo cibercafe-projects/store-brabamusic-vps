@@ -523,6 +523,7 @@ export type Database = {
       purchase_requests: {
         Row: {
           admin_notes: string | null
+          archived_at: string | null
           beat_id: string
           continuation_token: string
           created_at: string
@@ -547,6 +548,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          archived_at?: string | null
           beat_id: string
           continuation_token?: string
           created_at?: string
@@ -571,6 +573,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          archived_at?: string | null
           beat_id?: string
           continuation_token?: string
           created_at?: string

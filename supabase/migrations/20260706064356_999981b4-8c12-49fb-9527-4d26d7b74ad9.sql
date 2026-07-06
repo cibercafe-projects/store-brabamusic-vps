@@ -1,0 +1,2 @@
+ALTER TABLE public.purchase_requests ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ NULL;
+CREATE INDEX IF NOT EXISTS purchase_requests_archived_at_idx ON public.purchase_requests (archived_at) WHERE archived_at IS NOT NULL;
