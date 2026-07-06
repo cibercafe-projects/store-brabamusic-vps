@@ -92,6 +92,9 @@ export type Database = {
           preview_path: string | null
           preview_url: string | null
           produtora_id: string
+          reservation_expires_at: string | null
+          reserved_at: string | null
+          reserved_purchase_id: string | null
           slug: string
           status: Database["public"]["Enums"]["beat_status"]
           stems_path: string | null
@@ -119,6 +122,9 @@ export type Database = {
           preview_path?: string | null
           preview_url?: string | null
           produtora_id: string
+          reservation_expires_at?: string | null
+          reserved_at?: string | null
+          reserved_purchase_id?: string | null
           slug: string
           status?: Database["public"]["Enums"]["beat_status"]
           stems_path?: string | null
@@ -146,6 +152,9 @@ export type Database = {
           preview_path?: string | null
           preview_url?: string | null
           produtora_id?: string
+          reservation_expires_at?: string | null
+          reserved_at?: string | null
+          reserved_purchase_id?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["beat_status"]
           stems_path?: string | null
@@ -169,6 +178,13 @@ export type Database = {
             columns: ["produtora_id"]
             isOneToOne: false
             referencedRelation: "producers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beats_reserved_purchase_id_fkey"
+            columns: ["reserved_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -830,6 +846,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_beat_reservations: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -858,7 +875,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin"
-      beat_status: "rascunho" | "ativo" | "vendido"
+      beat_status: "rascunho" | "ativo" | "vendido" | "reservado"
       beat_tipo: "fechado" | "aberto"
       feedback_area:
         | "catalogo"
@@ -1023,7 +1040,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin"],
-      beat_status: ["rascunho", "ativo", "vendido"],
+      beat_status: ["rascunho", "ativo", "vendido", "reservado"],
       beat_tipo: ["fechado", "aberto"],
       feedback_area: [
         "catalogo",
