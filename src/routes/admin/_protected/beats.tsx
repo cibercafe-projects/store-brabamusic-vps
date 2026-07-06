@@ -290,7 +290,8 @@ function BeatsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todas">Todos status</SelectItem>
-            <SelectItem value="ativo">Ativo</SelectItem>
+            <SelectItem value="ativo">Disponível</SelectItem>
+            <SelectItem value="reservado">Reservado</SelectItem>
             <SelectItem value="rascunho">Rascunho</SelectItem>
             <SelectItem value="vendido">Vendido</SelectItem>
           </SelectContent>
