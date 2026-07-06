@@ -539,7 +539,7 @@ export const listPurchases = createServerFn({ method: "GET" })
     let q = admin
       .from("purchase_requests")
       .select(
-        "id, nome_cliente, email, whatsapp, status, valor, receipt_path, created_at, forma_pagamento, beat:beats(id, nome, slug)",
+        "id, nome_cliente, email, whatsapp, status, valor, receipt_path, created_at, forma_pagamento, beat:beats!purchase_requests_beat_id_fkey(id, nome, slug)",
       )
       .order("created_at", { ascending: false })
       .limit(200);
