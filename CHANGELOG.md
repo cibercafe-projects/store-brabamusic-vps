@@ -13,6 +13,61 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 12 — Tipos de Beat Configuráveis
+
+### Added
+
+- **Tabela `public.beat_types`** (`nome`, `slug` único, `descricao`,
+  `valor_padrao`, `link_pagamento`, `inclui_stems`, `ativo`, `ordem`) com
+  RLS: leitura para autenticados, gestão restrita a admins ativos. Seed
+  inicial `fechado` (R$ 100 · WAV) e `aberto` (R$ 200 · WAV + Stems), com
+  link inicial copiado do antigo `app_settings.payment_link`.
+- **Rota `/admin/tipos-beat`** — CRUD completo (criar, editar, ativar,
+  desativar, reordenar) no sidebar de Configurações.
+- **FK `beats.beat_type_id`** referenciando `beat_types(id)` + backfill do
+  legado `beats.tipo` (`aberto`/`fechado`) por slug.
+- **Helper único `resolveBeatPayment(beat)`** em `src/lib/purchases.functions.ts`
+  — fonte única de `{ valor, paymentLink, tipoNome, incluiStems }` para
+  compra, WhatsApp, e-mail, popup e reenvio de instruções.
+- Server fns em `src/lib/beat-types.functions.ts` e
+  `listBeatTypesForBeatForm` em `src/lib/beats.functions.ts`.
+
+### Changed
+
+- **BeatForm** — Select "Tipo do beat" agora carrega opções ativas de
+  `beat_types`. Ao selecionar/trocar tipo, o campo **Preço (R$)** é
+  autopreenchido com `valor_padrao` (editável). Uploaders de STEMS e
+  Licença aparecem apenas quando o tipo tem `inclui_stems = true`.
+- **Fluxo de compra** (`startPurchase`, `getPurchaseSettings`,
+  `resendPurchaseInstructions`) lê link e valor exclusivamente do tipo do
+  beat. `app_settings.payment_link` deixou de ser lido pelo app (coluna
+  mantida como legado).
+- **Exibição pública** — `BeatCard` e `/beat/$slug` mostram o nome
+  dinâmico do tipo (`tipo_nome`) em vez de rótulos hardcoded
+  "Aberto"/"Fechado". `catalog.functions` passa a expor `tipo_nome` e
+  `inclui_stems`.
+- **Painel admin** (`/admin/beats`) — chips de download de STEMS e
+  Licença agora dependem apenas da presença do arquivo, não do enum
+  legado `tipo`.
+- **Defaults de preço** em `beats.functions.ts` — quando `preco` vem
+  vazio, usa `valor_padrao` do tipo (fallback 100/200 só se o tipo não
+  tiver valor).
+
+### Docs
+
+- `docs/regras-de-negocio.md` §1.1 — reescrita para descrever tipos
+  configuráveis (nome, valor, link, `inclui_stems`, ativo, ordem).
+
+### Preserved
+
+- Enum `beat_tipo` e coluna `beats.tipo` permanecem no banco como legado
+  (deprecated). Código continua gravando `tipo` derivado de
+  `inclui_stems` para compatibilidade. Remoção física fica para uma
+  sprint futura após observação em produção.
+- Coluna `app_settings.payment_link` mantida no schema — não é mais lida.
+
+---
+
 ## Sprint 8A — MVP de Lançamentos
 
 ### Added
