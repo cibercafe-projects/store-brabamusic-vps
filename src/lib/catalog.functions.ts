@@ -175,10 +175,12 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
       .from("beats")
       .select("*")
       .eq("slug", data.slug)
-      .eq("status", "ativo")
+      .in("status", ["ativo", "reservado", "vendido"])
       .maybeSingle();
     if (error) { console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.'); }
     if (!row) return null;
+    const available = row.status === "ativo";
+
 
     const { data: prod } = await admin
       .from("producers")
