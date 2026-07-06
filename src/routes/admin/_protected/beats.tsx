@@ -512,10 +512,18 @@ function BeatsPage() {
 
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
+                          disabled={(b.purchases_count ?? 0) > 0}
                           onClick={() => setDeleteConfirm(b)}
+                          title={
+                            (b.purchases_count ?? 0) > 0
+                              ? "Não é possível excluir: existem compras associadas"
+                              : undefined
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
-                          Excluir beat
+                          {(b.purchases_count ?? 0) > 0
+                            ? `Excluir (bloqueado — ${b.purchases_count} compra${b.purchases_count === 1 ? "" : "s"})`
+                            : "Excluir beat"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
