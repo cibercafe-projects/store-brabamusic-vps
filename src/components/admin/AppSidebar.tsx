@@ -50,6 +50,7 @@ export function AppSidebar() {
   const queryClient = useQueryClient();
   const checkRole = useServerFn(checkAdminRole);
   const countNewFn = useServerFn(countNewReleases);
+  const feedbackStatsFn = useServerFn(getFeedbackStats);
 
   const roleQuery = useQuery({
     queryKey: ["admin-role"],
@@ -60,6 +61,13 @@ export function AppSidebar() {
   const newReleasesQuery = useQuery({
     queryKey: ["admin", "releases-new-count"],
     queryFn: () => countNewFn(),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+
+  const feedbackStatsQuery = useQuery({
+    queryKey: ["admin", "feedback-stats"],
+    queryFn: () => feedbackStatsFn(),
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
