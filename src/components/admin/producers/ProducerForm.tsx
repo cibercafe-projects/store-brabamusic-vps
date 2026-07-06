@@ -138,9 +138,6 @@ export function ProducerForm({ initial, onDone }: Props) {
       nome_artistico_creditos: initial?.nome_artistico_creditos ?? "",
       email_comercial: initial?.email_comercial ?? "",
       email_royalties: initial?.email_royalties ?? "",
-      texto_creditos: initial?.texto_creditos ?? "",
-      texto_registro: initial?.texto_registro ?? "",
-      texto_royalties: initial?.texto_royalties ?? "",
     },
   });
 
