@@ -301,6 +301,27 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
       throw new Error("Erro ao registrar pedido.");
     }
 
+    // Reserva atômica do beat (24h). Se outro cliente conseguiu reservar antes,
+    // o UPDATE não altera nenhuma linha e desfazemos o pedido.
+    const reservationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const { data: reserved, error: reserveErr } = await supabaseAdmin
+      .from("beats")
+      .update({
+        status: "reservado",
+        reserved_at: new Date().toISOString(),
+        reservation_expires_at: reservationExpiresAt,
+        reserved_purchase_id: inserted.id,
+      })
+      .eq("id", data.beat_id)
+      .eq("status", "ativo")
+      .select("id");
+    if (reserveErr || !reserved || reserved.length === 0) {
+      await supabaseAdmin.from("purchase_requests").delete().eq("id", inserted.id);
+      if (reserveErr) console.error("[purchases.create] reserve", reserveErr);
+      throw new Error("Beat indisponível para compra.");
+    }
+
+
     // Notificações (não bloqueiam a resposta) -----------------------------------
     try {
       const [pixRow, adminEmail, resolved] = await Promise.all([
