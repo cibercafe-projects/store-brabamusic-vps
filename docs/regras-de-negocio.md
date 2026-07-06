@@ -9,21 +9,43 @@ mudança técnica.
 
 ## 1. Catálogo de Beats
 
-### 1.1 Tipos de Beat
+### 1.1 Tipos de Beat (configuráveis)
 
-| Tipo     | Preço padrão | Entrega          |
-| -------- | ------------ | ---------------- |
-| Fechado  | R$ 100,00    | WAV              |
-| Aberto   | R$ 150,00    | WAV + Stems      |
+Os tipos de beat são cadastrados pelo admin em **/admin/tipos-beat**. Cada
+tipo define:
 
-- O tipo é obrigatório no cadastro do beat.
-- O preço padrão é apenas sugestão de cadastro — o valor final é editável por beat.
-- A entrega segue estritamente o tipo: beat **Fechado** nunca envia STEMS.
+- **Nome exibido** (ex.: "Beat Fechado", "Beat Aberto", "Premium").
+- **Valor padrão** (R$) — usado como sugestão ao cadastrar um beat.
+- **Link de pagamento** próprio (Mercado Pago/afins) — usado no fluxo de
+  compra, WhatsApp, e-mail e popup daquele beat.
+- **Inclui stems?** — define o que a entrega libera:
+  - `false` → entrega apenas WAV.
+  - `true` → libera upload/entrega de WAV + STEMS + documento de licença.
+- **Ativo** e **Ordem** — controlam disponibilidade e ordenação no seletor.
+
+Seed inicial:
+
+| Slug     | Nome         | Valor padrão | Entrega     |
+| -------- | ------------ | ------------ | ----------- |
+| fechado  | Beat Fechado | R$ 100,00    | WAV         |
+| aberto   | Beat Aberto  | R$ 200,00    | WAV + Stems |
+
+Regras:
+
+- O tipo é obrigatório no cadastro do beat (FK `beats.beat_type_id`).
+- Ao selecionar/trocar o tipo no formulário, o campo **Preço (R$)** é
+  autopreenchido com o `valor_padrao` do tipo — permanece editável.
+- A entrega segue estritamente `inclui_stems` do tipo: sem stems, apenas
+  WAV é entregue e o uploader de STEMS/licença nem aparece no admin.
+- Link de pagamento e valor exibidos ao cliente vêm sempre do tipo do beat
+  (helper `resolveBeatPayment`). O antigo `app_settings.payment_link` global
+  não é mais lido pelo sistema (mantido no schema como legado).
 
 ### 1.2 Cadastro
 
-- Campos obrigatórios: nome, produtora, gênero, BPM, tom, mood, **tipo**,
-  preço, capa, prévia (MP3 ≤ 30s) e arquivos definitivos (WAV; STEMS se Aberto).
+- Campos obrigatórios: nome, produtora, gênero, BPM, tom, mood, **tipo do
+  beat**, preço, capa, prévia (MP3 ≤ 30s) e arquivos definitivos (WAV;
+  STEMS + documento se o tipo tiver `inclui_stems = true`).
 - Beats em status `ativo` aparecem no catálogo público. Demais status
   (rascunho, pausado) ficam ocultos.
 
