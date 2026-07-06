@@ -155,6 +155,7 @@ function BeatsPage() {
   const [editing, setEditing] = useState<BeatFormInitial | undefined>(undefined);
   const [sellConfirm, setSellConfirm] = useState<Row | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Row | null>(null);
+  const [releaseConfirm, setReleaseConfirm] = useState<Row | null>(null);
 
   const producersQuery = useQuery({
     queryKey: ["admin", "producers", "select"],
