@@ -71,9 +71,16 @@ function DashboardPage() {
     queryFn: () => getPurchaseCounts(),
     staleTime: 30_000,
   });
+  const feedbackFn = useServerFn(getFeedbackStats);
+  const fQuery = useQuery({
+    queryKey: ["admin", "feedback-stats"],
+    queryFn: () => feedbackFn(),
+    staleTime: 30_000,
+  });
 
   const m = query.data;
   const p = pQuery.data;
+  const f = fQuery.data;
 
   return (
     <div className="space-y-6">
