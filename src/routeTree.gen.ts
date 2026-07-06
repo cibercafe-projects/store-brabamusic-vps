@@ -15,6 +15,7 @@ import { Route as ProdutoresRouteImport } from './routes/produtores'
 import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
 import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
 import { Route as LicencaDeUsoRouteImport } from './routes/licenca-de-uso'
+import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as EnviarLancamentoRouteImport } from './routes/enviar-lancamento'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AppRouteImport } from './routes/app'
@@ -76,6 +77,11 @@ const MeusInteressesRoute = MeusInteressesRouteImport.update({
 const LicencaDeUsoRoute = LicencaDeUsoRouteImport.update({
   id: '/licenca-de-uso',
   path: '/licenca-de-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnviarLancamentoRoute = EnviarLancamentoRouteImport.update({
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
@@ -374,6 +383,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/feedback'
     | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
@@ -412,6 +422,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/feedback'
     | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
@@ -451,6 +462,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/feedback'
     | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
@@ -492,6 +504,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   EnviarLancamentoRoute: typeof EnviarLancamentoRoute
+  FeedbackRoute: typeof FeedbackRoute
   LicencaDeUsoRoute: typeof LicencaDeUsoRoute
   MeusInteressesRoute: typeof MeusInteressesRoute
   PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
@@ -552,6 +565,13 @@ declare module '@tanstack/react-router' {
       path: '/licenca-de-uso'
       fullPath: '/licenca-de-uso'
       preLoaderRoute: typeof LicencaDeUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enviar-lancamento': {
@@ -852,6 +872,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   EnviarLancamentoRoute: EnviarLancamentoRoute,
+  FeedbackRoute: FeedbackRoute,
   LicencaDeUsoRoute: LicencaDeUsoRoute,
   MeusInteressesRoute: MeusInteressesRoute,
   PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
