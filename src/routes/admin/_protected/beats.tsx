@@ -92,17 +92,6 @@ const statusVariant: Record<BeatStatus, "default" | "secondary" | "outline"> = {
 };
 
 
-const statusLabel: Record<BeatStatus, string> = {
-  rascunho: "Rascunho",
-  ativo: "Ativo",
-  vendido: "Vendido",
-};
-
-const statusVariant: Record<BeatStatus, "default" | "secondary" | "outline"> = {
-  ativo: "default",
-  rascunho: "outline",
-  vendido: "secondary",
-};
 
 const extFromPath = (p: string | null | undefined) => {
   if (!p) return null;
