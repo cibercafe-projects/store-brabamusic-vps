@@ -226,11 +226,11 @@ export const getFeedback = createServerFn({ method: "POST" })
         };
       }
     }
-    let release: { id: string; titulo: string | null; nome_artistico: string | null } | null = null;
+    let release: { id: string; release_name: string; artist_name: string } | null = null;
     if (row.release_id) {
       const { data: r } = await admin
         .from("releases")
-        .select("id, titulo, nome_artistico")
+        .select("id, release_name, artist_name")
         .eq("id", row.release_id)
         .maybeSingle();
       if (r) release = r;
