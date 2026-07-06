@@ -63,9 +63,6 @@ const producerInputSchema = z.object({
   nome_artistico_creditos: optionalText(160),
   email_comercial: optionalEmail,
   email_royalties: optionalEmail,
-  texto_creditos: optionalText(4000),
-  texto_registro: optionalText(4000),
-  texto_royalties: optionalText(4000),
 });
 
 
