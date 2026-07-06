@@ -1,67 +1,42 @@
-# Textos Jurídicos globais (Créditos / Registro / Royalties)
+# Sprint — Atualização de textos da página "Como Funciona"
 
-Hoje cada produtora tem seus próprios textos de Créditos, Registro e Royalties, e o gerador de licença lê da produtora. Vamos centralizar em uma configuração única no Backoffice; o restante do fluxo (compra, aceite, snapshot da licença, entrega, download) permanece intacto.
+Atualização **exclusivamente textual** de `src/routes/como-funciona.tsx`. Layout, componentes, cores e responsividade permanecem intactos.
 
-## Fase 1 — Nova aba "Textos Jurídicos" em Configurações
+## 1. Substituir o array `steps` (6 passos)
 
-- Criar `src/routes/admin/_protected/textos-juridicos.tsx` (rota `/admin/textos-juridicos`).
-- Adicionar item "Textos Jurídicos" no `AppSidebar` (ícone `FileText`), logo abaixo de "Configurações". Nome escolhido para permitir crescer no futuro (Termos, LGPD, etc.) sem novas telas.
-- 3 campos `Textarea` (rows≈6, maxLength 4000):
-  - **Créditos** — chave `legal_text_creditos`
-  - **Registro da Obra e do Fonograma** — chave `legal_text_registro`
-  - **Divisão de Royalties e Cadastro de Participação** — chave `legal_text_royalties`
-- Persistidos em `public.app_settings` (mesmo padrão usado por `whatsapp_number`, `pix_key`, etc.), via novo par de server fns em `src/lib/legal-texts.functions.ts` (`getLegalTexts` / `updateLegalTexts`), ambos com `requireSupabaseAuth` + checagem admin (mesmo helper `assertAdmin` já usado em `settings.functions.ts`).
-- Seed dos valores iniciais (os três textos do briefing) via migração `INSERT ... ON CONFLICT DO NOTHING` em `app_settings`.
+Reescrever os 6 itens refletindo o fluxo atual:
 
-## Fase 2 — Limpeza no cadastro de Produtoras
+1. **Escolha seu Beat** — Navegue pelo catálogo da Braba Beats, ouça a prévia e escolha o beat ideal para o seu projeto musical.
+2. **Preencha seus dados** — Nome completo, nome artístico, e-mail, WhatsApp e Instagram (opcional). Usados para contato e envio dos arquivos após a confirmação do pagamento.
+3. **Aceite os Termos de Uso** — Leia e aceite os Termos de Uso e Licenciamento: utilização da licença, crédito obrigatório à produtora, registro da obra e orientações sobre royalties.
+4. **Preencha o formulário e faça o pagamento** — Escolha a forma de pagamento (Pix ou Link de Pagamento). O sistema gera um link exclusivo para envio do comprovante.
+5. **Envie o comprovante** — Upload direto pela plataforma. Depois, avise a equipe Braba pelo WhatsApp (botão na tela) ou aguarde o contato.
+6. **Receba seus arquivos** — Após a confirmação, a equipe Braba envia: beat adquirido, stems (quando disponíveis conforme a licença), documento de licenciamento e orientações de créditos da produtora. Contato por WhatsApp e/ou e-mail cadastrados.
 
-- `src/components/admin/producers/ProducerForm.tsx`: remover campos `texto_creditos`, `texto_registro`, `texto_royalties` do schema, `defaultValues`, `onSubmit` e JSX. Manter `nome_artistico_creditos` e `email_royalties` (são dados próprios da produtora, não textos jurídicos).
-- `src/lib/producers.functions.ts`: remover as três chaves de `producerInput` e do payload de `saveProducer`.
-- `src/routes/admin/_protected/produtoras.tsx`: remover as três chaves do `initial` passado ao form.
-- Colunas `producers.texto_creditos/texto_registro/texto_royalties` **ficam no banco** por ora (dados históricos + segurança). Serão removidas em sprint futura de limpeza, mesma abordagem já adotada com `beats.tipo`.
+## 2. Adicionar seção "Destaques da Plataforma"
 
-## Fase 3 — Gerador de licença lê do global
+Nova seção entre os passos e o FAQ, usando os mesmos utilitários visuais já presentes na página (`glass rounded-2xl`, `font-display`, grid responsivo) — nenhum componente novo, apenas marcação equivalente à já usada. Itens (com ✅):
 
-- `src/lib/purchases.functions.ts`, função `createPurchaseRequest` (~linha 226): ao montar o `license_snapshot`, buscar `legal_text_creditos/registro/royalties` de `app_settings` (via `supabaseAdmin` já usado ali) e gravar no snapshot. Não ler mais esses três campos da produtora no SELECT do beat.
-- Efeito: cada nova compra congela os textos **globais atuais** no `license_snapshot`, exatamente como hoje já congela os da produtora. Licenças antigas continuam válidas (leem do próprio snapshot).
-- `getPurchaseLicense` e `getMyPurchase` (~linhas 120/159): remover `texto_creditos/registro/royalties` do SELECT da produtora e do fallback — o snapshot passa a ser a única fonte para compras novas; para compras antigas sem esses campos no snapshot, cair no snapshot mesmo assim (que já foi preenchido no momento da compra).
-- `src/routes/licenca.$token.tsx` e `src/routes/admin/_protected/compras.$id.licenca.tsx`: remover o fallback `?? producer?.texto_*`. O snapshot já contém o texto vigente à época da compra.
-- `src/components/purchase/PurchaseDialog.tsx`: sem mudança (já lê de `license.data.texto_*`, que continua vindo do snapshot).
+- Compra 100% online
+- Processo simples e intuitivo
+- Pagamento via Pix ou Link de Pagamento
+- Upload do comprovante diretamente pela plataforma
+- Aviso rápido para a equipe via WhatsApp
+- Atendimento humanizado pela equipe Braba Music
+- Liberação dos arquivos após confirmação do pagamento
+- Licenciamento digital com orientações de créditos da produtora
 
-## Compatibilidade
+## 3. Atualizar FAQ
 
-- Fluxo de compra, aceite, versão da licença, PDF gerado, entrega e download: inalterados.
-- Licenças já emitidas: inalteradas (leem do `license_snapshot` que já foi gravado).
-- Editar os três textos em Textos Jurídicos passa a valer para **novas** compras automaticamente, sem deploy.
+Ajustar respostas que citam o fluxo antigo para refletir o atual (Pix / Link de Pagamento, upload pela plataforma, aviso opcional por WhatsApp, entrega com licenciamento + créditos). Perguntas mantidas; textos revisados para consistência com os novos passos.
 
-## Detalhes técnicos
+## 4. Subtítulo (H1 supporting)
 
-**Novo arquivo `src/lib/legal-texts.functions.ts`** — mesmo shape de `settings.functions.ts`:
+Ajuste leve do parágrafo de introdução para: "Do catálogo à entrega dos arquivos — veja como funciona a compra na Braba Beats."
 
-```ts
-const KEYS = ["legal_text_creditos", "legal_text_registro", "legal_text_royalties"] as const;
-export const getLegalTexts = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).handler(...)
-export const updateLegalTexts = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator(zodSchema).handler(...)
-```
+## Fora de escopo
+- Nenhuma alteração em `PurchaseDialog`, rotas, backend, estilos globais ou outros arquivos.
+- CHANGELOG/documentação de regras de negócio **não** são atualizados (mudança puramente de copy institucional).
 
-**Migração** — apenas seed:
-
-```sql
-INSERT INTO public.app_settings (key, value) VALUES
-  ('legal_text_creditos',  '<texto padrão do briefing>'),
-  ('legal_text_registro',  '<texto padrão do briefing>'),
-  ('legal_text_royalties', '<texto padrão do briefing>')
-ON CONFLICT (key) DO NOTHING;
-```
-
-**Snapshot em `createPurchaseRequest`** — antes do `insert`, ler as 3 chaves de `app_settings` em uma única query e gravar em `license_snapshot.texto_*`.
-
-## Documentação
-
-- Atualizar `docs/regras-de-negocio.md`: nova seção "Textos Jurídicos globais"; ajustar a seção de Produtoras (remoção dos 3 campos) e a de Licença (fonte passa a ser Configurações → Textos Jurídicos, congelado no snapshot).
-- `CHANGELOG.md`: entrada "Sprint 13 — Textos Jurídicos globais" com Added / Changed / Preserved (colunas antigas na tabela `producers`).
-
-## Fora do escopo
-
-- Remoção física das colunas `producers.texto_creditos/registro/royalties` (fica para uma sprint de limpeza futura).
-- Editor rich-text — usamos `Textarea` simples, alinhado ao restante do admin.
+## Arquivo alterado
+- `src/routes/como-funciona.tsx`
