@@ -236,3 +236,48 @@ Todos os formulários públicos (`submitRelease`, `createLead`,
 - CPF (`releases.cpf`) e `continuation_token` nunca são retornados fora do
   painel admin nem aparecem em logs.
 
+
+## 8. Central de Ajuda e Feedback
+
+Módulo adicionado na Sprint 14 para coleta de feedback, sugestões, dúvidas,
+elogios e reporte de problemas por qualquer usuário da plataforma.
+
+### 8.1 Envio (público)
+- Formulário em `/feedback`, acessível pelo rodapé em "Ajuda e Feedback",
+  "Reportar problema" e "Suporte".
+- Também é acionado por CTA:
+  - **Pós-compra**: página pública `/licenca/$token`, com botões de estrelas
+    que preenchem `?purchase=<id>&origin=pos_compra&rating=<n>`.
+  - **Pós-lançamento**: tela de sucesso de `/enviar-lancamento`, com link para
+    `/feedback?origin=pos_lancamento`.
+- Campos: rating (1–5, opcional), tipo (obrigatório), área (opcional),
+  mensagem (obrigatória), "quero receber resposta" (checkbox) e, se marcado,
+  nome + e-mail e/ou WhatsApp.
+- Anti-abuso: honeypot `website` + validação Zod server-side.
+- Nunca envia e-mail automático (nem cliente, nem admin).
+
+### 8.2 Associação automática
+- `purchase_request_id` e `release_id` são gravados automaticamente quando o
+  formulário é aberto via CTA de contexto.
+- Ambos usam `ON DELETE SET NULL` — se a compra ou lançamento for removido,
+  o feedback é preservado sem quebrar a referência.
+
+### 8.3 Backoffice
+- Menu **Ajuda e Feedback** em `/admin/feedback` (badge com contagem de
+  feedbacks `novo`). Lista com filtros por status, tipo, origem e busca.
+- Detalhe em `/admin/feedback/$id` permite alterar status, escrever
+  observações internas e abrir contato (WhatsApp/e-mail) diretamente com quem
+  pediu retorno. Referência clicável para a compra/lançamento associado.
+- Status: `novo` → `em_analise` → `respondido` → `resolvido`, com fallback
+  `arquivado` para casos sem ação.
+
+### 8.4 Dashboard
+- Cards: Total de Feedbacks, Pendentes (`novo` + `em_analise`), Nota Média
+  (avaliações 1–5) e Problemas em aberto (`type = 'problema'` e status
+  diferente de `resolvido`/`arquivado`).
+
+### 8.5 Segurança
+- RLS: `INSERT` liberado para `anon`/`authenticated` mas restrito a
+  `status = 'novo'` e `internal_notes IS NULL` (bloqueia auto-fabricação
+  de status e observações internas via cliente).
+- `SELECT` e `UPDATE` apenas para admins ativos (`has_role(auth.uid(), 'admin')`).

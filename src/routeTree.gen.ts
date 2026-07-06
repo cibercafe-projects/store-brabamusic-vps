@@ -15,6 +15,7 @@ import { Route as ProdutoresRouteImport } from './routes/produtores'
 import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
 import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
 import { Route as LicencaDeUsoRouteImport } from './routes/licenca-de-uso'
+import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as EnviarLancamentoRouteImport } from './routes/enviar-lancamento'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AppRouteImport } from './routes/app'
@@ -40,11 +41,13 @@ import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_pro
 import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/_protected/configuracoes'
 import { Route as AdminProtectedBeatsRouteImport } from './routes/admin/_protected/beats'
 import { Route as AdminProtectedLancamentosIndexRouteImport } from './routes/admin/_protected/lancamentos.index'
+import { Route as AdminProtectedFeedbackIndexRouteImport } from './routes/admin/_protected/feedback.index'
 import { Route as AdminProtectedComprasIndexRouteImport } from './routes/admin/_protected/compras.index'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
+import { Route as AdminProtectedFeedbackIdRouteImport } from './routes/admin/_protected/feedback.$id'
 import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
 import { Route as AdminProtectedComprasIdLicencaRouteImport } from './routes/admin/_protected/compras.$id.licenca'
 
@@ -76,6 +79,11 @@ const MeusInteressesRoute = MeusInteressesRouteImport.update({
 const LicencaDeUsoRoute = LicencaDeUsoRouteImport.update({
   id: '/licenca-de-uso',
   path: '/licenca-de-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnviarLancamentoRoute = EnviarLancamentoRouteImport.update({
@@ -206,6 +214,12 @@ const AdminProtectedLancamentosIndexRoute =
     path: '/lancamentos/',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedFeedbackIndexRoute =
+  AdminProtectedFeedbackIndexRouteImport.update({
+    id: '/feedback/',
+    path: '/feedback/',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
 const AdminProtectedComprasIndexRoute =
   AdminProtectedComprasIndexRouteImport.update({
     id: '/compras/',
@@ -236,6 +250,12 @@ const AdminProtectedLancamentosIdRoute =
     path: '/lancamentos/$id',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedFeedbackIdRoute =
+  AdminProtectedFeedbackIdRouteImport.update({
+    id: '/feedback/$id',
+    path: '/feedback/$id',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
 const AdminProtectedComprasIdRoute = AdminProtectedComprasIdRouteImport.update({
   id: '/compras/$id',
   path: '/compras/$id',
@@ -254,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
@@ -279,11 +300,13 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
+  '/admin/feedback/$id': typeof AdminProtectedFeedbackIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/compras/': typeof AdminProtectedComprasIndexRoute
+  '/admin/feedback/': typeof AdminProtectedFeedbackIndexRoute
   '/admin/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
   '/admin/compras/$id/licenca': typeof AdminProtectedComprasIdLicencaRoute
 }
@@ -292,6 +315,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
@@ -317,11 +341,13 @@ export interface FileRoutesByTo {
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
+  '/admin/feedback/$id': typeof AdminProtectedFeedbackIdRoute
   '/admin/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/compras': typeof AdminProtectedComprasIndexRoute
+  '/admin/feedback': typeof AdminProtectedFeedbackIndexRoute
   '/admin/lancamentos': typeof AdminProtectedLancamentosIndexRoute
   '/admin/compras/$id/licenca': typeof AdminProtectedComprasIdLicencaRoute
 }
@@ -332,6 +358,7 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
+  '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
@@ -358,11 +385,13 @@ export interface FileRoutesById {
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/_protected/compras/$id': typeof AdminProtectedComprasIdRouteWithChildren
+  '/admin/_protected/feedback/$id': typeof AdminProtectedFeedbackIdRoute
   '/admin/_protected/lancamentos/$id': typeof AdminProtectedLancamentosIdRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/admin/_protected/compras/': typeof AdminProtectedComprasIndexRoute
+  '/admin/_protected/feedback/': typeof AdminProtectedFeedbackIndexRoute
   '/admin/_protected/lancamentos/': typeof AdminProtectedLancamentosIndexRoute
   '/admin/_protected/compras/$id/licenca': typeof AdminProtectedComprasIdLicencaRoute
 }
@@ -374,6 +403,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/feedback'
     | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
@@ -399,11 +429,13 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/lovable/email/suppression'
     | '/admin/compras/$id'
+    | '/admin/feedback/$id'
     | '/admin/lancamentos/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
     | '/admin/compras/'
+    | '/admin/feedback/'
     | '/admin/lancamentos/'
     | '/admin/compras/$id/licenca'
   fileRoutesByTo: FileRoutesByTo
@@ -412,6 +444,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/feedback'
     | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
@@ -437,11 +470,13 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/lovable/email/suppression'
     | '/admin/compras/$id'
+    | '/admin/feedback/$id'
     | '/admin/lancamentos/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
     | '/admin/compras'
+    | '/admin/feedback'
     | '/admin/lancamentos'
     | '/admin/compras/$id/licenca'
   id:
@@ -451,6 +486,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/como-funciona'
     | '/enviar-lancamento'
+    | '/feedback'
     | '/licenca-de-uso'
     | '/meus-interesses'
     | '/politica-privacidade'
@@ -477,11 +513,13 @@ export interface FileRouteTypes {
     | '/admin/_protected/usuarios'
     | '/lovable/email/suppression'
     | '/admin/_protected/compras/$id'
+    | '/admin/_protected/feedback/$id'
     | '/admin/_protected/lancamentos/$id'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
     | '/admin/_protected/compras/'
+    | '/admin/_protected/feedback/'
     | '/admin/_protected/lancamentos/'
     | '/admin/_protected/compras/$id/licenca'
   fileRoutesById: FileRoutesById
@@ -492,6 +530,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
   EnviarLancamentoRoute: typeof EnviarLancamentoRoute
+  FeedbackRoute: typeof FeedbackRoute
   LicencaDeUsoRoute: typeof LicencaDeUsoRoute
   MeusInteressesRoute: typeof MeusInteressesRoute
   PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
@@ -552,6 +591,13 @@ declare module '@tanstack/react-router' {
       path: '/licenca-de-uso'
       fullPath: '/licenca-de-uso'
       preLoaderRoute: typeof LicencaDeUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enviar-lancamento': {
@@ -729,6 +775,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedLancamentosIndexRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/feedback/': {
+      id: '/admin/_protected/feedback/'
+      path: '/feedback'
+      fullPath: '/admin/feedback/'
+      preLoaderRoute: typeof AdminProtectedFeedbackIndexRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/compras/': {
       id: '/admin/_protected/compras/'
       path: '/compras'
@@ -762,6 +815,13 @@ declare module '@tanstack/react-router' {
       path: '/lancamentos/$id'
       fullPath: '/admin/lancamentos/$id'
       preLoaderRoute: typeof AdminProtectedLancamentosIdRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/feedback/$id': {
+      id: '/admin/_protected/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/admin/feedback/$id'
+      preLoaderRoute: typeof AdminProtectedFeedbackIdRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
     '/admin/_protected/compras/$id': {
@@ -805,8 +865,10 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedTiposBeatRoute: typeof AdminProtectedTiposBeatRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
   AdminProtectedComprasIdRoute: typeof AdminProtectedComprasIdRouteWithChildren
+  AdminProtectedFeedbackIdRoute: typeof AdminProtectedFeedbackIdRoute
   AdminProtectedLancamentosIdRoute: typeof AdminProtectedLancamentosIdRoute
   AdminProtectedComprasIndexRoute: typeof AdminProtectedComprasIndexRoute
+  AdminProtectedFeedbackIndexRoute: typeof AdminProtectedFeedbackIndexRoute
   AdminProtectedLancamentosIndexRoute: typeof AdminProtectedLancamentosIndexRoute
 }
 
@@ -820,8 +882,10 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedTiposBeatRoute: AdminProtectedTiposBeatRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
   AdminProtectedComprasIdRoute: AdminProtectedComprasIdRouteWithChildren,
+  AdminProtectedFeedbackIdRoute: AdminProtectedFeedbackIdRoute,
   AdminProtectedLancamentosIdRoute: AdminProtectedLancamentosIdRoute,
   AdminProtectedComprasIndexRoute: AdminProtectedComprasIndexRoute,
+  AdminProtectedFeedbackIndexRoute: AdminProtectedFeedbackIndexRoute,
   AdminProtectedLancamentosIndexRoute: AdminProtectedLancamentosIndexRoute,
 }
 
@@ -852,6 +916,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
   EnviarLancamentoRoute: EnviarLancamentoRoute,
+  FeedbackRoute: FeedbackRoute,
   LicencaDeUsoRoute: LicencaDeUsoRoute,
   MeusInteressesRoute: MeusInteressesRoute,
   PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,

@@ -13,9 +13,43 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 14 — Central de Ajuda e Feedback
+
+### Added
+
+- **Nova tabela `public.feedback`** (migration `20260706_feedback`) com enums
+  `feedback_type` (sugestao/problema/duvida/suporte/elogio), `feedback_area`,
+  `feedback_origin` (geral/pos_compra/pos_lancamento) e `feedback_status`
+  (novo/em_analise/respondido/resolvido/arquivado). RLS: `INSERT` liberado
+  para `anon`/`authenticated` (apenas status `novo` e sem `internal_notes`);
+  `SELECT`/`UPDATE` restritos a admins ativos via `has_role`.
+- **`src/lib/feedback.functions.ts`** — `submitFeedback` (público, Zod + honeypot),
+  `listFeedback`, `getFeedback`, `updateFeedback`, `getFeedbackStats` (admin).
+- **`/feedback`** — página pública com rating 1–5, tipo, área opcional,
+  mensagem, "quero receber resposta" (nome/e-mail/WhatsApp), suporta
+  querystring `?purchase=<id>&origin=pos_compra` e `?release=<id>&origin=pos_lancamento`.
+- **CTA pós-compra** na página pública `/licenca/$token` — convite de avaliação
+  em estrelas que leva a `/feedback` com contexto preenchido.
+- **CTA pós-lançamento** na tela de sucesso de `/enviar-lancamento`.
+- **Backoffice `/admin/feedback`** — lista com filtros (status, tipo, origem, busca).
+- **Backoffice `/admin/feedback/$id`** — detalhe com alteração de status, notas
+  internas e atalhos de contato (WhatsApp/e-mail) quando o usuário pediu retorno.
+- **Sidebar admin** — novo item "Ajuda e Feedback" com badge de feedbacks `novo`.
+- **Dashboard admin** — nova seção com Total de Feedbacks, Pendentes, Nota Média
+  e Problemas em aberto.
+- **Footer público** — links "Ajuda e Feedback", "Reportar problema" e "Suporte".
+
+### Notes
+
+- Nenhum e-mail automático é disparado nesta sprint (nem para cliente, nem para
+  admin). Feedback fica exclusivamente registrado na plataforma.
+
+---
+
 ## Sprint 13 — Textos Jurídicos globais
 
 ### Added
+
 
 - **Nova aba "Textos Jurídicos"** em `/admin/textos-juridicos` (sidebar,
   ícone `FileText`), com 3 campos editáveis (Créditos, Registro da Obra e

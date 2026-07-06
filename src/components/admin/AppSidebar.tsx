@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Tags,
   FileText,
+  MessageSquare,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -28,6 +29,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { checkAdminRole } from "@/lib/admin.functions";
 import { countNewReleases } from "@/lib/releases.functions";
+import { getFeedbackStats } from "@/lib/feedback.functions";
 
 const items = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
@@ -36,6 +38,7 @@ const items = [
   { title: "Leads", url: "/admin/leads", icon: Inbox },
   { title: "Lançamentos", url: "/admin/lancamentos", icon: Disc3 },
   { title: "Compras", url: "/admin/compras", icon: ShoppingCart },
+  { title: "Ajuda e Feedback", url: "/admin/feedback", icon: MessageSquare },
   { title: "Tipos de Beat", url: "/admin/tipos-beat", icon: Tags },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
   { title: "Textos Jurídicos", url: "/admin/textos-juridicos", icon: FileText },
@@ -47,6 +50,7 @@ export function AppSidebar() {
   const queryClient = useQueryClient();
   const checkRole = useServerFn(checkAdminRole);
   const countNewFn = useServerFn(countNewReleases);
+  const feedbackStatsFn = useServerFn(getFeedbackStats);
 
   const roleQuery = useQuery({
     queryKey: ["admin-role"],
@@ -57,6 +61,13 @@ export function AppSidebar() {
   const newReleasesQuery = useQuery({
     queryKey: ["admin", "releases-new-count"],
     queryFn: () => countNewFn(),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+
+  const feedbackStatsQuery = useQuery({
+    queryKey: ["admin", "feedback-stats"],
+    queryFn: () => feedbackStatsFn(),
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
@@ -81,10 +92,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                const badge =
-                  item.url === "/admin/lancamentos" && (newReleasesQuery.data?.count ?? 0) > 0
-                    ? newReleasesQuery.data!.count
-                    : null;
+                let badge: number | null = null;
+                if (item.url === "/admin/lancamentos" && (newReleasesQuery.data?.count ?? 0) > 0) {
+                  badge = newReleasesQuery.data!.count;
+                } else if (item.url === "/admin/feedback" && (feedbackStatsQuery.data?.novos ?? 0) > 0) {
+                  badge = feedbackStatsQuery.data!.novos;
+                }
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
