@@ -62,13 +62,20 @@ function BeatDetail() {
         : `Ouça "${beat.nome}" na Braba Beats`,
       url,
     };
-    try {
-      if (typeof navigator !== "undefined" && navigator.share) {
+    const canNativeShare =
+      typeof navigator !== "undefined" &&
+      typeof navigator.share === "function" &&
+      (typeof navigator.canShare !== "function" || navigator.canShare(shareData));
+
+    if (canNativeShare) {
+      try {
         await navigator.share(shareData);
         return;
+      } catch (err) {
+        // User cancelled — don't fall through to clipboard (would flash a misleading toast)
+        if (err instanceof Error && err.name === "AbortError") return;
+        // Other errors (permission denied, etc.) → fall through to clipboard
       }
-    } catch {
-      // user cancelled or share failed — fall through to clipboard
     }
     try {
       await navigator.clipboard.writeText(url);
