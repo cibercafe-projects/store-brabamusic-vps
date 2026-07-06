@@ -149,10 +149,17 @@ function DashboardPage() {
               value={m.produtorasTotal}
               icon={Users}
               hint={`${m.produtorasAtivas} ativas`}
+              tone="accent"
             />
-            <MetricCard label="Total Beats" value={m.beatsTotal} icon={Music} />
-            <MetricCard label="Beats Ativos" value={m.beatsAtivos} icon={CheckCircle2} />
-            <MetricCard label="Beats Vendidos" value={m.beatsVendidos} icon={PackageCheck} />
+            <MetricCard label="Total Beats" value={m.beatsTotal} icon={Music} tone="primary" highlight />
+            <MetricCard label="Beats Ativos" value={m.beatsAtivos} icon={CheckCircle2} tone="accent" />
+            <MetricCard
+              label="Beats Vendidos"
+              value={m.beatsVendidos}
+              icon={PackageCheck}
+              tone="primary"
+              highlight
+            />
           </section>
 
           <section className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -172,13 +179,15 @@ function DashboardPage() {
             </div>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Total de Leads" value={m.leadsTotal} icon={Inbox} />
-              <MetricCard label="Leads Novos" value={m.leadsNovos} icon={MessageCircle} />
-              <MetricCard label="Em Negociação" value={m.leadsNegociacao} icon={Handshake} />
+              <MetricCard label="Leads Novos" value={m.leadsNovos} icon={MessageCircle} tone="accent" highlight />
+              <MetricCard label="Em Negociação" value={m.leadsNegociacao} icon={Handshake} tone="accent" />
               <MetricCard
                 label="Convertidos"
                 value={m.leadsConvertidos}
                 icon={Trophy}
                 hint="Pagos + entregues"
+                tone="primary"
+                highlight
               />
             </div>
           </section>
@@ -199,17 +208,22 @@ function DashboardPage() {
                 value={p?.pagamento_confirmado ?? 0}
                 icon={FileText}
                 hint="Pagamento confirmado, aguardando entrega"
+                tone="destructive"
+                highlight
               />
               <MetricCard
                 label="Arquivos enviados"
                 value={p?.arquivos_enviados ?? 0}
                 icon={Send}
+                tone="accent"
               />
               <MetricCard
                 label="Compras concluídas"
                 value={p?.arquivos_enviados ?? 0}
                 icon={CreditCard}
                 hint="Ciclo finalizado"
+                tone="primary"
+                highlight
               />
             </div>
           </section>
@@ -225,9 +239,28 @@ function DashboardPage() {
             </div>
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <MetricCard label="Total de Feedbacks" value={f?.total ?? 0} icon={MessageSquare} />
-              <MetricCard label="Pendentes" value={f?.pendentes ?? 0} icon={Inbox} hint="Novos + em análise" />
-              <MetricCard label="Nota Média" value={f?.notaMedia ? f.notaMedia.toFixed(2) : "—"} icon={Star} hint="Avaliações 1–5" />
-              <MetricCard label="Problemas em aberto" value={f?.problemas ?? 0} icon={AlertTriangle} />
+              <MetricCard
+                label="Pendentes"
+                value={f?.pendentes ?? 0}
+                icon={Inbox}
+                hint="Novos + em análise"
+                tone="accent"
+                highlight
+              />
+              <MetricCard
+                label="Nota Média"
+                value={f?.notaMedia ? f.notaMedia.toFixed(2) : "—"}
+                icon={Star}
+                hint="Avaliações 1–5"
+                tone="primary"
+              />
+              <MetricCard
+                label="Problemas em aberto"
+                value={f?.problemas ?? 0}
+                icon={AlertTriangle}
+                tone="destructive"
+                highlight
+              />
             </div>
           </section>
         </>
