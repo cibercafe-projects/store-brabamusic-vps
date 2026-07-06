@@ -1,42 +1,105 @@
-# Sprint — Atualização de textos da página "Como Funciona"
+# Sprint — Central de Ajuda e Feedback
 
-Atualização **exclusivamente textual** de `src/routes/como-funciona.tsx`. Layout, componentes, cores e responsividade permanecem intactos.
+Novo módulo para coleta de feedback (sugestões, problemas, dúvidas, suporte, elogios) integrado ao fluxo público e ao Backoffice. Sem envio de e-mails automáticos, sem integrações externas.
 
-## 1. Substituir o array `steps` (6 passos)
+## 1. Backend (Lovable Cloud)
 
-Reescrever os 6 itens refletindo o fluxo atual:
+### Nova tabela `public.feedback`
+Campos principais:
+- `rating` (1–5, opcional para tipos não-avaliação)
+- `type` (enum: `sugestao`, `problema`, `duvida`, `suporte`, `elogio`)
+- `area` (enum opcional: `catalogo`, `compra`, `pagamento`, `comprovante`, `entrega`, `lancamentos`, `backoffice`, `outro`)
+- `message` (texto obrigatório)
+- `wants_reply` (bool)
+- `contact_name`, `contact_email`, `contact_whatsapp` (opcionais; obrigatórios se `wants_reply=true`)
+- `purchase_request_id` (FK opcional → `purchase_requests`)
+- `release_id` (FK opcional → `releases`)
+- `origin` (enum: `geral`, `pos_compra`, `pos_lancamento`)
+- `status` (enum: `novo`, `em_analise`, `respondido`, `resolvido`, `arquivado`, default `novo`)
+- `internal_notes` (texto, admin-only)
+- `created_at`, `updated_at`
 
-1. **Escolha seu Beat** — Navegue pelo catálogo da Braba Beats, ouça a prévia e escolha o beat ideal para o seu projeto musical.
-2. **Preencha seus dados** — Nome completo, nome artístico, e-mail, WhatsApp e Instagram (opcional). Usados para contato e envio dos arquivos após a confirmação do pagamento.
-3. **Aceite os Termos de Uso** — Leia e aceite os Termos de Uso e Licenciamento: utilização da licença, crédito obrigatório à produtora, registro da obra e orientações sobre royalties.
-4. **Preencha o formulário e faça o pagamento** — Escolha a forma de pagamento (Pix ou Link de Pagamento). O sistema gera um link exclusivo para envio do comprovante.
-5. **Envie o comprovante** — Upload direto pela plataforma. Depois, avise a equipe Braba pelo WhatsApp (botão na tela) ou aguarde o contato.
-6. **Receba seus arquivos** — Após a confirmação, a equipe Braba envia: beat adquirido, stems (quando disponíveis conforme a licença), documento de licenciamento e orientações de créditos da produtora. Contato por WhatsApp e/ou e-mail cadastrados.
+### RLS + GRANTS
+- `INSERT` liberado para `anon` e `authenticated` (formulário público)
+- `SELECT / UPDATE` restrito a admins ativos (`has_role(auth.uid(),'admin')`)
+- Trigger `set_updated_at`
 
-## 2. Adicionar seção "Destaques da Plataforma"
+### Server functions (`src/lib/feedback.functions.ts`)
+- `submitFeedback` — público (sem `requireSupabaseAuth`), valida com Zod, insere via cliente publishable server-side
+- `listFeedback` — admin, filtros por status/tipo/origem
+- `getFeedback` — admin, detalhe
+- `updateFeedbackStatus` — admin, status + `internal_notes`
+- `getFeedbackStats` — admin (total, pendentes, respondidos, nota média, problemas reportados)
 
-Nova seção entre os passos e o FAQ, usando os mesmos utilitários visuais já presentes na página (`glass rounded-2xl`, `font-display`, grid responsivo) — nenhum componente novo, apenas marcação equivalente à já usada. Itens (com ✅):
+## 2. Frontend público
 
-- Compra 100% online
-- Processo simples e intuitivo
-- Pagamento via Pix ou Link de Pagamento
-- Upload do comprovante diretamente pela plataforma
-- Aviso rápido para a equipe via WhatsApp
-- Atendimento humanizado pela equipe Braba Music
-- Liberação dos arquivos após confirmação do pagamento
-- Licenciamento digital com orientações de créditos da produtora
+### `/feedback` (nova rota `src/routes/feedback.tsx`)
+Formulário único:
+- Pergunta inicial "Como foi sua experiência?" → 5 estrelas (opcional se tipo ≠ elogio/avaliação)
+- Select **Tipo**
+- Select **Área** (opcional)
+- Textarea **Conte sua experiência**
+- Checkbox **Quero receber resposta** → revela Nome / Email / WhatsApp
+- Suporta querystring `?purchase=<id>` e `?release=<id>` para associação automática (mostra badge "Referente ao pedido #XXXX" / "Lançamento X")
+- Head SEO específico
 
-## 3. Atualizar FAQ
+### Rodapé (`src/components/Footer.tsx`)
+Nova coluna/links "Ajuda e Feedback":
+- Enviar Feedback → `/feedback`
+- Reportar Problema → `/feedback?type=problema`
+- Suporte → `/feedback?type=suporte`
+- FAQ → mantém link para `/como-funciona#faq` (já existente)
 
-Ajustar respostas que citam o fluxo antigo para refletir o atual (Pix / Link de Pagamento, upload pela plataforma, aviso opcional por WhatsApp, entrega com licenciamento + créditos). Perguntas mantidas; textos revisados para consistência com os novos passos.
+### Integração pós-fluxo
+- **Pós-compra** (`PurchaseDialog` / `DeliveryDialog` quando status = `arquivos_enviados`): card "Como foi sua experiência?" com 5 estrelas → CTA para `/feedback?purchase=<id>&origin=pos_compra&rating=<n>`
+- **Pós-lançamento** (rota pública de status do lançamento após `publicado`): card equivalente → `/feedback?release=<id>&origin=pos_lancamento`
 
-## 4. Subtítulo (H1 supporting)
+## 3. Backoffice
 
-Ajuste leve do parágrafo de introdução para: "Do catálogo à entrega dos arquivos — veja como funciona a compra na Braba Beats."
+### Novo item de menu "Feedback" (`src/components/admin/AppSidebar.tsx`)
+Ícone `MessageSquare`, badge com contagem de status `novo`.
+
+### `/admin/feedback` (lista) — `src/routes/admin/_protected/feedback.index.tsx`
+Tabela: Data · Tipo · Avaliação · Origem (Geral/Compra #/Lançamento) · Status · Ação (ver).
+Filtros: status, tipo, origem, período.
+
+### `/admin/feedback/$id` (detalhe) — `src/routes/admin/_protected/feedback.$id.tsx`
+- Todos os campos do feedback
+- Link para compra/lançamento associado (se houver)
+- Select para alterar status
+- Textarea de observações internas
+- Botões WhatsApp/Email para contato quando `wants_reply=true`
+
+### Dashboard (`/admin/dashboard`)
+Cards adicionais:
+- Total de Feedbacks
+- Pendentes (`novo` + `em_analise`)
+- Respondidos
+- Nota Média
+- Problemas Reportados
+
+## 4. Documentação
+
+- `CHANGELOG.md` — nova entrada "Central de Ajuda e Feedback"
+- `docs/regras-de-negocio.md` — nova seção "Feedback" (fluxo, status, associação automática, sem e-mails automáticos)
 
 ## Fora de escopo
-- Nenhuma alteração em `PurchaseDialog`, rotas, backend, estilos globais ou outros arquivos.
-- CHANGELOG/documentação de regras de negócio **não** são atualizados (mudança puramente de copy institucional).
+- Nenhum e-mail automático (nem cliente, nem admin)
+- Nenhuma integração externa
+- Nenhuma FAQ nova (mantém a de `/como-funciona`)
+- Sem respostas do admin diretamente pela plataforma (contato via WhatsApp/Email externos)
 
-## Arquivo alterado
-- `src/routes/como-funciona.tsx`
+## Arquivos novos
+- `supabase/migrations/<timestamp>_feedback.sql`
+- `src/lib/feedback.functions.ts`
+- `src/routes/feedback.tsx`
+- `src/routes/admin/_protected/feedback.index.tsx`
+- `src/routes/admin/_protected/feedback.$id.tsx`
+
+## Arquivos alterados
+- `src/components/Footer.tsx` (links Ajuda e Feedback)
+- `src/components/admin/AppSidebar.tsx` (menu + badge)
+- `src/routes/admin/_protected/dashboard.tsx` (novos cards)
+- `src/components/purchase/DeliveryDialog.tsx` (CTA pós-compra)
+- Rota pública de status de lançamento (CTA pós-lançamento)
+- `CHANGELOG.md`, `docs/regras-de-negocio.md`
