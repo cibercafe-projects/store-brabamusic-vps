@@ -183,7 +183,7 @@ function BeatsPage() {
   );
 
   const mutateStatus = useMutation({
-    mutationFn: async (input: { id: string; status: BeatStatus }) =>
+    mutationFn: async (input: { id: string; status: "rascunho" | "ativo" | "vendido" }) =>
       changeStatus({ data: input }),
     onSuccess: () => {
       toast.success("Status atualizado.");
@@ -191,6 +191,18 @@ function BeatsPage() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha"),
     onSettled: () => setSellConfirm(null),
+  });
+
+  const releaseReservation = useServerFn(releaseBeatReservation);
+  const mutateRelease = useMutation({
+    mutationFn: async (id: string) => releaseReservation({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Beat liberado e devolvido ao catálogo.");
+      qc.invalidateQueries({ queryKey: ["admin", "beats"] });
+      qc.invalidateQueries({ queryKey: ["admin", "metrics"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao liberar"),
+    onSettled: () => setReleaseConfirm(null),
   });
 
   const mutateDelete = useMutation({
@@ -202,6 +214,7 @@ function BeatsPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Falha ao remover"),
     onSettled: () => setDeleteConfirm(null),
   });
+
 
   const producers = producersQuery.data ?? [];
   const noProducers = !producersQuery.isLoading && producers.length === 0;
