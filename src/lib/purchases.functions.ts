@@ -228,13 +228,20 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: beat, error: beatErr } = await supabaseAdmin
-      .from("beats")
-      .select(
-        "id, nome, preco, status, produtora:producers(id, nome_artistico, nome_civil, nome_artistico_creditos, texto_creditos, texto_registro, texto_royalties)",
-      )
-      .eq("id", data.beat_id)
-      .maybeSingle();
+    const [beatRes, textsRes] = await Promise.all([
+      supabaseAdmin
+        .from("beats")
+        .select(
+          "id, nome, preco, status, produtora:producers(id, nome_artistico, nome_civil, nome_artistico_creditos)",
+        )
+        .eq("id", data.beat_id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("app_settings")
+        .select("key, value")
+        .in("key", ["legal_text_creditos", "legal_text_registro", "legal_text_royalties"]),
+    ]);
+    const { data: beat, error: beatErr } = beatRes;
     if (beatErr) {
       console.error("[purchases.create] beat lookup", beatErr);
       throw new Error("Erro ao localizar beat.");
@@ -249,20 +256,22 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
           nome_artistico: string | null;
           nome_civil: string | null;
           nome_artistico_creditos: string | null;
-          texto_creditos: string | null;
-          texto_registro: string | null;
-          texto_royalties: string | null;
         }
       | null;
+
+    const legalTexts: Record<string, string> = {};
+    (textsRes.data ?? []).forEach((r) => {
+      legalTexts[r.key] = r.value ?? "";
+    });
 
     const licenseSnapshot = {
       produtora_id: produtora?.id ?? null,
       produtora_nome: produtora?.nome_artistico ?? null,
       nome_civil: produtora?.nome_civil ?? null,
       nome_artistico_creditos: produtora?.nome_artistico_creditos ?? null,
-      texto_creditos: produtora?.texto_creditos ?? null,
-      texto_registro: produtora?.texto_registro ?? null,
-      texto_royalties: produtora?.texto_royalties ?? null,
+      texto_creditos: legalTexts.legal_text_creditos ?? null,
+      texto_registro: legalTexts.legal_text_registro ?? null,
+      texto_royalties: legalTexts.legal_text_royalties ?? null,
       captured_at: new Date().toISOString(),
     };
 
