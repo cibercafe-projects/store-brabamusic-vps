@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { MessageCircleQuestion, Star, Bug, LifeBuoy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/como-funciona")({ component: Como });
 
