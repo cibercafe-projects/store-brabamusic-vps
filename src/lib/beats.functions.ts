@@ -195,6 +195,19 @@ export const listBeats = createServerFn({ method: "POST" })
       );
     }
 
+    const beatIds = (rows ?? []).map((r) => r.id);
+    const purchasesCount = new Map<string, number>();
+    if (beatIds.length) {
+      const { data: prAll } = await supabaseAdmin
+        .from("purchase_requests")
+        .select("beat_id")
+        .in("beat_id", beatIds);
+      prAll?.forEach((p) => {
+        if (!p.beat_id) return;
+        purchasesCount.set(p.beat_id, (purchasesCount.get(p.beat_id) ?? 0) + 1);
+      });
+    }
+
     const enriched = await Promise.all(
       (rows ?? []).map(async (r) => {
         const reservedId = (r as { reserved_purchase_id?: string | null }).reserved_purchase_id;
@@ -204,6 +217,7 @@ export const listBeats = createServerFn({ method: "POST" })
           capa_signed_url: await signFromBucket(supabaseAdmin, COVER_BUCKET, r.capa_path),
           preview_signed_url: await signFromBucket(supabaseAdmin, PREVIEW_BUCKET, r.preview_path),
           reserved_by: reservedId ? (purchaseMap.get(reservedId) ?? null) : null,
+          purchases_count: purchasesCount.get(r.id) ?? 0,
         };
       }),
     );
