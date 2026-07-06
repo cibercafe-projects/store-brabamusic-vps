@@ -278,9 +278,13 @@ export const updateBeat = createServerFn({ method: "POST" })
       patch.slug = await uniqueSlug(supabaseAdmin, base, id);
     }
     if (rest.beat_type_id !== undefined && rest.beat_type_id !== null) {
-      const derived = await resolveTipoFromBeatType(supabaseAdmin, rest.beat_type_id);
-      if (derived) patch.tipo = derived;
+      const info = await resolveBeatTypeInfo(supabaseAdmin, rest.beat_type_id);
+      if (info.tipo) patch.tipo = info.tipo;
+      if (patch.preco == null && info.valorPadrao != null) {
+        patch.preco = info.valorPadrao;
+      }
     }
+
 
 
     const privateFields = ["capa_path", "preview_path", "wav_path", "stems_path", "license_path"] as const;
