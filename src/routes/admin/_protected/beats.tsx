@@ -356,11 +356,11 @@ function BeatsPage() {
                   <TableCell>
                     <div className="flex flex-wrap gap-1 max-w-[220px]">
                       <FileChip label="WAV" path={(b as { wav_path?: string | null }).wav_path} />
-                      {(b as { tipo?: string }).tipo === "aberto" && (
-                        <>
-                          <FileChip label="Stems" path={(b as { stems_path?: string | null }).stems_path} />
-                          <FileChip label="Licença" path={(b as { license_path?: string | null }).license_path} />
-                        </>
+                      {(b as { stems_path?: string | null }).stems_path && (
+                        <FileChip label="Stems" path={(b as { stems_path?: string | null }).stems_path} />
+                      )}
+                      {(b as { license_path?: string | null }).license_path && (
+                        <FileChip label="Licença" path={(b as { license_path?: string | null }).license_path} />
                       )}
                     </div>
                   </TableCell>
