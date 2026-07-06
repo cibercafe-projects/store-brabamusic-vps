@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { MessageCircleQuestion, Star, Bug, LifeBuoy } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/como-funciona")({ component: Como });
 
@@ -119,6 +121,40 @@ function Como() {
           </details>
         ))}
       </div>
+
+      <section className="mt-16 glass glow-magenta rounded-2xl border-t border-primary/30 p-8 md:p-10">
+        <div className="flex items-start gap-4">
+          <MessageCircleQuestion className="h-8 w-8 shrink-0 text-accent" />
+          <div className="flex-1">
+            <h2 className="font-display text-3xl text-gradient">Ajuda e Feedback</h2>
+            <p className="mt-3 text-sm text-muted-foreground md:text-base">
+              Ficou com dúvida, encontrou um problema ou quer sugerir uma melhoria? A
+              equipe Braba lê cada mensagem enviada pelo canal de Ajuda e Feedback.
+              Você também pode compartilhar sua experiência avaliando a compra ou o
+              lançamento — sua opinião ajuda a plataforma a evoluir.
+            </p>
+
+            <ul className="mt-5 grid gap-2 text-sm sm:grid-cols-2">
+              <li className="flex items-center gap-2"><Star className="h-4 w-4 text-accent" /> Avaliar sua experiência</li>
+              <li className="flex items-center gap-2"><MessageCircleQuestion className="h-4 w-4 text-accent" /> Enviar sugestões, dúvidas ou elogios</li>
+              <li className="flex items-center gap-2"><Bug className="h-4 w-4 text-accent" /> Reportar problemas técnicos</li>
+              <li className="flex items-center gap-2"><LifeBuoy className="h-4 w-4 text-accent" /> Solicitar suporte da equipe</li>
+            </ul>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button asChild size="lg" className="rounded-full">
+                <Link to="/feedback">Enviar feedback</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full">
+                <Link to="/feedback" search={{ type: "problema" }}>Reportar problema</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="rounded-full">
+                <Link to="/feedback" search={{ type: "suporte" }}>Suporte</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
