@@ -503,7 +503,13 @@ function BeatsPage() {
                         >
                           Marcar como vendido
                         </DropdownMenuItem>
+                        {b.status === "reservado" && (
+                          <DropdownMenuItem onClick={() => setReleaseConfirm(b)}>
+                            Liberar beat (cancelar reserva)
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
+
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           onClick={() => setDeleteConfirm(b)}
