@@ -180,7 +180,7 @@ function PurchasesListPage() {
           )}
         </button>
         <Select value={status} onValueChange={(v) => setStatus(v as PurchaseStatus | "all")}>
-          <SelectTrigger className="w-[240px]">
+          <SelectTrigger className="w-[220px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -190,6 +190,16 @@ function PurchasesListPage() {
                 {PURCHASE_STATUS_LABELS[s]}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={archived} onValueChange={(v) => setArchived(v as "hide" | "only" | "all")}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="hide">Ocultar arquivadas</SelectItem>
+            <SelectItem value="only">Somente arquivadas</SelectItem>
+            <SelectItem value="all">Incluir arquivadas</SelectItem>
           </SelectContent>
         </Select>
       </div>
