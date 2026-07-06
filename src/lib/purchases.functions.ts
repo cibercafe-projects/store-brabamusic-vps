@@ -589,6 +589,12 @@ export const updatePurchaseStatus = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => statusSchema.parse(input))
   .handler(async ({ context, data }) => {
     const admin = await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await admin
+      .from("purchase_requests")
+      .select("id, beat_id, status")
+      .eq("id", data.id)
+      .maybeSingle();
     const patch: { status: PurchaseStatus; admin_notes?: string | null } = {
       status: data.status,
     };
@@ -601,8 +607,37 @@ export const updatePurchaseStatus = createServerFn({ method: "POST" })
       console.error("[purchases.updateStatus]", error);
       throw new Error("Erro ao atualizar status.");
     }
+
+    // Sincroniza status do beat conforme transição da compra.
+    if (existing?.beat_id) {
+      if (data.status === "pagamento_confirmado" || data.status === "arquivos_enviados") {
+        await supabaseAdmin
+          .from("beats")
+          .update({
+            status: "vendido",
+            reserved_at: null,
+            reservation_expires_at: null,
+          })
+          .eq("id", existing.beat_id);
+      } else if (data.status === "cancelado") {
+        // Só devolve para "ativo" se este pedido ainda era o dono da reserva.
+        await supabaseAdmin
+          .from("beats")
+          .update({
+            status: "ativo",
+            reserved_at: null,
+            reservation_expires_at: null,
+            reserved_purchase_id: null,
+          })
+          .eq("id", existing.beat_id)
+          .eq("status", "reservado")
+          .eq("reserved_purchase_id", existing.id);
+      }
+    }
+
     return { ok: true };
   });
+
 
 export const getReceiptSignedUrlByToken = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => tokenSchema.parse(input))
