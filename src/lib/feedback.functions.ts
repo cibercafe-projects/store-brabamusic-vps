@@ -214,7 +214,7 @@ export const getFeedback = createServerFn({ method: "POST" })
     if (row.purchase_request_id) {
       const { data: p } = await admin
         .from("purchase_requests")
-        .select("id, nome_cliente, beats(nome)")
+        .select("id, nome_cliente, beats!purchase_requests_beat_id_fkey(nome)")
         .eq("id", row.purchase_request_id)
         .maybeSingle();
       if (p) {

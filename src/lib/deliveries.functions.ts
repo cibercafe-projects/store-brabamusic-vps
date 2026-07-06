@@ -53,7 +53,7 @@ export const deliverPurchase = createServerFn({ method: "POST" })
     const { data: purchase, error: pErr } = await admin
       .from("purchase_requests")
       .select(
-        "id, status, nome_cliente, email, whatsapp, continuation_token, beat:beats(id, nome, wav_path, stems_path, license_path)",
+        "id, status, nome_cliente, email, whatsapp, continuation_token, beat:beats!purchase_requests_beat_id_fkey(id, nome, wav_path, stems_path, license_path)",
       )
       .eq("id", data.purchase_id)
       .maybeSingle();
