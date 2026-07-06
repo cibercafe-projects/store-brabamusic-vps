@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin/_protected")({
         throw redirect({ to: "/admin/login" });
       }
     } catch (e) {
-      if ((e as { isRedirect?: boolean })?.isRedirect) throw e;
+      if (isRedirect(e)) throw e;
       throw redirect({ to: "/admin/login" });
     }
     return { user: data.user };
