@@ -243,9 +243,6 @@ function ProdutorasPage() {
                           nome_artistico_creditos: p.nome_artistico_creditos,
                           email_comercial: p.email_comercial,
                           email_royalties: p.email_royalties,
-                          texto_creditos: p.texto_creditos,
-                          texto_registro: p.texto_registro,
-                          texto_royalties: p.texto_royalties,
                         });
                         setSheetOpen(true);
                       }}

@@ -1,0 +1,5 @@
+INSERT INTO public.app_settings (key, value) VALUES
+  ('legal_text_creditos', 'A Produtora deverá ser creditada sempre que houver campo disponível para créditos, produtores, compositores ou metadados nas plataformas de distribuição, streaming, redes sociais, videoclipes e demais materiais promocionais.'),
+  ('legal_text_registro', 'O Artista compromete-se a utilizar as informações acima para o correto registro da obra musical e do fonograma junto às entidades competentes, distribuidoras digitais e associações de gestão coletiva.'),
+  ('legal_text_royalties', 'Para fins de divisão de royalties, cadastro de splits, participação autoral e demais informações relacionadas à arrecadação de receitas da obra, o Artista deverá entrar em contato através do e-mail da produtora.')
+ON CONFLICT (key) DO NOTHING;

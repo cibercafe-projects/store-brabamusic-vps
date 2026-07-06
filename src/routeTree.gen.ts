@@ -33,6 +33,7 @@ import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protect
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AdminProtectedUsuariosRouteImport } from './routes/admin/_protected/usuarios'
 import { Route as AdminProtectedTiposBeatRouteImport } from './routes/admin/_protected/tipos-beat'
+import { Route as AdminProtectedTextosJuridicosRouteImport } from './routes/admin/_protected/textos-juridicos'
 import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
 import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
 import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
@@ -166,6 +167,12 @@ const AdminProtectedTiposBeatRoute = AdminProtectedTiposBeatRouteImport.update({
   path: '/tipos-beat',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
+const AdminProtectedTextosJuridicosRoute =
+  AdminProtectedTextosJuridicosRouteImport.update({
+    id: '/textos-juridicos',
+    path: '/textos-juridicos',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
 const AdminProtectedProdutorasRoute =
   AdminProtectedProdutorasRouteImport.update({
     id: '/produtoras',
@@ -267,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/textos-juridicos': typeof AdminProtectedTextosJuridicosRoute
   '/admin/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -304,6 +312,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/textos-juridicos': typeof AdminProtectedTextosJuridicosRoute
   '/admin/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -344,6 +353,7 @@ export interface FileRoutesById {
   '/admin/_protected/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/_protected/textos-juridicos': typeof AdminProtectedTextosJuridicosRoute
   '/admin/_protected/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/textos-juridicos'
     | '/admin/tipos-beat'
     | '/admin/usuarios'
     | '/lovable/email/suppression'
@@ -421,6 +432,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/textos-juridicos'
     | '/admin/tipos-beat'
     | '/admin/usuarios'
     | '/lovable/email/suppression'
@@ -460,6 +472,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/dashboard'
     | '/admin/_protected/leads'
     | '/admin/_protected/produtoras'
+    | '/admin/_protected/textos-juridicos'
     | '/admin/_protected/tipos-beat'
     | '/admin/_protected/usuarios'
     | '/lovable/email/suppression'
@@ -667,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedTiposBeatRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/textos-juridicos': {
+      id: '/admin/_protected/textos-juridicos'
+      path: '/textos-juridicos'
+      fullPath: '/admin/textos-juridicos'
+      preLoaderRoute: typeof AdminProtectedTextosJuridicosRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/produtoras': {
       id: '/admin/_protected/produtoras'
       path: '/produtoras'
@@ -781,6 +801,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedDashboardRoute: typeof AdminProtectedDashboardRoute
   AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
   AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
+  AdminProtectedTextosJuridicosRoute: typeof AdminProtectedTextosJuridicosRoute
   AdminProtectedTiposBeatRoute: typeof AdminProtectedTiposBeatRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
   AdminProtectedComprasIdRoute: typeof AdminProtectedComprasIdRouteWithChildren
@@ -795,6 +816,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedDashboardRoute: AdminProtectedDashboardRoute,
   AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
   AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
+  AdminProtectedTextosJuridicosRoute: AdminProtectedTextosJuridicosRoute,
   AdminProtectedTiposBeatRoute: AdminProtectedTiposBeatRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,
   AdminProtectedComprasIdRoute: AdminProtectedComprasIdRouteWithChildren,
@@ -850,13 +872,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

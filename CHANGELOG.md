@@ -13,6 +13,51 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 13 — Textos Jurídicos globais
+
+### Added
+
+- **Nova aba "Textos Jurídicos"** em `/admin/textos-juridicos` (sidebar,
+  ícone `FileText`), com 3 campos editáveis (Créditos, Registro da Obra e
+  do Fonograma, Divisão de Royalties e Cadastro de Participação),
+  persistidos em `app_settings` sob as chaves `legal_text_creditos`,
+  `legal_text_registro`, `legal_text_royalties`.
+- **Server functions** `getLegalTexts` / `updateLegalTexts` em
+  `src/lib/legal-texts.functions.ts` (admin-only via `requireSupabaseAuth`).
+- **Seed inicial** dos 3 textos padrão via migração
+  (`INSERT ... ON CONFLICT DO NOTHING`).
+
+### Changed
+
+- **`createPurchaseRequest`** agora lê `legal_text_creditos/registro/royalties`
+  de `app_settings` e congela os três textos vigentes no
+  `license_snapshot` no momento da compra (mesma mecânica anterior, só
+  muda a **fonte**). Licenças já emitidas continuam intactas.
+- **`getBeatLicenseInfo`** passa a devolver os 3 textos jurídicos a partir
+  de `app_settings` em vez de campos da produtora — o modal de compra
+  continua exibindo o texto vigente sem mudança visual.
+- **Cadastro de Produtoras** (`ProducerForm`, `producers.functions.ts`,
+  rota `/admin/produtoras`): removidos os 3 campos `texto_creditos`,
+  `texto_registro`, `texto_royalties`. A produtora segue com seus dados
+  próprios (nome civil, CPF, nome para créditos, e-mails, etc.).
+- **Páginas de licença** (`/licenca/$token` e
+  `/admin/compras/$id/licenca`): removido o fallback para os campos da
+  produtora; o `license_snapshot` é a única fonte para os 3 textos.
+
+### Docs
+
+- `docs/regras-de-negocio.md` §2.2 reescrita explicando a origem global
+  dos textos jurídicos e o congelamento em `license_snapshot`.
+
+### Preserved
+
+- Colunas `producers.texto_creditos`, `producers.texto_registro`,
+  `producers.texto_royalties` **permanecem no banco** para preservar
+  dados históricos. Removidas em sprint futura de limpeza, mesma
+  abordagem já adotada com `beats.tipo`.
+
+---
+
 ## Sprint 12 — Tipos de Beat Configuráveis
 
 ### Added

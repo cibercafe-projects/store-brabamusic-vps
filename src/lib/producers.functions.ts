@@ -63,9 +63,6 @@ const producerInputSchema = z.object({
   nome_artistico_creditos: optionalText(160),
   email_comercial: optionalEmail,
   email_royalties: optionalEmail,
-  texto_creditos: optionalText(4000),
-  texto_registro: optionalText(4000),
-  texto_royalties: optionalText(4000),
 });
 
 
@@ -180,9 +177,6 @@ export const createProducer = createServerFn({ method: "POST" })
         nome_artistico_creditos: data.nome_artistico_creditos,
         email_comercial: data.email_comercial,
         email_royalties: data.email_royalties,
-        texto_creditos: data.texto_creditos,
-        texto_registro: data.texto_registro,
-        texto_royalties: data.texto_royalties,
       })
       .select("*")
       .single();
