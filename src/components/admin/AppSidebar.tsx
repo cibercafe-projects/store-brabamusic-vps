@@ -92,10 +92,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                const badge =
-                  item.url === "/admin/lancamentos" && (newReleasesQuery.data?.count ?? 0) > 0
-                    ? newReleasesQuery.data!.count
-                    : null;
+                let badge: number | null = null;
+                if (item.url === "/admin/lancamentos" && (newReleasesQuery.data?.count ?? 0) > 0) {
+                  badge = newReleasesQuery.data!.count;
+                } else if (item.url === "/admin/feedback" && (feedbackStatsQuery.data?.novos ?? 0) > 0) {
+                  badge = feedbackStatsQuery.data!.novos;
+                }
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)}>
