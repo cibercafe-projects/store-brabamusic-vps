@@ -195,7 +195,9 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
     );
 
     return {
+      available,
       beat: {
+
         id: row.id,
         slug: row.slug,
         nome: row.nome,
