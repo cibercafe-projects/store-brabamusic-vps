@@ -529,6 +529,7 @@ export const uploadReceiptByToken = createServerFn({ method: "POST" })
 const adminListSchema = z.object({
   status: z.enum(PURCHASE_STATUSES).optional(),
   search: z.string().trim().max(120).optional(),
+  archived: z.enum(["hide", "only", "all"]).default("hide"),
 });
 
 export const listPurchases = createServerFn({ method: "GET" })
@@ -539,11 +540,13 @@ export const listPurchases = createServerFn({ method: "GET" })
     let q = admin
       .from("purchase_requests")
       .select(
-        "id, nome_cliente, email, whatsapp, status, valor, receipt_path, created_at, forma_pagamento, beat:beats!purchase_requests_beat_id_fkey(id, nome, slug)",
+        "id, nome_cliente, email, whatsapp, status, valor, receipt_path, created_at, forma_pagamento, archived_at, beat:beats!purchase_requests_beat_id_fkey(id, nome, slug)",
       )
       .order("created_at", { ascending: false })
       .limit(200);
     if (data.status) q = q.eq("status", data.status);
+    if (data.archived === "hide") q = q.is("archived_at", null);
+    else if (data.archived === "only") q = q.not("archived_at", "is", null);
     if (data.search) {
       const s = `%${data.search}%`;
       q = q.or(`nome_cliente.ilike.${s},email.ilike.${s}`);
@@ -555,6 +558,89 @@ export const listPurchases = createServerFn({ method: "GET" })
     }
     return rows ?? [];
   });
+
+async function releaseBeatIfHeldBy(
+  supabaseAdmin: Awaited<ReturnType<typeof assertAdmin>>,
+  purchaseId: string,
+  beatId: string | null | undefined,
+) {
+  if (!beatId) return;
+  await supabaseAdmin
+    .from("beats")
+    .update({
+      status: "ativo",
+      reserved_at: null,
+      reservation_expires_at: null,
+      reserved_purchase_id: null,
+    })
+    .eq("id", beatId)
+    .eq("reserved_purchase_id", purchaseId)
+    .eq("status", "reservado");
+}
+
+export const archivePurchase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { data: existing, error: getErr } = await admin
+      .from("purchase_requests")
+      .select("id, beat_id, status, archived_at")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (getErr) throw new Error(getErr.message);
+    if (!existing) throw new Error("Compra não encontrada.");
+    if (existing.archived_at) throw new Error("Compra já está arquivada.");
+    const { error } = await admin
+      .from("purchase_requests")
+      .update({ archived_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await releaseBeatIfHeldBy(admin, data.id, existing.beat_id);
+    return { ok: true };
+  });
+
+export const unarchivePurchase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { error } = await admin
+      .from("purchase_requests")
+      .update({ archived_at: null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deletePurchase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { data: existing, error: getErr } = await admin
+      .from("purchase_requests")
+      .select("id, beat_id, receipt_path")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (getErr) throw new Error(getErr.message);
+    if (!existing) throw new Error("Compra não encontrada.");
+
+    // Libera a reserva do beat se esta compra ainda estiver segurando-o.
+    await releaseBeatIfHeldBy(admin, data.id, existing.beat_id);
+
+    const { error } = await admin
+      .from("purchase_requests")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    if (existing.receipt_path) {
+      await admin.storage.from(RECEIPT_BUCKET).remove([existing.receipt_path]);
+    }
+    return { ok: true };
+  });
+
 
 const idSchema = z.object({ id: z.string().uuid() });
 
