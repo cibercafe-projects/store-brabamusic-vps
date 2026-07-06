@@ -386,49 +386,8 @@ export function ProducerForm({ initial, onDone }: Props) {
               )}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="texto_creditos"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Texto de créditos</FormLabel>
-                <FormControl>
-                  <Textarea rows={3} {...field} placeholder="Texto padrão de créditos..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="texto_registro"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Texto de registro</FormLabel>
-                <FormControl>
-                  <Textarea rows={3} {...field} placeholder="Texto padrão de registro..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="texto_royalties"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Texto de royalties</FormLabel>
-                <FormControl>
-                  <Textarea rows={3} {...field} placeholder="Texto padrão de royalties..." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
+
 
 
 
