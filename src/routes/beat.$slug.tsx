@@ -180,31 +180,51 @@ function BeatDetail() {
             ))}
           </dl>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              onClick={() => setPurchaseOpen(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground glow-magenta px-6 py-3 text-sm font-bold hover:opacity-90 transition"
-            >
-              <ShoppingCart className="h-4 w-4" /> COMPRAR
-            </button>
-            <button
-              onClick={handleShare}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
-              aria-label="Compartilhar beat"
-            >
-              {copied ? <Check className="h-4 w-4 text-accent" /> : <Share2 className="h-4 w-4" />}
-              {copied ? "Link copiado" : "Compartilhar"}
-            </button>
-          </div>
+          {available ? (
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                onClick={() => setPurchaseOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground glow-magenta px-6 py-3 text-sm font-bold hover:opacity-90 transition"
+              >
+                <ShoppingCart className="h-4 w-4" /> COMPRAR
+              </button>
+              <button
+                onClick={handleShare}
+                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
+                aria-label="Compartilhar beat"
+              >
+                {copied ? <Check className="h-4 w-4 text-accent" /> : <Share2 className="h-4 w-4" />}
+                {copied ? "Link copiado" : "Compartilhar"}
+              </button>
+            </div>
+          ) : (
+            <div className="mt-6 glass rounded-2xl p-5">
+              <p className="font-display text-lg">
+                Este beat não está mais disponível para compra.
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Todos os beats da Braba Beats são exclusivos e vendidos uma única vez.
+              </p>
+              <Link
+                to="/"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-2.5 text-sm font-bold hover:opacity-90 transition"
+              >
+                <ArrowLeft className="h-4 w-4" /> Voltar ao catálogo
+              </Link>
+            </div>
+          )}
 
-          <PurchaseDialog
-            open={purchaseOpen}
-            onOpenChange={setPurchaseOpen}
-            beatId={beat.id}
-            beatName={beat.nome}
-            produtora={produtora?.nome_artistico ?? null}
-            preco={beat.preco}
-          />
+          {available && (
+            <PurchaseDialog
+              open={purchaseOpen}
+              onOpenChange={setPurchaseOpen}
+              beatId={beat.id}
+              beatName={beat.nome}
+              produtora={produtora?.nome_artistico ?? null}
+              preco={beat.preco}
+            />
+          )}
+
 
 
 
