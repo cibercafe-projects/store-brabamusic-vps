@@ -176,6 +176,14 @@ function SubmitReleasePage() {
           <p className="text-xs text-muted-foreground">
             Após o aviso, aguarde até 24h para a equipe analisar e retornar.
           </p>
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+            <p>Como foi sua experiência enviando seu lançamento?</p>
+            <Button asChild size="sm" variant="outline" className="mt-2">
+              <Link to="/feedback" search={{ origin: "pos_lancamento" }}>
+                Enviar feedback
+              </Link>
+            </Button>
+          </div>
           <Button asChild variant="ghost">
             <Link to="/">Voltar para o catálogo</Link>
           </Button>
