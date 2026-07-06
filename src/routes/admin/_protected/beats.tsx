@@ -590,6 +590,30 @@ function BeatsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={!!releaseConfirm} onOpenChange={(o) => !o && setReleaseConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Liberar reserva do beat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O beat <strong>{releaseConfirm?.nome}</strong> voltará para o catálogo
+              como disponível e o cliente reservado deixará de ter prioridade.
+              Utilize quando a compra for cancelada ou o cliente desistir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => releaseConfirm && mutateRelease.mutate(releaseConfirm.id)}
+              disabled={mutateRelease.isPending}
+            >
+              {mutateRelease.isPending ? "Liberando..." : "Liberar beat"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
+
       <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => !o && setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
