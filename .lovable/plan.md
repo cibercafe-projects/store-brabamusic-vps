@@ -1,105 +1,97 @@
-# Sprint — Central de Ajuda e Feedback
+# Reserva Automática de Beats Exclusivos
 
-Novo módulo para coleta de feedback (sugestões, problemas, dúvidas, suporte, elogios) integrado ao fluxo público e ao Backoffice. Sem envio de e-mails automáticos, sem integrações externas.
+Adicionar reserva temporária (24h) ao criar uma compra, liberar automaticamente na expiração/cancelamento, marcar como vendido na confirmação de pagamento. Implementação minimamente invasiva usando os campos sugeridos no próprio beat.
 
-## 1. Backend (Lovable Cloud)
+## FASE 1 — Modelo de dados
 
-### Nova tabela `public.feedback`
-Campos principais:
-- `rating` (1–5, opcional para tipos não-avaliação)
-- `type` (enum: `sugestao`, `problema`, `duvida`, `suporte`, `elogio`)
-- `area` (enum opcional: `catalogo`, `compra`, `pagamento`, `comprovante`, `entrega`, `lancamentos`, `backoffice`, `outro`)
-- `message` (texto obrigatório)
-- `wants_reply` (bool)
-- `contact_name`, `contact_email`, `contact_whatsapp` (opcionais; obrigatórios se `wants_reply=true`)
-- `purchase_request_id` (FK opcional → `purchase_requests`)
-- `release_id` (FK opcional → `releases`)
-- `origin` (enum: `geral`, `pos_compra`, `pos_lancamento`)
-- `status` (enum: `novo`, `em_analise`, `respondido`, `resolvido`, `arquivado`, default `novo`)
-- `internal_notes` (texto, admin-only)
-- `created_at`, `updated_at`
+Migração:
+- Adicionar valor `reservado` ao enum `beat_status` (já existem `rascunho`, `ativo`, `vendido`; mapeamento: `ativo` = Disponível, `reservado` = Reservado, `vendido` = Vendido — `rascunho` continua para beats não publicados).
+- Adicionar colunas em `public.beats`:
+  - `reserved_at timestamptz null`
+  - `reservation_expires_at timestamptz null`
+  - `reserved_purchase_id uuid null references purchase_requests(id) on delete set null`
+- Índice: `create index on beats (status, reservation_expires_at)` para expiração eficiente.
 
-### RLS + GRANTS
-- `INSERT` liberado para `anon` e `authenticated` (formulário público)
-- `SELECT / UPDATE` restrito a admins ativos (`has_role(auth.uid(),'admin')`)
-- Trigger `set_updated_at`
+## FASE 2 — Reserva na criação da compra
 
-### Server functions (`src/lib/feedback.functions.ts`)
-- `submitFeedback` — público (sem `requireSupabaseAuth`), valida com Zod, insere via cliente publishable server-side
-- `listFeedback` — admin, filtros por status/tipo/origem
-- `getFeedback` — admin, detalhe
-- `updateFeedbackStatus` — admin, status + `internal_notes`
-- `getFeedbackStats` — admin (total, pendentes, respondidos, nota média, problemas reportados)
+Em `createPurchaseRequest` (src/lib/purchases.functions.ts):
+- Após validar `beat.status === 'ativo'`, executar UPDATE atômico condicional:
+  ```
+  UPDATE beats SET status='reservado', reserved_at=now(),
+    reservation_expires_at=now()+interval '24 hours',
+    reserved_purchase_id=<novo id>
+  WHERE id=? AND status='ativo'
+  ```
+- Reordenar: inserir `purchase_requests` primeiro, então executar o UPDATE condicional; se `rowCount=0`, apagar o purchase recém-criado e lançar "Beat indisponível para compra" (previne corrida entre dois checkouts simultâneos).
 
-## 2. Frontend público
+## FASE 3 — Catálogo público
 
-### `/feedback` (nova rota `src/routes/feedback.tsx`)
-Formulário único:
-- Pergunta inicial "Como foi sua experiência?" → 5 estrelas (opcional se tipo ≠ elogio/avaliação)
-- Select **Tipo**
-- Select **Área** (opcional)
-- Textarea **Conte sua experiência**
-- Checkbox **Quero receber resposta** → revela Nome / Email / WhatsApp
-- Suporta querystring `?purchase=<id>` e `?release=<id>` para associação automática (mostra badge "Referente ao pedido #XXXX" / "Lançamento X")
-- Head SEO específico
+`src/lib/catalog.functions.ts`: filtros existentes `.eq("status","ativo")` já excluem `reservado` e `vendido` automaticamente. Auditar todos os fetchers públicos (listBeats, getBeat por slug, produtora pages) para confirmar que continuam usando `= 'ativo'` — nenhuma mudança de código esperada.
 
-### Rodapé (`src/components/Footer.tsx`)
-Nova coluna/links "Ajuda e Feedback":
-- Enviar Feedback → `/feedback`
-- Reportar Problema → `/feedback?type=problema`
-- Suporte → `/feedback?type=suporte`
-- FAQ → mantém link para `/como-funciona#faq` (já existente)
+## FASE 4 — Confirmação de pagamento → Vendido
 
-### Integração pós-fluxo
-- **Pós-compra** (`PurchaseDialog` / `DeliveryDialog` quando status = `arquivos_enviados`): card "Como foi sua experiência?" com 5 estrelas → CTA para `/feedback?purchase=<id>&origin=pos_compra&rating=<n>`
-- **Pós-lançamento** (rota pública de status do lançamento após `publicado`): card equivalente → `/feedback?release=<id>&origin=pos_lancamento`
+Em `updatePurchaseStatus`:
+- Ao mudar status para `pagamento_confirmado` ou `arquivos_enviados`: UPDATE do beat vinculado para `status='vendido'`, limpar `reserved_at`/`reservation_expires_at` (manter `reserved_purchase_id` como histórico).
 
-## 3. Backoffice
+## FASE 5 — Cancelamento → Disponível
 
-### Novo item de menu "Feedback" (`src/components/admin/AppSidebar.tsx`)
-Ícone `MessageSquare`, badge com contagem de status `novo`.
+Em `updatePurchaseStatus`, ao mudar para `cancelado`:
+- Se o beat atualmente aponta para essa compra (`reserved_purchase_id = purchase.id` e `status='reservado'`), reverter para `status='ativo'`, limpar `reserved_at`, `reservation_expires_at`, `reserved_purchase_id`.
+- Se o beat já está `vendido`, não alterar (admin precisa agir explicitamente pelo botão manual da Fase 7).
 
-### `/admin/feedback` (lista) — `src/routes/admin/_protected/feedback.index.tsx`
-Tabela: Data · Tipo · Avaliação · Origem (Geral/Compra #/Lançamento) · Status · Ação (ver).
-Filtros: status, tipo, origem, período.
+## FASE 6 — Expiração automática (cron)
 
-### `/admin/feedback/$id` (detalhe) — `src/routes/admin/_protected/feedback.$id.tsx`
-- Todos os campos do feedback
-- Link para compra/lançamento associado (se houver)
-- Select para alterar status
-- Textarea de observações internas
-- Botões WhatsApp/Email para contato quando `wants_reply=true`
+Função SQL `public.expire_beat_reservations()` (SECURITY DEFINER):
+```
+UPDATE beats SET status='ativo', reserved_at=null,
+  reservation_expires_at=null, reserved_purchase_id=null
+WHERE status='reservado' AND reservation_expires_at < now();
+```
+Agendar via `pg_cron` a cada 5 minutos (chamada SQL direta, sem HTTP — Opção 1 do padrão de scheduled jobs). Registrar via `supabase--insert` após a migração.
 
-### Dashboard (`/admin/dashboard`)
-Cards adicionais:
-- Total de Feedbacks
-- Pendentes (`novo` + `em_analise`)
-- Respondidos
-- Nota Média
-- Problemas Reportados
+## FASE 7 — Backoffice
 
-## 4. Documentação
+`src/routes/admin/_protected/beats.tsx` + `BeatForm`:
+- Badge de status agora inclui "Reservado" (amarelo).
+- Quando `status='reservado'`, mostrar bloco informativo: cliente (via `reserved_purchase_id → purchase_requests.nome_cliente`), `reserved_at`, `reservation_expires_at`, contador "expira em Xh Ym" (client-side).
+- Botão de ação **Liberar Beat** no dropdown/detalhe → nova server fn `releaseBeatReservation({ id })` que reverte para `ativo` e limpa campos de reserva. Confirmação via AlertDialog.
+- `listBeats` passa a selecionar as novas colunas + join leve com purchase para nome do cliente.
 
-- `CHANGELOG.md` — nova entrada "Central de Ajuda e Feedback"
-- `docs/regras-de-negocio.md` — nova seção "Feedback" (fluxo, status, associação automática, sem e-mails automáticos)
+## FASE 8 — Página pública do beat
 
-## Fora de escopo
-- Nenhum e-mail automático (nem cliente, nem admin)
-- Nenhuma integração externa
-- Nenhuma FAQ nova (mantém a de `/como-funciona`)
-- Sem respostas do admin diretamente pela plataforma (contato via WhatsApp/Email externos)
+`src/routes/beat.$slug.tsx` / fetcher em `catalog.functions.ts`:
+- Se o beat não é `ativo` (ou seja, reservado/vendido/rascunho), retornar `notFound()` já não basta pois queremos mensagem amigável. Ajustar o fetcher público para também retornar beats `reservado`/`vendido` mas com flag `available=false`.
+- Na página: se `available=false`, ocultar CTA "Comprar" e mostrar card:
+  > "Este beat não está mais disponível para compra."
+  > + botão "Voltar ao Catálogo".
+- Backend defense-in-depth: `createPurchaseRequest` já rejeita não-ativos (Fase 2).
 
-## Arquivos novos
-- `supabase/migrations/<timestamp>_feedback.sql`
-- `src/lib/feedback.functions.ts`
-- `src/routes/feedback.tsx`
-- `src/routes/admin/_protected/feedback.index.tsx`
-- `src/routes/admin/_protected/feedback.$id.tsx`
+## Fora do escopo
 
-## Arquivos alterados
-- `src/components/Footer.tsx` (links Ajuda e Feedback)
-- `src/components/admin/AppSidebar.tsx` (menu + badge)
-- `src/routes/admin/_protected/dashboard.tsx` (novos cards)
-- `src/components/purchase/DeliveryDialog.tsx` (CTA pós-compra)
-- Rota pública de status de lançamento (CTA pós-lançamento)
-- `CHANGELOG.md`, `docs/regras-de-negocio.md`
+Pagamento, upload de comprovante, licenciamento, dashboard, lançamentos, notificações — inalterados. Sem novas tabelas.
+
+## Detalhes técnicos
+
+**Arquivos afetados:**
+- Migração nova: enum + colunas + índice + função `expire_beat_reservations`.
+- `supabase--insert` separado: `cron.schedule('expire-beat-reservations','*/5 * * * *', $$select public.expire_beat_reservations()$$)`.
+- `src/lib/purchases.functions.ts`: reserva atômica em `createPurchaseRequest`; transições em `updatePurchaseStatus`.
+- `src/lib/beats.functions.ts`: nova `releaseBeatReservation`; incluir novas colunas/join em `listBeats`; permitir `reservado` no schema Zod de listagem.
+- `src/lib/catalog.functions.ts`: expor `available` flag em `getBeatBySlug`; listas públicas mantêm `= 'ativo'`.
+- `src/routes/beat.$slug.tsx`: UI de indisponível.
+- `src/routes/admin/_protected/beats.tsx`: badge "Reservado", bloco de info de reserva, ação "Liberar Beat".
+- `src/integrations/supabase/types.ts`: regenerado após migração.
+- `CHANGELOG.md`, `docs/regras-de-negocio.md`: documentar reserva automática.
+
+**Ordem de execução:** migração → `supabase--insert` do cron → código (server fns → UI) → docs.
+
+## Critérios de aceitação (mapeamento)
+
+| Critério | Fase |
+|---|---|
+| Todos os beats têm controle de disponibilidade | 1 |
+| Primeira compra reserva por 24h | 2 |
+| Não permite 2ª compra em reservado/vendido | 2 + 8 |
+| Pagamento confirmado → Vendido | 4 |
+| Reservas expiradas liberadas automaticamente | 6 |
+| Admin pode liberar manualmente | 7 |
