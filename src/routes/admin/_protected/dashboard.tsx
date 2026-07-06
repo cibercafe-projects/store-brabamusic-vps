@@ -18,11 +18,15 @@ import {
   FileText,
   CreditCard,
   Send,
+  MessageSquare,
+  Star,
+  AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminMetrics } from "@/lib/beats.functions";
 import { getPurchaseDashboardCounts } from "@/lib/purchases.functions";
+import { getFeedbackStats } from "@/lib/feedback.functions";
 
 
 export const Route = createFileRoute("/admin/_protected/dashboard")({
