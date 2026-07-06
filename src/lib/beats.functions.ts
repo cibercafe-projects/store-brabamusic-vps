@@ -141,7 +141,9 @@ export const listBeats = createServerFn({ method: "POST" })
     z
       .object({
         search: z.string().trim().max(160).optional(),
-        status: z.enum(["rascunho", "ativo", "vendido", "todas"]).default("todas"),
+        status: z
+          .enum(["rascunho", "ativo", "reservado", "vendido", "todas"])
+          .default("todas"),
         produtoraId: z.string().uuid().optional(),
         sort: z.enum(["nome", "created_at"]).default("created_at"),
         page: z.number().int().min(1).default(1),
@@ -175,16 +177,39 @@ export const listBeats = createServerFn({ method: "POST" })
       producerMap = new Map(producers?.map((p) => [p.id, { nome_artistico: p.nome_artistico }]));
     }
 
+    const reservedPurchaseIds = Array.from(
+      new Set(
+        (rows ?? [])
+          .map((r) => (r as { reserved_purchase_id?: string | null }).reserved_purchase_id)
+          .filter((x): x is string => !!x),
+      ),
+    );
+    const purchaseMap = new Map<string, { nome_cliente: string; email: string | null }>();
+    if (reservedPurchaseIds.length) {
+      const { data: prs } = await supabaseAdmin
+        .from("purchase_requests")
+        .select("id, nome_cliente, email")
+        .in("id", reservedPurchaseIds);
+      prs?.forEach((p) =>
+        purchaseMap.set(p.id, { nome_cliente: p.nome_cliente, email: p.email }),
+      );
+    }
+
     const enriched = await Promise.all(
-      (rows ?? []).map(async (r) => ({
-        ...r,
-        produtora_nome: producerMap.get(r.produtora_id)?.nome_artistico ?? "—",
-        capa_signed_url: await signFromBucket(supabaseAdmin, COVER_BUCKET, r.capa_path),
-        preview_signed_url: await signFromBucket(supabaseAdmin, PREVIEW_BUCKET, r.preview_path),
-      })),
+      (rows ?? []).map(async (r) => {
+        const reservedId = (r as { reserved_purchase_id?: string | null }).reserved_purchase_id;
+        return {
+          ...r,
+          produtora_nome: producerMap.get(r.produtora_id)?.nome_artistico ?? "—",
+          capa_signed_url: await signFromBucket(supabaseAdmin, COVER_BUCKET, r.capa_path),
+          preview_signed_url: await signFromBucket(supabaseAdmin, PREVIEW_BUCKET, r.preview_path),
+          reserved_by: reservedId ? (purchaseMap.get(reservedId) ?? null) : null,
+        };
+      }),
     );
     return { rows: enriched, total: count ?? 0 };
   });
+
 
 export const getBeat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
