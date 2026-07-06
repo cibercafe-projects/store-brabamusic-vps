@@ -99,8 +99,9 @@ function Index() {
             <span className="text-gradient">ESCREVE</span> A HISTÓRIA.
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-muted-foreground">
-            Catálogo oficial das produtoras da BRABA. Escute a prévia e conheça o time por trás de
-            cada beat.
+            Catálogo oficial das produtoras da BRABA.
+            <br />
+            Escute a prévia e conheça o time por trás de cada beat.
           </p>
 
           <div className="mt-8 max-w-xl mx-auto glass rounded-full flex items-center gap-2 px-4 py-2">
