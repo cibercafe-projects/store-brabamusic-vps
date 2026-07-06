@@ -135,9 +135,9 @@ function FeedbackDetailPage() {
                 <div><strong>WhatsApp:</strong> {f.contact_whatsapp || "—"}</div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                {f.contact_whatsapp && (
+                {f.contact_whatsapp && waLink(f.contact_whatsapp, "Olá! Sobre o feedback enviado à Braba Beats:") && (
                   <Button asChild size="sm" variant="outline">
-                    <a href={waLink(f.contact_whatsapp, "Olá! Sobre o feedback enviado à Braba Beats:")} target="_blank" rel="noopener noreferrer">
+                    <a href={waLink(f.contact_whatsapp, "Olá! Sobre o feedback enviado à Braba Beats:")!} target="_blank" rel="noopener noreferrer">
                       <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
                     </a>
                   </Button>
