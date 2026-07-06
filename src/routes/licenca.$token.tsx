@@ -127,6 +127,30 @@ function PublicLicensePage() {
           </Button>
         </div>
 
+        <div className="no-print mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-5 text-center">
+          <p className="font-display text-lg">Sua compra foi concluída. Como foi sua experiência?</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sua opinião ajuda a Braba Beats a evoluir. Leva menos de 1 minuto.
+          </p>
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <a
+                key={n}
+                href={`/feedback?purchase=${p.id}&origin=pos_compra&rating=${n}`}
+                className="rounded-full border border-primary/40 px-3 py-1 text-sm hover:bg-primary/10"
+              >
+                {"★".repeat(n)}
+              </a>
+            ))}
+          </div>
+          <a
+            href={`/feedback?purchase=${p.id}&origin=pos_compra`}
+            className="mt-3 inline-block text-xs text-muted-foreground underline hover:text-primary"
+          >
+            Enviar feedback detalhado
+          </a>
+        </div>
+
         <article className="license-doc">
           <div className="meta-top">
             <div>
