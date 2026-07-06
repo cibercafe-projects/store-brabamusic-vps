@@ -167,9 +167,6 @@ export function ProducerForm({ initial, onDone }: Props) {
         nome_artistico_creditos: values.nome_artistico_creditos || "",
         email_comercial: values.email_comercial || "",
         email_royalties: values.email_royalties || "",
-        texto_creditos: values.texto_creditos || "",
-        texto_registro: values.texto_registro || "",
-        texto_royalties: values.texto_royalties || "",
       };
       if (isEdit && initial?.id) {
         return update({ data: { id: initial.id, ...payload } });
