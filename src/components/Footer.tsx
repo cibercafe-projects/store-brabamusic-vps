@@ -60,7 +60,7 @@ export function Footer() {
               <h4 className="font-display text-lg text-foreground">Contato</h4>
               <ul className="mt-4 space-y-3">
                 <li><a href={CONTACT.instagram} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-2`}><Instagram className="size-4" /> Instagram Braba Music</a></li>
-                <li><a href={CONTACT.whatsapp} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-2`}><MessageCircle className="size-4" /> WhatsApp Comercial</a></li>
+                
                 <li><Link to="/feedback" className={linkClass}>Ajuda e Feedback</Link></li>
                 <li><Link to="/feedback" search={{ type: "problema" }} className={linkClass}>Reportar problema</Link></li>
                 <li><Link to="/feedback" search={{ type: "suporte" }} className={linkClass}>Suporte</Link></li>
