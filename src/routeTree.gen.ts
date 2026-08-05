@@ -9,96 +9,51 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
-import { Route as TermosUsoRouteImport } from './routes/termos-uso'
-import { Route as ProdutoresRouteImport } from './routes/produtores'
-import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
-import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
-import { Route as LicencaDeUsoRouteImport } from './routes/licenca-de-uso'
-import { Route as FeedbackRouteImport } from './routes/feedback'
-import { Route as EnviarLancamentoRouteImport } from './routes/enviar-lancamento'
-import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as EnviarLancamentoRouteImport } from './routes/enviar-lancamento'
+import { Route as FeedbackRouteImport } from './routes/feedback'
+import { Route as LicencaDeUsoRouteImport } from './routes/licenca-de-uso'
+import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
+import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
+import { Route as ProdutoresRouteImport } from './routes/produtores'
+import { Route as TermosUsoRouteImport } from './routes/termos-uso'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as ProdutoraSlugRouteImport } from './routes/produtora.$slug'
-import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
-import { Route as LicencaTokenRouteImport } from './routes/licenca.$token'
-import { Route as EnviarComprovanteTokenRouteImport } from './routes/enviar-comprovante.$token'
-import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
-import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
-import { Route as AdminResetPasswordRouteImport } from './routes/admin/reset-password'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProtectedRouteRouteImport } from './routes/admin/_protected/route'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
-import { Route as AdminProtectedUsuariosRouteImport } from './routes/admin/_protected/usuarios'
-import { Route as AdminProtectedTiposBeatRouteImport } from './routes/admin/_protected/tipos-beat'
-import { Route as AdminProtectedTextosJuridicosRouteImport } from './routes/admin/_protected/textos-juridicos'
-import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
-import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
-import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
-import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/_protected/configuracoes'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminResetPasswordRouteImport } from './routes/admin/reset-password'
+import { Route as BeatSlugRouteImport } from './routes/beat.$slug'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as EnviarComprovanteTokenRouteImport } from './routes/enviar-comprovante.$token'
+import { Route as LicencaTokenRouteImport } from './routes/licenca.$token'
+import { Route as ProdutorSlugRouteImport } from './routes/produtor.$slug'
+import { Route as ProdutoraSlugRouteImport } from './routes/produtora.$slug'
 import { Route as AdminProtectedBeatsRouteImport } from './routes/admin/_protected/beats'
-import { Route as AdminProtectedLancamentosIndexRouteImport } from './routes/admin/_protected/lancamentos.index'
-import { Route as AdminProtectedFeedbackIndexRouteImport } from './routes/admin/_protected/feedback.index'
+import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/_protected/configuracoes'
+import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
+import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
+import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
+import { Route as AdminProtectedTextosJuridicosRouteImport } from './routes/admin/_protected/textos-juridicos'
+import { Route as AdminProtectedTiposBeatRouteImport } from './routes/admin/_protected/tipos-beat'
+import { Route as AdminProtectedUsuariosRouteImport } from './routes/admin/_protected/usuarios'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AdminProtectedComprasIndexRouteImport } from './routes/admin/_protected/compras.index'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
-import { Route as AdminProtectedFeedbackIdRouteImport } from './routes/admin/_protected/feedback.$id'
 import { Route as AdminProtectedComprasIdRouteImport } from './routes/admin/_protected/compras.$id'
+import { Route as AdminProtectedFeedbackIndexRouteImport } from './routes/admin/_protected/feedback.index'
+import { Route as AdminProtectedFeedbackIdRouteImport } from './routes/admin/_protected/feedback.$id'
+import { Route as AdminProtectedLancamentosIndexRouteImport } from './routes/admin/_protected/lancamentos.index'
+import { Route as AdminProtectedLancamentosIdRouteImport } from './routes/admin/_protected/lancamentos.$id'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as AdminProtectedComprasIdLicencaRouteImport } from './routes/admin/_protected/compras.$id.licenca'
 
-const UnsubscribeRoute = UnsubscribeRouteImport.update({
-  id: '/unsubscribe',
-  path: '/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermosUsoRoute = TermosUsoRouteImport.update({
-  id: '/termos-uso',
-  path: '/termos-uso',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProdutoresRoute = ProdutoresRouteImport.update({
-  id: '/produtores',
-  path: '/produtores',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PoliticaPrivacidadeRoute = PoliticaPrivacidadeRouteImport.update({
-  id: '/politica-privacidade',
-  path: '/politica-privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MeusInteressesRoute = MeusInteressesRouteImport.update({
-  id: '/meus-interesses',
-  path: '/meus-interesses',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LicencaDeUsoRoute = LicencaDeUsoRouteImport.update({
-  id: '/licenca-de-uso',
-  path: '/licenca-de-uso',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedbackRoute = FeedbackRouteImport.update({
-  id: '/feedback',
-  path: '/feedback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EnviarLancamentoRoute = EnviarLancamentoRouteImport.update({
-  id: '/enviar-lancamento',
-  path: '/enviar-lancamento',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
-  id: '/como-funciona',
-  path: '/como-funciona',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -106,9 +61,54 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnviarLancamentoRoute = EnviarLancamentoRouteImport.update({
+  id: '/enviar-lancamento',
+  path: '/enviar-lancamento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LicencaDeUsoRoute = LicencaDeUsoRouteImport.update({
+  id: '/licenca-de-uso',
+  path: '/licenca-de-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeusInteressesRoute = MeusInteressesRouteImport.update({
+  id: '/meus-interesses',
+  path: '/meus-interesses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PoliticaPrivacidadeRoute = PoliticaPrivacidadeRouteImport.update({
+  id: '/politica-privacidade',
+  path: '/politica-privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdutoresRoute = ProdutoresRouteImport.update({
+  id: '/produtores',
+  path: '/produtores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosUsoRoute = TermosUsoRouteImport.update({
+  id: '/termos-uso',
+  path: '/termos-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -116,39 +116,8 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const ProdutoraSlugRoute = ProdutoraSlugRouteImport.update({
-  id: '/produtora/$slug',
-  path: '/produtora/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProdutorSlugRoute = ProdutorSlugRouteImport.update({
-  id: '/produtor/$slug',
-  path: '/produtor/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LicencaTokenRoute = LicencaTokenRouteImport.update({
-  id: '/licenca/$token',
-  path: '/licenca/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EnviarComprovanteTokenRoute = EnviarComprovanteTokenRouteImport.update({
-  id: '/enviar-comprovante/$token',
-  path: '/enviar-comprovante/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
-  id: '/email/unsubscribe',
-  path: '/email/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BeatSlugRoute = BeatSlugRouteImport.update({
-  id: '/beat/$slug',
-  path: '/beat/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const AdminProtectedRouteRoute = AdminProtectedRouteRouteImport.update({
+  id: '/_protected',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -156,45 +125,44 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminProtectedRouteRoute = AdminProtectedRouteRouteImport.update({
-  id: '/_protected',
+const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
+const BeatSlugRoute = BeatSlugRouteImport.update({
+  id: '/beat/$slug',
+  path: '/beat/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminProtectedUsuariosRoute = AdminProtectedUsuariosRouteImport.update({
-  id: '/usuarios',
-  path: '/usuarios',
-  getParentRoute: () => AdminProtectedRouteRoute,
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminProtectedTiposBeatRoute = AdminProtectedTiposBeatRouteImport.update({
-  id: '/tipos-beat',
-  path: '/tipos-beat',
-  getParentRoute: () => AdminProtectedRouteRoute,
+const EnviarComprovanteTokenRoute = EnviarComprovanteTokenRouteImport.update({
+  id: '/enviar-comprovante/$token',
+  path: '/enviar-comprovante/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminProtectedTextosJuridicosRoute =
-  AdminProtectedTextosJuridicosRouteImport.update({
-    id: '/textos-juridicos',
-    path: '/textos-juridicos',
-    getParentRoute: () => AdminProtectedRouteRoute,
-  } as any)
-const AdminProtectedProdutorasRoute =
-  AdminProtectedProdutorasRouteImport.update({
-    id: '/produtoras',
-    path: '/produtoras',
-    getParentRoute: () => AdminProtectedRouteRoute,
-  } as any)
-const AdminProtectedLeadsRoute = AdminProtectedLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => AdminProtectedRouteRoute,
+const LicencaTokenRoute = LicencaTokenRouteImport.update({
+  id: '/licenca/$token',
+  path: '/licenca/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminProtectedDashboardRoute = AdminProtectedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const ProdutorSlugRoute = ProdutorSlugRouteImport.update({
+  id: '/produtor/$slug',
+  path: '/produtor/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdutoraSlugRoute = ProdutoraSlugRouteImport.update({
+  id: '/produtora/$slug',
+  path: '/produtora/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProtectedBeatsRoute = AdminProtectedBeatsRouteImport.update({
+  id: '/beats',
+  path: '/beats',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
 const AdminProtectedConfiguracoesRoute =
@@ -203,51 +171,58 @@ const AdminProtectedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
-const AdminProtectedBeatsRoute = AdminProtectedBeatsRouteImport.update({
-  id: '/beats',
-  path: '/beats',
+const AdminProtectedDashboardRoute = AdminProtectedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AdminProtectedRouteRoute,
 } as any)
-const AdminProtectedLancamentosIndexRoute =
-  AdminProtectedLancamentosIndexRouteImport.update({
-    id: '/lancamentos/',
-    path: '/lancamentos/',
+const AdminProtectedLeadsRoute = AdminProtectedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
+const AdminProtectedProdutorasRoute =
+  AdminProtectedProdutorasRouteImport.update({
+    id: '/produtoras',
+    path: '/produtoras',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
-const AdminProtectedFeedbackIndexRoute =
-  AdminProtectedFeedbackIndexRouteImport.update({
-    id: '/feedback/',
-    path: '/feedback/',
+const AdminProtectedTextosJuridicosRoute =
+  AdminProtectedTextosJuridicosRouteImport.update({
+    id: '/textos-juridicos',
+    path: '/textos-juridicos',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedTiposBeatRoute = AdminProtectedTiposBeatRouteImport.update({
+  id: '/tipos-beat',
+  path: '/tipos-beat',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
+const AdminProtectedUsuariosRoute = AdminProtectedUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProtectedComprasIndexRoute =
   AdminProtectedComprasIndexRouteImport.update({
     id: '/compras/',
     path: '/compras/',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AdminProtectedLancamentosIdRoute =
-  AdminProtectedLancamentosIdRouteImport.update({
-    id: '/lancamentos/$id',
-    path: '/lancamentos/$id',
+const AdminProtectedComprasIdRoute = AdminProtectedComprasIdRouteImport.update({
+  id: '/compras/$id',
+  path: '/compras/$id',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
+const AdminProtectedFeedbackIndexRoute =
+  AdminProtectedFeedbackIndexRouteImport.update({
+    id: '/feedback/',
+    path: '/feedback/',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
 const AdminProtectedFeedbackIdRoute =
@@ -256,11 +231,36 @@ const AdminProtectedFeedbackIdRoute =
     path: '/feedback/$id',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
-const AdminProtectedComprasIdRoute = AdminProtectedComprasIdRouteImport.update({
-  id: '/compras/$id',
-  path: '/compras/$id',
-  getParentRoute: () => AdminProtectedRouteRoute,
-} as any)
+const AdminProtectedLancamentosIndexRoute =
+  AdminProtectedLancamentosIndexRouteImport.update({
+    id: '/lancamentos/',
+    path: '/lancamentos/',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
+const AdminProtectedLancamentosIdRoute =
+  AdminProtectedLancamentosIdRouteImport.update({
+    id: '/lancamentos/$id',
+    path: '/lancamentos/$id',
+    getParentRoute: () => AdminProtectedRouteRoute,
+  } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminProtectedComprasIdLicencaRoute =
   AdminProtectedComprasIdLicencaRouteImport.update({
     id: '/licenca',
@@ -270,7 +270,7 @@ const AdminProtectedComprasIdLicencaRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminProtectedRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/app': typeof AppRoute
   '/como-funciona': typeof ComoFuncionaRoute
   '/enviar-lancamento': typeof EnviarLancamentoRoute
@@ -551,74 +551,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/unsubscribe': {
-      id: '/unsubscribe'
-      path: '/unsubscribe'
-      fullPath: '/unsubscribe'
-      preLoaderRoute: typeof UnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/termos-uso': {
-      id: '/termos-uso'
-      path: '/termos-uso'
-      fullPath: '/termos-uso'
-      preLoaderRoute: typeof TermosUsoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/produtores': {
-      id: '/produtores'
-      path: '/produtores'
-      fullPath: '/produtores'
-      preLoaderRoute: typeof ProdutoresRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/politica-privacidade': {
-      id: '/politica-privacidade'
-      path: '/politica-privacidade'
-      fullPath: '/politica-privacidade'
-      preLoaderRoute: typeof PoliticaPrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/meus-interesses': {
-      id: '/meus-interesses'
-      path: '/meus-interesses'
-      fullPath: '/meus-interesses'
-      preLoaderRoute: typeof MeusInteressesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/licenca-de-uso': {
-      id: '/licenca-de-uso'
-      path: '/licenca-de-uso'
-      fullPath: '/licenca-de-uso'
-      preLoaderRoute: typeof LicencaDeUsoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feedback': {
-      id: '/feedback'
-      path: '/feedback'
-      fullPath: '/feedback'
-      preLoaderRoute: typeof FeedbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/enviar-lancamento': {
-      id: '/enviar-lancamento'
-      path: '/enviar-lancamento'
-      fullPath: '/enviar-lancamento'
-      preLoaderRoute: typeof EnviarLancamentoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/como-funciona': {
-      id: '/como-funciona'
-      path: '/como-funciona'
-      fullPath: '/como-funciona'
-      preLoaderRoute: typeof ComoFuncionaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -628,11 +565,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/como-funciona': {
+      id: '/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enviar-lancamento': {
+      id: '/enviar-lancamento'
+      path: '/enviar-lancamento'
+      fullPath: '/enviar-lancamento'
+      preLoaderRoute: typeof EnviarLancamentoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/licenca-de-uso': {
+      id: '/licenca-de-uso'
+      path: '/licenca-de-uso'
+      fullPath: '/licenca-de-uso'
+      preLoaderRoute: typeof LicencaDeUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meus-interesses': {
+      id: '/meus-interesses'
+      path: '/meus-interesses'
+      fullPath: '/meus-interesses'
+      preLoaderRoute: typeof MeusInteressesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/politica-privacidade': {
+      id: '/politica-privacidade'
+      path: '/politica-privacidade'
+      fullPath: '/politica-privacidade'
+      preLoaderRoute: typeof PoliticaPrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produtores': {
+      id: '/produtores'
+      path: '/produtores'
+      fullPath: '/produtores'
+      preLoaderRoute: typeof ProdutoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos-uso': {
+      id: '/termos-uso'
+      path: '/termos-uso'
+      fullPath: '/termos-uso'
+      preLoaderRoute: typeof TermosUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -642,53 +642,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/produtora/$slug': {
-      id: '/produtora/$slug'
-      path: '/produtora/$slug'
-      fullPath: '/produtora/$slug'
-      preLoaderRoute: typeof ProdutoraSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/produtor/$slug': {
-      id: '/produtor/$slug'
-      path: '/produtor/$slug'
-      fullPath: '/produtor/$slug'
-      preLoaderRoute: typeof ProdutorSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/licenca/$token': {
-      id: '/licenca/$token'
-      path: '/licenca/$token'
-      fullPath: '/licenca/$token'
-      preLoaderRoute: typeof LicencaTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/enviar-comprovante/$token': {
-      id: '/enviar-comprovante/$token'
-      path: '/enviar-comprovante/$token'
-      fullPath: '/enviar-comprovante/$token'
-      preLoaderRoute: typeof EnviarComprovanteTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/email/unsubscribe': {
-      id: '/email/unsubscribe'
-      path: '/email/unsubscribe'
-      fullPath: '/email/unsubscribe'
-      preLoaderRoute: typeof EmailUnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/beat/$slug': {
-      id: '/beat/$slug'
-      path: '/beat/$slug'
-      fullPath: '/beat/$slug'
-      preLoaderRoute: typeof BeatSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/reset-password': {
-      id: '/admin/reset-password'
-      path: '/reset-password'
-      fullPath: '/admin/reset-password'
-      preLoaderRoute: typeof AdminResetPasswordRouteImport
+    '/admin/_protected': {
+      id: '/admin/_protected'
+      path: ''
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminProtectedRouteRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/login': {
@@ -698,60 +656,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/_protected': {
-      id: '/admin/_protected'
-      path: ''
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminProtectedRouteRouteImport
+    '/admin/reset-password': {
+      id: '/admin/reset-password'
+      path: '/reset-password'
+      fullPath: '/admin/reset-password'
+      preLoaderRoute: typeof AdminResetPasswordRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+    '/beat/$slug': {
+      id: '/beat/$slug'
+      path: '/beat/$slug'
+      fullPath: '/beat/$slug'
+      preLoaderRoute: typeof BeatSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/_protected/usuarios': {
-      id: '/admin/_protected/usuarios'
-      path: '/usuarios'
-      fullPath: '/admin/usuarios'
-      preLoaderRoute: typeof AdminProtectedUsuariosRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/_protected/tipos-beat': {
-      id: '/admin/_protected/tipos-beat'
-      path: '/tipos-beat'
-      fullPath: '/admin/tipos-beat'
-      preLoaderRoute: typeof AdminProtectedTiposBeatRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
+    '/enviar-comprovante/$token': {
+      id: '/enviar-comprovante/$token'
+      path: '/enviar-comprovante/$token'
+      fullPath: '/enviar-comprovante/$token'
+      preLoaderRoute: typeof EnviarComprovanteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/_protected/textos-juridicos': {
-      id: '/admin/_protected/textos-juridicos'
-      path: '/textos-juridicos'
-      fullPath: '/admin/textos-juridicos'
-      preLoaderRoute: typeof AdminProtectedTextosJuridicosRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
+    '/licenca/$token': {
+      id: '/licenca/$token'
+      path: '/licenca/$token'
+      fullPath: '/licenca/$token'
+      preLoaderRoute: typeof LicencaTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/_protected/produtoras': {
-      id: '/admin/_protected/produtoras'
-      path: '/produtoras'
-      fullPath: '/admin/produtoras'
-      preLoaderRoute: typeof AdminProtectedProdutorasRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
+    '/produtor/$slug': {
+      id: '/produtor/$slug'
+      path: '/produtor/$slug'
+      fullPath: '/produtor/$slug'
+      preLoaderRoute: typeof ProdutorSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/_protected/leads': {
-      id: '/admin/_protected/leads'
-      path: '/leads'
-      fullPath: '/admin/leads'
-      preLoaderRoute: typeof AdminProtectedLeadsRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
+    '/produtora/$slug': {
+      id: '/produtora/$slug'
+      path: '/produtora/$slug'
+      fullPath: '/produtora/$slug'
+      preLoaderRoute: typeof ProdutoraSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/_protected/dashboard': {
-      id: '/admin/_protected/dashboard'
-      path: '/dashboard'
-      fullPath: '/admin/dashboard'
-      preLoaderRoute: typeof AdminProtectedDashboardRouteImport
+    '/admin/_protected/beats': {
+      id: '/admin/_protected/beats'
+      path: '/beats'
+      fullPath: '/admin/beats'
+      preLoaderRoute: typeof AdminProtectedBeatsRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
     '/admin/_protected/configuracoes': {
@@ -761,18 +719,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedConfiguracoesRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
-    '/admin/_protected/beats': {
-      id: '/admin/_protected/beats'
-      path: '/beats'
-      fullPath: '/admin/beats'
-      preLoaderRoute: typeof AdminProtectedBeatsRouteImport
+    '/admin/_protected/dashboard': {
+      id: '/admin/_protected/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminProtectedDashboardRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
-    '/admin/_protected/lancamentos/': {
-      id: '/admin/_protected/lancamentos/'
-      path: '/lancamentos'
-      fullPath: '/admin/lancamentos/'
-      preLoaderRoute: typeof AdminProtectedLancamentosIndexRouteImport
+    '/admin/_protected/leads': {
+      id: '/admin/_protected/leads'
+      path: '/leads'
+      fullPath: '/admin/leads'
+      preLoaderRoute: typeof AdminProtectedLeadsRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/produtoras': {
+      id: '/admin/_protected/produtoras'
+      path: '/produtoras'
+      fullPath: '/admin/produtoras'
+      preLoaderRoute: typeof AdminProtectedProdutorasRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/textos-juridicos': {
+      id: '/admin/_protected/textos-juridicos'
+      path: '/textos-juridicos'
+      fullPath: '/admin/textos-juridicos'
+      preLoaderRoute: typeof AdminProtectedTextosJuridicosRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/tipos-beat': {
+      id: '/admin/_protected/tipos-beat'
+      path: '/tipos-beat'
+      fullPath: '/admin/tipos-beat'
+      preLoaderRoute: typeof AdminProtectedTiposBeatRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/usuarios': {
+      id: '/admin/_protected/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminProtectedUsuariosRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/_protected/compras/': {
+      id: '/admin/_protected/compras/'
+      path: '/compras'
+      fullPath: '/admin/compras/'
+      preLoaderRoute: typeof AdminProtectedComprasIndexRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/compras/$id': {
+      id: '/admin/_protected/compras/$id'
+      path: '/compras/$id'
+      fullPath: '/admin/compras/$id'
+      preLoaderRoute: typeof AdminProtectedComprasIdRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
     '/admin/_protected/feedback/': {
@@ -782,18 +789,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedFeedbackIndexRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
-    '/admin/_protected/compras/': {
-      id: '/admin/_protected/compras/'
-      path: '/compras'
-      fullPath: '/admin/compras/'
-      preLoaderRoute: typeof AdminProtectedComprasIndexRouteImport
+    '/admin/_protected/feedback/$id': {
+      id: '/admin/_protected/feedback/$id'
+      path: '/feedback/$id'
+      fullPath: '/admin/feedback/$id'
+      preLoaderRoute: typeof AdminProtectedFeedbackIdRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+    '/admin/_protected/lancamentos/': {
+      id: '/admin/_protected/lancamentos/'
+      path: '/lancamentos'
+      fullPath: '/admin/lancamentos/'
+      preLoaderRoute: typeof AdminProtectedLancamentosIndexRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/admin/_protected/lancamentos/$id': {
+      id: '/admin/_protected/lancamentos/$id'
+      path: '/lancamentos/$id'
+      fullPath: '/admin/lancamentos/$id'
+      preLoaderRoute: typeof AdminProtectedLancamentosIdRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/transactional/preview': {
@@ -803,33 +824,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/admin/_protected/lancamentos/$id': {
-      id: '/admin/_protected/lancamentos/$id'
-      path: '/lancamentos/$id'
-      fullPath: '/admin/lancamentos/$id'
-      preLoaderRoute: typeof AdminProtectedLancamentosIdRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
-    }
-    '/admin/_protected/feedback/$id': {
-      id: '/admin/_protected/feedback/$id'
-      path: '/feedback/$id'
-      fullPath: '/admin/feedback/$id'
-      preLoaderRoute: typeof AdminProtectedFeedbackIdRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
-    }
-    '/admin/_protected/compras/$id': {
-      id: '/admin/_protected/compras/$id'
-      path: '/compras/$id'
-      fullPath: '/admin/compras/$id'
-      preLoaderRoute: typeof AdminProtectedComprasIdRouteImport
-      parentRoute: typeof AdminProtectedRouteRoute
     }
     '/admin/_protected/compras/$id/licenca': {
       id: '/admin/_protected/compras/$id/licenca'
