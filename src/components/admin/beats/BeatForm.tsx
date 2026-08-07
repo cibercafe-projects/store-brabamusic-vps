@@ -70,6 +70,9 @@ const schema = z.object({
   wav_path: z.string().max(300).optional().or(z.literal("")),
   stems_path: z.string().max(300).optional().or(z.literal("")),
   license_path: z.string().max(300).optional().or(z.literal("")),
+}).refine((v) => v.status !== "ativo" || !!v.preview_path, {
+  path: ["preview_path"],
+  message: "Envie o preview de áudio antes de publicar o beat como ativo.",
 });
 
 type FormValues = z.infer<typeof schema>;
