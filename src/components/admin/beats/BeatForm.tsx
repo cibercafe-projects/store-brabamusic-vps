@@ -70,6 +70,9 @@ const schema = z.object({
   wav_path: z.string().max(300).optional().or(z.literal("")),
   stems_path: z.string().max(300).optional().or(z.literal("")),
   license_path: z.string().max(300).optional().or(z.literal("")),
+}).refine((v) => v.status !== "ativo" || !!v.preview_path, {
+  path: ["preview_path"],
+  message: "Envie o preview de áudio antes de publicar o beat como ativo.",
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -476,16 +479,25 @@ export function BeatForm({ initial, onDone }: Props) {
               previewUrl={audioPreview}
               beatId={initial?.id}
               onUploaded={(path, url) => {
-                form.setValue("preview_path", path, { shouldDirty: true });
+                form.setValue("preview_path", path, { shouldDirty: true, shouldValidate: true });
                 setAudioPreview(url);
               }}
               onClear={() => {
-                form.setValue("preview_path", "", { shouldDirty: true });
+                form.setValue("preview_path", "", { shouldDirty: true, shouldValidate: true });
                 setAudioPreview(null);
               }}
             />
+            {!form.watch("preview_path") && (
+              <Alert className="mt-2 border-destructive/50">
+                <AlertDescription className="text-xs">
+                  Sem preview: o beat não poderá ser ouvido no site. Envie o áudio de preview antes
+                  de publicar como ativo.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
+
 
         {(() => {
           const selectedTypeId = form.watch("beat_type_id");
