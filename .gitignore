@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Migração
+.env.migration
+migration/scripts/.storage-progress.log
