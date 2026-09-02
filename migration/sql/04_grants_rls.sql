@@ -4,6 +4,54 @@
 -- 04_grants_rls.sql — privilégios da Data API, RLS e policies
 
 -- Privilégios de tabela
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.app_settings TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.app_settings TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.app_settings TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.beat_types TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.beat_types TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.beat_types TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.beats TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.beats TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.beats TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_send_log TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_send_log TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_send_log TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_send_state TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_send_state TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_send_state TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_unsubscribe_tokens TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_unsubscribe_tokens TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.email_unsubscribe_tokens TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.feedback TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.feedback TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.feedback TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.leads TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.leads TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.leads TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.producers TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.producers TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.producers TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.purchase_deliveries TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.purchase_deliveries TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.purchase_deliveries TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.purchase_requests TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.purchase_requests TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.purchase_requests TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.release_audio_files TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.release_audio_files TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.release_audio_files TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.release_promo_photos TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.release_promo_photos TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.release_promo_photos TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.releases TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.releases TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.releases TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.suppressed_emails TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.suppressed_emails TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.suppressed_emails TO service_role;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.user_roles TO anon;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.user_roles TO authenticated;
+GRANT DELETE, INSERT, SELECT, UPDATE ON public.user_roles TO service_role;
 
 -- Privilégios de função
 GRANT EXECUTE ON FUNCTION public.delete_email(queue_name text, message_id bigint) TO service_role;
