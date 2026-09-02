@@ -107,12 +107,21 @@ O GoTrue também precisa de SMTP configurado para os e-mails de autenticação (
 
 ## 5. Migração de dados e arquivos
 
-Os scripts já foram gerados anteriormente e devem ser executados nesta ordem:
+Os scripts estão versionados em [`migration/`](../migration/README.md) e devem ser executados nesta ordem:
 
-1. `01_schema.sql` — extensões, 14 ENUMs, 16 tabelas, chaves e índices.
-2. `02_functions_rls.sql` — 10 funções, triggers, RLS e 29 policies, com os `GRANT` correspondentes.
-3. `03_data.sql` — dados em ordem pai-primeiro (`session_replication_role = replica`).
-4. `04_storage_buckets.sql` — os 10 buckets privados.
+1. `migration/sql/01_extensions.sql` — extensões Postgres exigidas.
+2. `migration/sql/02_schema.sql` — 14 ENUMs, 16 tabelas, chaves e índices.
+3. `migration/sql/03_functions_triggers.sql` — 11 funções e triggers.
+4. `migration/sql/04_grants_rls.sql` — GRANTs, RLS e todas as policies.
+5. `migration/sql/05_data.sql` — dados em ordem pai-primeiro (`session_replication_role = replica`).
+6. `migration/sql/06_storage_buckets.sql` — os 10 buckets privados.
+7. `migration/sql/07_storage_policies.sql` — policies de `storage.objects`.
+8. `migration/sql/08_cron_jobs.sql` — agendamentos `pg_cron`.
+9. `migration/sql/09_post_migration.sql` — filas pgmq, vault e URLs de webhook (edição manual).
+
+Arquivos e verificação: `migration/scripts/migrate-storage.ts` e `migration/scripts/verify-migration.ts`.
+Passos manuais (admins, Google, SMTP, DNS): `migration/MANUAL_STEPS.md`.
+
 
 Depois:
 - **Usuários admin**: recriar manualmente em `auth.users` e revincular em `public.user_roles` mantendo o mesmo `user_id`. O super admin é protegido por trigger.
