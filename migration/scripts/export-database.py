@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import subprocess, os, textwrap
+import subprocess, os
 
-OUT = "/dev-server/migration/sql"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "sql")
 os.makedirs(OUT, exist_ok=True)
 
 def q(sql, sep="|"):
