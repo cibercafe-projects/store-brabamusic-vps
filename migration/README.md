@@ -65,7 +65,16 @@ Por fim, siga `MANUAL_STEPS.md` (admins, Google, SMTP, build Node, DNS).
 
 ---
 
+## Aviso: `05_data.sql` contém dados pessoais
+
+O dump de dados inclui nome, e-mail, WhatsApp, Instagram e CPF de clientes e produtoras.
+Mantenha o repositório **privado**. Se ele for tornado público, remova `sql/05_data.sql`
+do versionamento (ele é regerável a qualquer momento pelo exportador).
+
+---
+
 ## Detalhes importantes
+
 
 **Dados.** `05_data.sql` usa `session_replication_role = replica` para ignorar a ordem das FKs
 durante a carga e restaura `origin` no final. Todos os `INSERT` usam `ON CONFLICT DO NOTHING`,
