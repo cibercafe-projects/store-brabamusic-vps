@@ -89,7 +89,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
+  const maintenanceLocked =
+    FEATURES.maintenance && !isAdmin && pathname !== "/manutencao";
   usePresence();
+
+  if (maintenanceLocked) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MaintenanceScreen />
+      </QueryClientProvider>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       {isAdmin ? (
