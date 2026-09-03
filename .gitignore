@@ -34,3 +34,8 @@ dist-ssr
 # Migração
 .env.migration
 migration/scripts/.storage-progress.log
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
