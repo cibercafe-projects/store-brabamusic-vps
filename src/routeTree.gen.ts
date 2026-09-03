@@ -16,6 +16,7 @@ import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as EnviarLancamentoRouteImport } from './routes/enviar-lancamento'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as LicencaDeUsoRouteImport } from './routes/licenca-de-uso'
+import { Route as ManutencaoRouteImport } from './routes/manutencao'
 import { Route as MeusInteressesRouteImport } from './routes/meus-interesses'
 import { Route as PoliticaPrivacidadeRouteImport } from './routes/politica-privacidade'
 import { Route as ProdutoresRouteImport } from './routes/produtores'
@@ -84,6 +85,11 @@ const FeedbackRoute = FeedbackRouteImport.update({
 const LicencaDeUsoRoute = LicencaDeUsoRouteImport.update({
   id: '/licenca-de-uso',
   path: '/licenca-de-uso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManutencaoRoute = ManutencaoRouteImport.update({
+  id: '/manutencao',
+  path: '/manutencao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeusInteressesRoute = MeusInteressesRouteImport.update({
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/enviar-lancamento': typeof EnviarLancamentoRoute
   '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
+  '/manutencao': typeof ManutencaoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/enviar-lancamento': typeof EnviarLancamentoRoute
   '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
+  '/manutencao': typeof ManutencaoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -360,6 +368,7 @@ export interface FileRoutesById {
   '/enviar-lancamento': typeof EnviarLancamentoRoute
   '/feedback': typeof FeedbackRoute
   '/licenca-de-uso': typeof LicencaDeUsoRoute
+  '/manutencao': typeof ManutencaoRoute
   '/meus-interesses': typeof MeusInteressesRoute
   '/politica-privacidade': typeof PoliticaPrivacidadeRoute
   '/produtores': typeof ProdutoresRoute
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/enviar-lancamento'
     | '/feedback'
     | '/licenca-de-uso'
+    | '/manutencao'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -446,6 +456,7 @@ export interface FileRouteTypes {
     | '/enviar-lancamento'
     | '/feedback'
     | '/licenca-de-uso'
+    | '/manutencao'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -488,6 +499,7 @@ export interface FileRouteTypes {
     | '/enviar-lancamento'
     | '/feedback'
     | '/licenca-de-uso'
+    | '/manutencao'
     | '/meus-interesses'
     | '/politica-privacidade'
     | '/produtores'
@@ -532,6 +544,7 @@ export interface RootRouteChildren {
   EnviarLancamentoRoute: typeof EnviarLancamentoRoute
   FeedbackRoute: typeof FeedbackRoute
   LicencaDeUsoRoute: typeof LicencaDeUsoRoute
+  ManutencaoRoute: typeof ManutencaoRoute
   MeusInteressesRoute: typeof MeusInteressesRoute
   PoliticaPrivacidadeRoute: typeof PoliticaPrivacidadeRoute
   ProdutoresRoute: typeof ProdutoresRoute
@@ -598,6 +611,13 @@ declare module '@tanstack/react-router' {
       path: '/licenca-de-uso'
       fullPath: '/licenca-de-uso'
       preLoaderRoute: typeof LicencaDeUsoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manutencao': {
+      id: '/manutencao'
+      path: '/manutencao'
+      fullPath: '/manutencao'
+      preLoaderRoute: typeof ManutencaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meus-interesses': {
@@ -918,6 +938,7 @@ const rootRouteChildren: RootRouteChildren = {
   EnviarLancamentoRoute: EnviarLancamentoRoute,
   FeedbackRoute: FeedbackRoute,
   LicencaDeUsoRoute: LicencaDeUsoRoute,
+  ManutencaoRoute: ManutencaoRoute,
   MeusInteressesRoute: MeusInteressesRoute,
   PoliticaPrivacidadeRoute: PoliticaPrivacidadeRoute,
   ProdutoresRoute: ProdutoresRoute,

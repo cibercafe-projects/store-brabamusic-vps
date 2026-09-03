@@ -9,4 +9,9 @@ export const FEATURES = {
   auth: false,
   /** Promoção e links para o aplicativo BRABA. */
   appPromo: false,
+  /**
+   * Modo manutenção. Com `true`, todo o site público passa a mostrar a tela
+   * de manutenção (/manutencao). O painel /admin continua acessível.
+   */
+  maintenance: false,
 };

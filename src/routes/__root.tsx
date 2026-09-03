@@ -15,6 +15,8 @@ import { Footer } from "@/components/Footer";
 import { PlayerBar } from "@/components/PlayerBar";
 import { Toaster } from "@/components/ui/sonner";
 import { usePresence } from "@/hooks/usePresence";
+import { FEATURES } from "@/config/features";
+import { MaintenanceScreen } from "@/components/MaintenanceScreen";
 
 function NotFoundComponent() {
   return (
@@ -89,7 +91,18 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
+  const maintenanceLocked =
+    FEATURES.maintenance && !isAdmin && pathname !== "/manutencao";
   usePresence();
+
+  if (maintenanceLocked) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MaintenanceScreen />
+      </QueryClientProvider>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       {isAdmin ? (
