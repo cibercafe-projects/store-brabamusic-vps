@@ -15,6 +15,8 @@ import { Footer } from "@/components/Footer";
 import { PlayerBar } from "@/components/PlayerBar";
 import { Toaster } from "@/components/ui/sonner";
 import { usePresence } from "@/hooks/usePresence";
+import { FEATURES } from "@/config/features";
+import { MaintenanceScreen } from "@/components/MaintenanceScreen";
 
 function NotFoundComponent() {
   return (
