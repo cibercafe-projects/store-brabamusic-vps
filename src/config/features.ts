@@ -13,5 +13,5 @@ export const FEATURES = {
    * Modo manutenção. Com `true`, todo o site público passa a mostrar a tela
    * de manutenção (/manutencao). O painel /admin continua acessível.
    */
-  maintenance: false,
+  maintenance: true,
 };
