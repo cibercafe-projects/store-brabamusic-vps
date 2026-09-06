@@ -2,12 +2,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
+  useNavigate,
   createRootRouteWithContext,
   useRouter,
   useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
 import { Header } from "@/components/Header";
@@ -89,11 +93,23 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
   const maintenanceLocked =
     FEATURES.maintenance && !isAdmin && pathname !== "/manutencao";
   usePresence();
+
+  useEffect(() => {
+    // Se o link de recuperação cair em qualquer página (ex.: home, redirect_to =
+    // SITE_URL), leva o admin para a tela de redefinição de senha.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        navigate({ to: "/admin/reset-password", replace: true });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate]);
 
   if (maintenanceLocked) {
     return (

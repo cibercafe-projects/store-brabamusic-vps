@@ -10,10 +10,11 @@
 import * as React from "react";
 import { render } from "@react-email/components";
 import { TEMPLATES } from "@/lib/email-templates/registry";
+import { getSenderDomain, getDefaultFromEmail } from "@/lib/site-url";
 
 const SITE_NAME = "BRABA Beats";
-const SENDER_DOMAIN = "notify.brababeats.app";
-const FROM_DOMAIN = "notify.brababeats.app";
+const SENDER_DOMAIN = getSenderDomain();
+const FROM_DOMAIN = getDefaultFromEmail();
 
 function generateToken(): string {
   const bytes = new Uint8Array(32);
@@ -141,7 +142,7 @@ export async function sendAppEmail(
     payload: {
       message_id: messageId,
       to: recipient,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      from: `${SITE_NAME} <${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject,
       html,

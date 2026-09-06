@@ -12,7 +12,7 @@ interface Props {
 const AdminNewReceipt = ({
   nomeCliente = "—",
   beatNome = "—",
-  adminUrl = "https://brababeats.app/admin/compras",
+  adminUrl = "https://loja.brabamusic.com.br/admin/compras",
 }: Props) => (
   <EmailShell
     preview={`Novo comprovante: ${nomeCliente} (${beatNome})`}
@@ -44,6 +44,6 @@ export const template = {
   previewData: {
     nomeCliente: "Maria",
     beatNome: "Trap Diamante",
-    adminUrl: "https://brababeats.app/admin/compras/abc-123",
+    adminUrl: "https://loja.brabamusic.com.br/admin/compras/abc-123",
   },
 } satisfies TemplateEntry;

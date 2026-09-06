@@ -67,13 +67,13 @@ const PurchaseDelivered = ({
       </Text>
       <Text style={{ ...styles.paragraph, margin: "4px 0" }}>
         •{" "}
-        <Link href="https://brababeats.app/licenca-de-uso" style={styles.link}>
+        <Link href="https://loja.brabamusic.com.br/licenca-de-uso" style={styles.link}>
           Licença de Uso dos Beats
         </Link>
       </Text>
       <Text style={{ ...styles.paragraph, margin: "4px 0" }}>
         •{" "}
-        <Link href="https://brababeats.app/termos-uso" style={styles.link}>
+        <Link href="https://loja.brabamusic.com.br/termos-uso" style={styles.link}>
           Termos de Uso da Braba Music
         </Link>
       </Text>

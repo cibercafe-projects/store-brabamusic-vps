@@ -164,7 +164,7 @@ Validação pós-migração: contar registros por tabela, abrir um beat público
 - [ ] Schema, funções, RLS e policies aplicados sem erro.
 - [ ] Dados importados e conferidos por contagem de registros.
 - [ ] Arquivos do Storage transferidos e signed URL testada.
-- [ ] Usuários admin recriados e login validado.
+- [x] Usuários admin recriados e login validado.
 - [ ] Build da aplicação com alvo Node funcionando em produção.
 - [ ] Proxy reverso com TLS válido no domínio.
 - [ ] Provedor de e-mail configurado, domínio verificado e envio testado.

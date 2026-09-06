@@ -3,10 +3,11 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { BEAT_PRIVATE_BUCKETS, type BeatPrivateKind } from "@/lib/beats.functions";
 import { sendAppEmail } from "@/lib/email/send.server";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
 const FILE_KINDS = ["wav", "stems", "license"] as const;
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 dias
-const PUBLIC_SITE_URL = "https://brababeats.app";
+const PUBLIC_SITE_URL = getPublicSiteUrl();
 
 
 async function assertAdmin(userId: string) {
@@ -201,7 +202,7 @@ function buildEmailBody(nome: string, beatNome: string, links: FileLink[], obs?:
   if (obs) {
     lines.push("", `Observação: ${obs}`);
   }
-  lines.push("", "Documentos:", "- Licença de Uso dos Beats: https://brababeats.app/licenca-de-uso", "- Termos de Uso: https://brababeats.app/termos-uso", "", "Obrigado por comprar na Braba Music!", "— Braba Music");
+  lines.push("", "Documentos:", `- Licença de Uso dos Beats: ${PUBLIC_SITE_URL}/licenca-de-uso`, `- Termos de Uso: ${PUBLIC_SITE_URL}/termos-uso`, "", "Obrigado por comprar na Braba Music!", "— Braba Music");
   return lines.join("\n");
 }
 

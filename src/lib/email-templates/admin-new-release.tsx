@@ -24,7 +24,7 @@ const AdminNewRelease = ({
   releaseType = "single",
   faixaFoco = "",
   email = "—",
-  adminUrl = "https://brababeats.app/admin/lancamentos",
+  adminUrl = "https://loja.brabamusic.com.br/admin/lancamentos",
 }: Props) => (
   <EmailShell
     preview={`Novo lançamento: ${releaseName} (${artistName})`}
@@ -70,6 +70,6 @@ export const template = {
     releaseType: "ep",
     faixaFoco: "Madrugada",
     email: "mc@example.com",
-    adminUrl: "https://brababeats.app/admin/lancamentos/abc-123",
+    adminUrl: "https://loja.brabamusic.com.br/admin/lancamentos/abc-123",
   },
 } satisfies TemplateEntry;

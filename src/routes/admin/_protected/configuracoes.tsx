@@ -156,7 +156,7 @@ function SettingsPage() {
                   type="email"
                   value={form.admin_notification_email}
                   onChange={(e) => update("admin_notification_email", e.target.value)}
-                  placeholder="admin@brababeats.app"
+                  placeholder="admin@brabamusic.com.br"
                   maxLength={255}
                 />
               </div>

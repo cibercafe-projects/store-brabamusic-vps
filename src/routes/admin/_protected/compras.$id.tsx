@@ -283,7 +283,7 @@ function PurchaseDetailPage() {
                 const origin =
                   typeof window !== "undefined" && window.location?.origin
                     ? window.location.origin
-                    : "https://brababeats.app";
+                    : "https://loja.brabamusic.com.br";
                 const fullLink = `${origin}/enviar-comprovante/${p.continuation_token}`;
                 return (
                   <div className="flex items-center gap-2">

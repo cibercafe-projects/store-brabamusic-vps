@@ -3,8 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sendAppEmailSafe, getAdminNotificationEmail } from "@/lib/email/send.server";
 import { CURRENT_LICENSE_VERSION } from "@/lib/licenses.constants";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
-const PUBLIC_SITE_URL = "https://brababeats.app";
+const PUBLIC_SITE_URL = getPublicSiteUrl();
 
 const PURCHASE_STATUSES = [
   "aguardando_pagamento",

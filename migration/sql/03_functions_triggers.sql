@@ -46,7 +46,7 @@ BEGIN
   END IF;
 
   PERFORM net.http_post(
-    url := 'https://project--8f65ba5e-df22-4183-929e-576aec7b50c4.lovable.app/lovable/email/queue/process',
+    url := 'https://loja.brabamusic.com.br/lovable/email/queue/process',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Lovable-Context', 'cron',
@@ -80,7 +80,7 @@ BEGIN
 
   BEGIN
     PERFORM net.http_post(
-      url := 'https://project--8f65ba5e-df22-4183-929e-576aec7b50c4.lovable.app/lovable/email/queue/process',
+      url := 'https://loja.brabamusic.com.br/lovable/email/queue/process',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
         'Lovable-Context', 'cron',

@@ -57,7 +57,7 @@ export function ResendInstructionsCard({ purchase }: Props) {
   const [custom, setCustom] = useState("");
 
   const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://brababeats.app";
+    typeof window !== "undefined" ? window.location.origin : "https://loja.brabamusic.com.br";
   const link = `${origin}/enviar-comprovante/${purchase.continuation_token}`;
   const pix = settings.data?.pix_key ?? "";
   const paymentLink = settings.data?.payment_link ?? "";

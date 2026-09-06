@@ -9,8 +9,9 @@ import {
   type ReleaseType,
 } from "@/lib/releases.constants";
 import { sendAppEmailSafe, getAdminNotificationEmail } from "@/lib/email/send.server";
+import { getPublicSiteUrl } from "@/lib/site-url";
 
-const PUBLIC_SITE_URL = "https://brababeats.app";
+const PUBLIC_SITE_URL = getPublicSiteUrl();
 
 const COVER_BUCKET = "release-covers";
 const AUDIO_BUCKET = "release-audio";

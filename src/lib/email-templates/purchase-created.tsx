@@ -20,7 +20,7 @@ const PurchaseCreated = ({
   formaPagamento = "pix",
   pixKey = "",
   paymentLink = "",
-  receiptUrl = "https://brababeats.app",
+  receiptUrl = "https://loja.brabamusic.com.br",
 }: Props) => (
   <EmailShell
     preview={`Recebemos seu pedido do beat ${beatNome}`}
@@ -85,7 +85,7 @@ export const template = {
     beatNome: "Trap Diamante",
     valor: 250,
     formaPagamento: "pix",
-    pixKey: "pagamentos@brababeats.app",
-    receiptUrl: "https://brababeats.app/enviar-comprovante/abc-123",
+    pixKey: "pagamentos@loja.brabamusic.com.br",
+    receiptUrl: "https://loja.brabamusic.com.br/enviar-comprovante/abc-123",
   },
 } satisfies TemplateEntry;

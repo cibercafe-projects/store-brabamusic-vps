@@ -20,7 +20,7 @@ const AdminNewPurchase = ({
   beatNome = "—",
   valor,
   formaPagamento = "—",
-  adminUrl = "https://brababeats.app/admin/compras",
+  adminUrl = "https://loja.brabamusic.com.br/admin/compras",
 }: Props) => (
   <EmailShell
     preview={`Nova compra: ${beatNome} por ${nomeCliente}`}
@@ -65,6 +65,6 @@ export const template = {
     beatNome: "Trap Diamante",
     valor: 250,
     formaPagamento: "pix",
-    adminUrl: "https://brababeats.app/admin/compras/abc-123",
+    adminUrl: "https://loja.brabamusic.com.br/admin/compras/abc-123",
   },
 } satisfies TemplateEntry;

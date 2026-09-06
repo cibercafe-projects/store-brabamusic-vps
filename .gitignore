@@ -34,8 +34,17 @@ dist-ssr
 # Migração
 .env.migration
 migration/scripts/.storage-progress.log
+migration/scripts/.storage-local-progress.json
+migration/storage-import/
+migration/import/
 
 # Variáveis de ambiente
 .env
 .env.*
 !.env.example
+
+# Backups gerados nas correções (não versionar)
+.output.before-*/
+*.backup*
+.backup-*
+*.bak

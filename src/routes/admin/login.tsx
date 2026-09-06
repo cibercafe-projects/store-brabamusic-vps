@@ -107,7 +107,6 @@ function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={8}
                 autoComplete={needsBootstrap ? "new-password" : "current-password"}
               />
               {needsBootstrap && (
