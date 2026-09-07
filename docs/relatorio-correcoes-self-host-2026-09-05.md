@@ -267,4 +267,79 @@ automatizada (usuário descartável): `getClaims` com a chave nova → `OK`
 
 ---
 
-*Relatório original gerado em 2026-09-05; adendos registrados em 2026-09-06 (estabilização pós-migração) e 2026-09-07 (autenticação admin — manhã e tarde).*
+## Adendo — 2026-09-07 (fim de tarde): teste E2E do fluxo de compra em produção
+
+Teste de ponta a ponta do fluxo de compra de beats em produção, automatizado
+via API (reproduzindo byte a byte as chamadas dos server functions TanStack
+que o browser faz). Beat de teste dedicado ("TESTE COMPRA BEAT", R$ 200,00,
+produtora "Gau Beats", tipo fechado) + cliente fictício `gizavizion@gmail.com`.
+
+### Etapas e resultados
+| Etapa | Ação | Resultado |
+|---|---|---|
+| 2.1 Compra | `createPurchaseRequest` (Pix) | `aguardando_pagamento`; beat `reservado` (24 h); e-mails `purchase-created` (cliente) e `admin-new-purchase` (admin) **sent** |
+| 2.2 Comprovante | `uploadReceiptByToken` (PNG p/ bucket privado) | `comprovante_recebido`; e-mails `receipt-received` e `admin-new-receipt` **sent** |
+| 2.3 Confirmação | `updatePurchaseStatus` (admin) | `pagamento_confirmado`; beat → `vendido` |
+| 2.3 Entrega | `deliverPurchase` (admin) | `arquivos_enviados`; `purchase_deliveries` registrada; e-mail `purchase-delivered` **sent** com links assinados (7 dias) WAV/STEMS + licença online |
+| 2.4 Licença | `GET /licenca/<token>` | HTTP 200; compra entregue com `license_version` 2026-07-01.v1 |
+
+### Conclusão
+Fluxo de compra completo **funcional** em produção: compra → comprovante →
+confirmação → entrega com e-mails transacionais em todos os marcos (status
+`sent` no `email_send_log`, fila `transactional_emails` vazia após processar).
+
+### Limpeza realizada
+Todos os artefatos do teste foram removidos: `purchase_requests`,
+`purchase_deliveries`, comprovante e arquivos do storage, beat de teste
+(linha + objetos nos 4 buckets), logs de e-mail do teste e o usuário admin de
+teste criado para simular a sessão (`auth.users` + `user_roles`).
+`/beat/teste-compra-beat` voltou a responder 404.
+
+### Infra descoberta durante o teste
+- Server functions TanStack: `POST /_serverFn/<hash>` com header
+  `x-tsr-serverFn: true` e payload seroval; GET envia `payload` na query.
+- Sessões admin testáveis: criar usuário via `POST /auth/v1/admin/users`
+  (email_confirm true) + linha em `user_roles` (role admin) + password grant.
+- `SUPABASE_ANON_KEY` não definida no `.env` do app (vazio); usar a `ANON_KEY`
+  do `/opt/supabase-test/supabase/docker/.env` em chamadas diretas ao Gateway.
+- Remoção de objeto de storage nesta versão: `DELETE /storage/v1/object/<bucket>/<path>`
+  (`POST /object/remove` inexistente).
+- Envio de e-mails: fila `transactional_emails` é processada por
+  `POST /lovable/email/queue/process` (Bearer service role); **não há cron** no
+  host, o disparo é manual.
+
+---
+
+## Adendo — 2026-09-07 (noite): cron automático do processador de e-mails
+
+Automatizado o disparo do processador de e-mails, que até então era manual.
+
+### Implementado
+- **`scripts/process-emails.sh`** (root `700`, sem segredos no arquivo): lê
+  `SUPABASE_SERVICE_ROLE_KEY` **ao vivo** do `.env` da app a cada execução
+  (natural a rotações de chave), `POST /lovable/email/queue/process` (Bearer)
+  com 1 retry (3 s, janela de restart do PM2). Loga só eventos/erros em
+  `/var/log/braba-email-process.log` (`640`, rotação interna 2000 linhas);
+  silencioso com fila vazia.
+- **`/etc/cron.d/braba-email`** (`644`, root): dispara o script de **2 em 2
+  minutos**. TTL da fila transacional é 60 min (auth 15 min) — folga ampla.
+
+### Validação (produção)
+1. Fila vazia → rodada manual silenciosa (exit 0).
+2. Guardas: `.env` ausente e chave vazia → `ERRO` no log + exit 1.
+3. **Prova E2E automática** (mensagem sintética `process-cron-test@invalid.local`
+   via `enqueue_email`): no tick das 14:50:01 o cron disparou o script (syslog
+   `CMD`), o endpoint processou (`processed=1` no log), `email_send_log`
+   registrou `sent` e a fila esvaziou — **sem intervenção manual**. Todas as
+   linhas de teste removidas ao final (log e fila zerados).
+
+### Aprendizado / pegadinha
+- Arquivo `/etc/cron.d/*` **precisa terminar com quebra de linha**: sem `\n`,
+  o cron do Debian descarta a última linha (job ficou invisível até corrigir).
+  Aplicar `systemctl restart cron` após editar para forçar reload.
+- PGMQ desta versão usa tabelas `pgmq.q_<fila>` / `pgmq.a_<fila>` (não
+  `pgmq.<fila>`).
+
+---
+
+*Relatório original gerado em 2026-09-05; adendos registrados em 2026-09-06 (estabilização pós-migração), 2026-09-07 (autenticação admin — manhã e tarde), 2026-09-07 (teste E2E do fluxo de compra) e 2026-09-07 (cron automático do processador de e-mails).*

@@ -142,4 +142,38 @@ install -m 600 "$SNAP/root_.git-credentials"                /root/.git-credentia
 
 ---
 
+## 6. Processador de e-mails (cron automático)
+
+Os e-mails transacionais e de autenticação saem da fila PGMQ
+(`transactional_emails`, `auth_emails`) e são enviados pelo endpoint
+`POST /lovable/email/queue/process` (Bearer service role) da própria app.
+
+| Item | Detalhe |
+|---|---|
+| Script | `/opt/apps/braba-music/scripts/process-emails.sh` (root, `700`) |
+| Cron | `/etc/cron.d/braba-email` — `*/2` min, root, `644` |
+| Log | `/var/log/braba-email-process.log` (`640`, rotação interna 2000 linhas) |
+| Chave | Lida ao vivo de `SUPABASE_SERVICE_ROLE_KEY` no `.env` da app a cada execução |
+| Diagnóstico | `cat /var/log/braba-email-process.log`; `grep process-emails /var/log/syslog` |
+
+- **Fila vazia** → script silencioso (exit 0), nenhum custo.
+- **`processed=N` no log** → N e-mails foram ditos enviados naquela rodada.
+- **`ERRO: ... http 401/403`** → `SUPABASE_SERVICE_ROLE_KEY` divergente
+  (rotacionou sem atualizar o `.env` da app). **`http 5xx`/curl** → app/PM2
+  fora do ar. Ver `pm2 status` e `pm2 logs braba-music`.
+
+### Manutenção / restauração
+- Para **editar** `/etc/cron.d/braba-email`, de novo e sempre: o arquivo
+  **deve terminar com uma quebra de linha** (o cron do Debian descarta a
+  última linha sem `\n`), e aplicar `systemctl restart cron` para forçar o
+  reload.
+- Após **rotacionar** a service role key: só atualizar o `.env` da app e
+  `pm2 restart braba-music --update-env` — o script lê a chave viva, nada a
+  mudar no cron.
+- Em um **VPS novo**: reinstalar o script no mesmo caminho, o arquivo do cron
+  (644) e o log (`touch ... && chmod 640`). Guardar nos passos de restauração
+  junto dos `.env`.
+
+---
+
 *Runbook criado em 2026-09-07. Registrar evolução no `docs/CHANGELOG.md`.*

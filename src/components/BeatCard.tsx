@@ -108,6 +108,7 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
         open={purchaseOpen}
         onOpenChange={setPurchaseOpen}
         beatId={beat.id}
+        beatSlug={beat.slug}
         beatName={beat.nome}
         produtora={beat.produtora_nome}
         preco={beat.preco}
@@ -115,4 +116,3 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
     </article>
   );
 }
-

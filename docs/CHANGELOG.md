@@ -5,6 +5,127 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ---
 
+## [2026-09-07] — Compartilhamento de beat, pedido pendente e upload de comprovante
+
+### Added
+- **Compartilhamento de beat** (`src/routes/beat.$slug.tsx`): o botão
+  Compartilhar agora abre um menu com **Copiar link**, **Compartilhar pelo
+  sistema** (Web Share, só quando disponível) e **Enviar no WhatsApp**. A URL
+  usada é canônica via `getPublicSiteUrl()` (sem depender de
+  `window.location.origin`/hash).
+- **Meta tags por beat** (`head()` na rota): `title`/`description`, `og:title`,
+  `og:description`, `og:type=music.song`, `og:url`, `og:image` (capa do beat ou
+  imagem global) e `twitter:*` + `link canonical` — prévia correta no WhatsApp
+  e em redes sociais para cada beat.
+- **Pedido pendente recuperável** (`src/lib/pending-purchase.ts` novo):
+  quando um pedido é criado no `PurchaseDialog`, os dados
+  (`continuation_token`, beat, valor) ficam em `sessionStorage`
+  (`braba.pending-purchase`, máx. 5). A página do beat exibe um banner
+  "Enviar comprovante"/"Dispensar" quando há pedido pendente daquele beat —
+  resolve a perda de contexto ao abrir o link de pagamento em aba nova.
+- **Upload de comprovante mais robusto** (`ReceiptUploader.tsx`): validação
+  antecipada de tamanho base64 (máx. ~8 MB) e mensagens de erro amigáveis para
+  falhas de rede/413 (filtra HTML do erro). Envio bem-sucedido limpa a pendência
+  do `sessionStorage`.
+
+### Fixed
+- Botão Compartilhar "não fazia nada" no desktop (navegadores sem Web Share
+  API): agora abre o menu com as opções acima.
+- Upload de comprovante pelo **celular** quebrava com erro 413 (HTML no toast)
+  porque um único `class` do vhost `loja` não tinha limite de corpo. Adicionado
+  `client_max_body_size 15m` no nginx (`/etc/nginx/sites-available/loja.brabamusic.com.br`),
+  `nginx -t` OK e reload aplicado.
+
+### Changed
+- **Tentativa de correção do mojibake de emoji revertida**: ao forçar
+  `charset=utf-8` + `encoding=base64` no `process.ts`, o e-mail inteiro saiu
+  corrompido (mojibake geral). Mudança **revertida** — o envio voltou ao
+  formato anterior (strings simples) e foi validado com uma compra real de
+  produção (e-mail legível). **O mojibake isolado dos emojis (🔥 ✅) no e-mail
+  permanece em aberto**; emojis seguem funcionando no WhatsApp/celular.
+
+### Infra
+- Limpeza dos dados de teste da produtora **Malana**: removidas as 2 compras
+  de teste (Beat Aberto Teste e Beat Fechado Teste), as 4 entregas
+  (`purchase_deliveries`), os 2 comprovantes do `purchase-receipts` e as 16
+  linhas de `email_send_log` relacionados. Beats `aberto`/`fechado` voltaram
+  a `ativo` (sem reserva) — prontos para novo teste de compra.
+
+---
+
+## [2026-09-07] — Cron automático do processador de e-mails
+
+### Added
+- **`scripts/process-emails.sh`**: processa a fila `transactional_emails` (e
+  `auth_emails`) automaticamente. Lê a service role key **ao vivo** do
+  `/opt/apps/braba-music/.env` em cada execução (robusto a rotações de chave),
+  faz `POST /lovable/email/queue/process` (Bearer) com 1 retry (3 s) para
+  cobrir restart do PM2, e loga apenas eventos/erros em
+  `/var/log/braba-email-process.log` (rotação interna, 2000 linhas). Silencioso
+  quando a fila está vazia.
+- **`/etc/cron.d/braba-email`**: dispara o script de 2 em 2 minutos (raiz/root).
+  TTL da fila transacional é 60 min (auth 15 min) — folga ampla; custo nulo
+  com fila vazia.
+
+### Validado (produção)
+1. Rodada manual com fila vazia → silencioso, exit 0.
+2. Guardas de erro: `.env` ausente e chave vazia → `ERRO` no log e exit 1.
+3. **Prova E2E automática**: enfileirada mensagem sintética
+   (`process-cron-test@invalid.local` via `enqueue_email`); **sem intervenção
+   manual**, o cron disparou às 14:50:01 (syslog), o script logou
+   `processed=1`, o `email_send_log` registrou `status=sent` e a fila
+   esvaziou. Tudo limpo após o teste.
+
+### Infra / aprendizado
+- Isenção para quem editar `/etc/cron.d/braba-email`: o arquivo **deve
+  terminar com quebra de linha** (cron do Debian descarta a última linha sem
+  `\n`) e pedir `systemctl restart cron` para forçar o reload.
+- PGMQ nesta versão usa tabelas `pgmq.q_<fila>` / `pgmq.a_<fila>` (não
+  `pgmq.<fila>`).
+
+---
+
+## [2026-09-07] — Teste E2E completo do fluxo de compra em produção
+
+Teste manual automatizado via API (reproduzindo as chamadas do browser) do
+fluxo de compra de beats, end-to-end, em produção (loja.brabamusic.com.br /
+api.loja.brabamusic.com.br). Beat de teste dedicado ("TESTE COMPRA BEAT",
+R$ 200, produtora "Gau Beats") e cliente fictício `gizavizion@gmail.com`.
+
+### Validado
+1. **Criação da compra** (`createPurchaseRequest`): pedido
+   `aguardando_pagamento`, valor R$ 200,00, forma Pix; beat status `reservado`
+   (24 h). E-mails `purchase-created` (cliente) e `admin-new-purchase`
+   (admin) **enviados** via fila `transactional_emails`.
+2. **Envio de comprovante** (`uploadReceiptByToken`, PNG p/ bucket privado):
+   status `comprovante_recebido`; e-mails `receipt-received` (cliente) e
+   `admin-new-receipt` (admin) **enviados**.
+3. **Confirmação de pagamento** (`updatePurchaseStatus`, admin): status
+   `pagamento_confirmado`, beat → `vendido`.
+4. **Entrega de arquivos** (`deliverPurchase`, admin): status
+   `arquivos_enviados`, `purchase_deliveries` registrada (enviado_por,
+   recipient, arquivos WAV/STEMS/licença), e-mail `purchase-delivered`
+   **enviado** com links assinados (7 dias) de WAV/STEMS + link público da
+   licença `/licenca/<token>`. Página `/licenca/<token>` responde 200.
+5. **Limpeza**: compras, entregas, comprovante, arquivos e beat de teste
+   removidos; usuário admin de teste removido (`auth.users` + `user_roles`);
+   `/beat/teste-compra-beat` voltou a 404.
+
+### Infra / aprendizado
+- Server functions TanStack são invocáveis via `POST /_serverFn/<hash>`
+  (header `x-tsr-serverFn: true`, payload serializado com seroval).
+- `SUPABASE_ANON_KEY` não existe no `.env` do app (vazio); a chave ANON real
+  usada é `SUPABASE_PUBLISHABLE_KEY`. Para chamadas Gateway diretas, usar a
+  `ANON_KEY` do stack (`/opt/supabase-test/supabase/docker/.env`).
+- Storage: o endpoint de remoção é `DELETE /storage/v1/object/<bucket>/<path>`
+  (nesta versão, `POST /object/remove` não existe).
+- O processador de e-mails é o endpoint `/lovable/email/queue/process`
+  (Bearer service role); na época do teste o disparo era manual — hoje há o
+  cron automático `scripts/process-emails.sh` + `/etc/cron.d/braba-email`
+  (2 em 2 minutos), ver seção acima.
+
+---
+
 ## [2026-09-07] — Runbook operacional + backup manual de segredos
 
 ### Added

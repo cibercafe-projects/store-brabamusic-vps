@@ -32,6 +32,7 @@ import {
   getBeatLicenseInfo,
 } from "@/lib/purchases.functions";
 import { CURRENT_LICENSE_VERSION } from "@/lib/licenses.constants";
+import { addPendingPurchase } from "@/lib/pending-purchase";
 
 type Method = "pix" | "link";
 type Step = "form" | "receipt";
@@ -40,6 +41,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   beatId: string;
+  beatSlug: string;
   beatName: string;
   produtora?: string | null;
   preco?: number | null;
@@ -53,6 +55,7 @@ export function PurchaseDialog({
   open,
   onOpenChange,
   beatId,
+  beatSlug,
   beatName,
   produtora,
   preco,
@@ -70,7 +73,6 @@ export function PurchaseDialog({
   const [token, setToken] = useState<string | null>(null);
   const [website, setWebsite] = useState(""); // honeypot
   const startedAt = useRef(Date.now()).current;
-
 
   const loadSettings = useServerFn(getPurchaseSettings);
   const createFn = useServerFn(createPurchaseRequest);
@@ -106,7 +108,6 @@ export function PurchaseDialog({
     }
   }, [open]);
 
-  
   const pixKey = settings.data?.pix_key ?? "";
   const paymentLink = settings.data?.payment_link ?? "";
 
@@ -146,6 +147,13 @@ export function PurchaseDialog({
 
       setToken(res.continuation_token);
       setStep("receipt");
+      addPendingPurchase({
+        token: res.continuation_token,
+        beatSlug,
+        beatName,
+        valor: preco ?? null,
+        createdAt: new Date().toISOString(),
+      });
       toast.success("Pedido registrado!");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao registrar pedido.");
@@ -153,7 +161,6 @@ export function PurchaseDialog({
       setSubmitting(false);
     }
   }
-
 
   function copy(value: string, label: string) {
     if (!value) return;
@@ -193,9 +200,7 @@ export function PurchaseDialog({
                   Beat selecionado
                 </p>
                 <p className="font-display text-lg mt-1">{beatName}</p>
-                {produtora && (
-                  <p className="text-xs text-muted-foreground">prod. {produtora}</p>
-                )}
+                {produtora && <p className="text-xs text-muted-foreground">prod. {produtora}</p>}
                 <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
               </div>
 
@@ -251,13 +256,9 @@ export function PurchaseDialog({
                     className="mt-0.5"
                     disabled={license.isLoading}
                   />
-                  <span>
-                    Li e concordo com os termos de licenciamento acima da produtora.
-                  </span>
+                  <span>Li e concordo com os termos de licenciamento acima da produtora.</span>
                 </label>
               </div>
-
-
 
               <div className="space-y-2">
                 <Label>Forma de pagamento</Label>
@@ -384,8 +385,8 @@ export function PurchaseDialog({
 
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
                 <p className="text-sm">
-                  Antes de finalizar, leia e aceite os documentos abaixo. Eles
-                  também serão enviados por e-mail junto com os arquivos do beat.
+                  Antes de finalizar, leia e aceite os documentos abaixo. Eles também serão enviados
+                  por e-mail junto com os arquivos do beat.
                 </p>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center justify-between gap-2">
@@ -422,13 +423,11 @@ export function PurchaseDialog({
                     className="mt-0.5"
                   />
                   <span>
-                    Li e aceito a{" "}
-                    <strong>Licença de Uso dos Beats</strong> e os{" "}
+                    Li e aceito a <strong>Licença de Uso dos Beats</strong> e os{" "}
                     <strong>Termos de Uso da Braba Music</strong>.
                   </span>
                 </label>
               </div>
-
             </div>
 
             <DialogFooter>
@@ -450,84 +449,84 @@ export function PurchaseDialog({
           </>
         )}
 
-        {step === "receipt" && token && (() => {
-          const origin = typeof window !== "undefined" ? window.location.origin : "";
-          const receiptUrl = `${origin}/enviar-comprovante/${token}`;
-          const paymentLineForMsg = paymentLink || "Será enviado pelo time Braba";
-          const copyText = `Beat: ${beatName}
+        {step === "receipt" &&
+          token &&
+          (() => {
+            const origin = typeof window !== "undefined" ? window.location.origin : "";
+            const receiptUrl = `${origin}/enviar-comprovante/${token}`;
+            const paymentLineForMsg = paymentLink || "Será enviado pelo time Braba";
+            const copyText = `Beat: ${beatName}
 Valor: ${valorFmt}
 Link para pagamento: ${paymentLineForMsg}
 Link para envio do comprovante: ${receiptUrl}`;
-          return (
-            <>
-              <DialogHeader>
-                <DialogTitle>Compra registrada com sucesso</DialogTitle>
-                <DialogDescription>
-                  Salve os links abaixo para concluir seu pedido.
-                </DialogDescription>
-              </DialogHeader>
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Compra registrada com sucesso</DialogTitle>
+                  <DialogDescription>
+                    Salve os links abaixo para concluir seu pedido.
+                  </DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-4 py-2">
-                <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent" />
-                  <p className="text-sm">Pedido criado com sucesso!</p>
+                <div className="space-y-4 py-2">
+                  <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-accent" />
+                    <p className="text-sm">Pedido criado com sucesso!</p>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Beat</p>
+                    <p className="font-display text-lg mt-1">{beatName}</p>
+                    <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm font-semibold mb-2">Próximos passos:</p>
+                    <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>Efetue o pagamento.</li>
+                      <li>Envie seu comprovante no link.</li>
+                      <li>Aguarde até 24h para validação e envio dos arquivos.</li>
+                    </ol>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Button
+                      onClick={() => window.open(receiptUrl, "_blank", "noopener,noreferrer")}
+                      className="w-full"
+                    >
+                      <Upload className="h-4 w-4" /> ENVIAR COMPROVANTE DE PAGAMENTO
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (!paymentLink) {
+                          toast.info("O link de pagamento será enviado pelo time Braba.");
+                          return;
+                        }
+                        window.open(paymentLink, "_blank", "noopener,noreferrer");
+                      }}
+                      className="w-full"
+                    >
+                      <CreditCard className="h-4 w-4" /> Pagar Agora
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => copy(copyText, "Informações da compra")}
+                      className="w-full"
+                    >
+                      <Copy className="h-4 w-4" /> Copiar Informações
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                    Beat
-                  </p>
-                  <p className="font-display text-lg mt-1">{beatName}</p>
-                  <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
-                </div>
-
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-sm font-semibold mb-2">Próximos passos:</p>
-                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Efetue o pagamento.</li>
-                    <li>Envie seu comprovante no link.</li>
-                    <li>Aguarde até 24h para validação e envio dos arquivos.</li>
-                  </ol>
-                </div>
-
-                <div className="grid gap-2">
-                  <Button
-                    onClick={() => window.open(receiptUrl, "_blank", "noopener,noreferrer")}
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4" /> ENVIAR COMPROVANTE DE PAGAMENTO
+                <DialogFooter>
+                  <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                    Fechar
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      if (!paymentLink) {
-                        toast.info("O link de pagamento será enviado pelo time Braba.");
-                        return;
-                      }
-                      window.open(paymentLink, "_blank", "noopener,noreferrer");
-                    }}
-                    className="w-full"
-                  >
-                    <CreditCard className="h-4 w-4" /> Pagar Agora
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => copy(copyText, "Informações da compra")}
-                    className="w-full"
-                  >
-                    <Copy className="h-4 w-4" /> Copiar Informações
-                  </Button>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                  Fechar
-                </Button>
-              </DialogFooter>
-            </>
-          );
-        })()}
+                </DialogFooter>
+              </>
+            );
+          })()}
       </DialogContent>
     </Dialog>
   );

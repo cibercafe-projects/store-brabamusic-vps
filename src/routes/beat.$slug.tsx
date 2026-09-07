@@ -1,13 +1,31 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Play, Pause, Instagram, Music2, Share2, Check, ArrowLeft, ShoppingCart } from "lucide-react";
+import {
+  Play,
+  Pause,
+  Instagram,
+  Music2,
+  Share2,
+  Check,
+  ArrowLeft,
+  ShoppingCart,
+  Copy,
+  MessageCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { getPublicBeatBySlug } from "@/lib/catalog.functions";
 import { usePlayer } from "@/components/PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
 import { PurchaseDialog } from "@/components/purchase/PurchaseDialog";
-
+import { getPublicSiteUrl } from "@/lib/site-url";
+import { getPendingPurchaseBySlug, removePendingPurchase } from "@/lib/pending-purchase";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const beatQuery = (slug: string) =>
   queryOptions({
@@ -18,10 +36,60 @@ const beatQuery = (slug: string) =>
     },
   });
 
+const GLOBAL_OG_IMAGE =
+  "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/07435e01-cc15-410a-bc90-917055cb21f3";
+
 export const Route = createFileRoute("/beat/$slug")({
   loader: async ({ params, context }) => {
     const data = await context.queryClient.ensureQueryData(beatQuery(params.slug));
     if (!data) throw notFound();
+    return data;
+  },
+  head: ({ loaderData }) => {
+    if (!loaderData) {
+      return {
+        meta: [
+          { title: "Beat — Braba Beats" },
+          {
+            name: "description",
+            content: "Conheça este beat exclusivo na Braba Beats.",
+          },
+        ],
+      };
+    }
+    const { beat, produtora } = loaderData;
+    const siteUrl = getPublicSiteUrl();
+    const canonical = `${siteUrl}/beat/${beat.slug}`;
+    const title = `${beat.nome} — Braba Beats`;
+    const parts = [
+      produtora ? `prod. ${produtora.nome_artistico}` : null,
+      beat.genero ? `Gênero: ${beat.genero}` : null,
+      beat.mood ? `Mood: ${beat.mood}` : null,
+      beat.bpm != null ? `${beat.bpm} BPM` : null,
+      beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : null,
+    ].filter(Boolean);
+    const description = [
+      `Ouça "${beat.nome}"`,
+      parts.length ? ` — ${parts.join(" · ")}.` : ".",
+      "Prévia exclusiva e compra com envio dos arquivos.",
+    ].join("");
+    const ogImage = beat.capa_url ?? GLOBAL_OG_IMAGE;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "music.song" },
+        { property: "og:url", content: canonical },
+        { property: "og:image", content: ogImage },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        { name: "twitter:image", content: ogImage },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [{ rel: "canonical", href: canonical }],
+    };
   },
   component: BeatDetail,
   notFoundComponent: () => (
@@ -35,59 +103,74 @@ export const Route = createFileRoute("/beat/$slug")({
       </Link>
     </div>
   ),
-  errorComponent: () => <p className="p-8 text-center">Não foi possível carregar este beat agora. Tente novamente em instantes.</p>,
+  errorComponent: () => (
+    <p className="p-8 text-center">
+      Não foi possível carregar este beat agora. Tente novamente em instantes.
+    </p>
+  ),
 });
 
 function BeatDetail() {
   const { slug } = Route.useParams();
+  const { current, playing, play } = usePlayer();
+  const [copied, setCopied] = useState(false);
+  const [purchaseOpen, setPurchaseOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const router = useRouter();
+
   const { data } = useSuspenseQuery(beatQuery(slug));
   if (!data) return null;
   const { beat, produtora, available } = data;
 
-  const { current, playing, play } = usePlayer();
   const isPlaying = current?.id === beat.id && playing;
   const hasPreview = !!beat.preview_url;
-  const [copied, setCopied] = useState(false);
-  const [purchaseOpen, setPurchaseOpen] = useState(false);
 
+  const shareUrl = `${getPublicSiteUrl()}/beat/${beat.slug}`;
+  const shareData = {
+    title: `${beat.nome} — Braba Beats`,
+    text: produtora
+      ? `Ouça "${beat.nome}" prod. ${produtora.nome_artistico} na Braba Beats`
+      : `Ouça "${beat.nome}" na Braba Beats`,
+    url: shareUrl,
+  };
+  const canNativeShare =
+    typeof navigator !== "undefined" &&
+    typeof navigator.share === "function" &&
+    (typeof navigator.canShare !== "function" || navigator.canShare(shareData));
 
-
-
-  const handleShare = async () => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
-    const shareData = {
-      title: `${beat.nome} — Braba Beats`,
-      text: produtora
-        ? `Ouça "${beat.nome}" prod. ${produtora.nome_artistico} na Braba Beats`
-        : `Ouça "${beat.nome}" na Braba Beats`,
-      url,
-    };
-    const canNativeShare =
-      typeof navigator !== "undefined" &&
-      typeof navigator.share === "function" &&
-      (typeof navigator.canShare !== "function" || navigator.canShare(shareData));
-
-    if (canNativeShare) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (err) {
-        // User cancelled — don't fall through to clipboard (would flash a misleading toast)
-        if (err instanceof Error && err.name === "AbortError") return;
-        // Other errors (permission denied, etc.) → fall through to clipboard
-      }
-    }
+  async function copyShareLink() {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       toast.success("Link copiado!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Não foi possível copiar o link.");
     }
-  };
+  }
 
-  const router = useRouter();
+  function openWhatsAppShare() {
+    const encoded = encodeURIComponent(`${shareData.text} ${shareUrl}`);
+    window.open(`https://wa.me/?text=${encoded}`, "_blank", "noopener,noreferrer");
+  }
+
+  async function handleShare() {
+    if (!canNativeShare) {
+      await copyShareLink();
+      return;
+    }
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (err) {
+      // User cancelled — don't fall through to clipboard (would flash a misleading toast)
+      if (err instanceof Error && err.name === "AbortError") return;
+      await copyShareLink();
+    }
+  }
+
+  const pendingPurchase = getPendingPurchaseBySlug(slug);
+
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.history.back();
@@ -106,10 +189,7 @@ function BeatDetail() {
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </button>
-        <Link
-          to="/"
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
+        <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
           Ir ao catálogo
         </Link>
       </div>
@@ -143,9 +223,7 @@ function BeatDetail() {
             )}
           </div>
           {!hasPreview && (
-            <p className="mt-4 text-xs text-muted-foreground text-center">
-              Sem prévia disponível.
-            </p>
+            <p className="mt-4 text-xs text-muted-foreground text-center">Sem prévia disponível.</p>
           )}
         </div>
 
@@ -173,19 +251,41 @@ function BeatDetail() {
               ["BPM", beat.bpm ?? "—"],
               ["Tom", beat.tom ?? "—"],
               ["Mood", beat.mood ?? "—"],
-              [
-                "Preço",
-                beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : "—",
-              ],
+              ["Preço", beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : "—"],
             ].map(([k, v]) => (
               <div key={k as string} className="glass rounded-xl p-3">
-                <dt className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {k}
-                </dt>
+                <dt className="text-[10px] uppercase tracking-widest text-muted-foreground">{k}</dt>
                 <dd className="mt-1 font-semibold">{v}</dd>
               </div>
             ))}
           </dl>
+
+          {pendingPurchase && (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4">
+              <div>
+                <p className="font-display text-base">Você tem um pedido pendente deste beat.</p>
+                <p className="text-xs text-muted-foreground">
+                  Envie o comprovante de pagamento para darmos continuidade.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Link
+                  to="/enviar-comprovante/$token"
+                  params={{ token: pendingPurchase.token }}
+                  className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-xs font-bold text-accent-foreground hover:opacity-90"
+                >
+                  Enviar comprovante
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => removePendingPurchase(pendingPurchase.token)}
+                  className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold hover:bg-white/10"
+                >
+                  Dispensar
+                </button>
+              </div>
+            </div>
+          )}
 
           {available ? (
             <div className="mt-6 flex flex-wrap gap-3">
@@ -195,14 +295,47 @@ function BeatDetail() {
               >
                 <ShoppingCart className="h-4 w-4" /> COMPRAR
               </button>
-              <button
-                onClick={handleShare}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition"
-                aria-label="Compartilhar beat"
-              >
-                {copied ? <Check className="h-4 w-4 text-accent" /> : <Share2 className="h-4 w-4" />}
-                {copied ? "Link copiado" : "Compartilhar"}
-              </button>
+              <DropdownMenu open={shareOpen} onOpenChange={setShareOpen}>
+                <DropdownMenuTrigger
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10 hover:border-accent transition outline-none"
+                  aria-label="Compartilhar beat"
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-accent" />
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
+                  {copied ? "Link copiado" : "Compartilhar"}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      void copyShareLink();
+                      setShareOpen(false);
+                    }}
+                  >
+                    <Copy className="h-4 w-4" /> Copiar link
+                  </DropdownMenuItem>
+                  {canNativeShare && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        void handleShare();
+                        setShareOpen(false);
+                      }}
+                    >
+                      <Share2 className="h-4 w-4" /> Compartilhar pelo sistema
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      openWhatsAppShare();
+                      setShareOpen(false);
+                    }}
+                  >
+                    <MessageCircle className="h-4 w-4" /> Enviar no WhatsApp
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ) : (
             <div className="mt-6 glass rounded-2xl p-5">
@@ -226,14 +359,12 @@ function BeatDetail() {
               open={purchaseOpen}
               onOpenChange={setPurchaseOpen}
               beatId={beat.id}
+              beatSlug={beat.slug}
               beatName={beat.nome}
               produtora={produtora?.nome_artistico ?? null}
               preco={beat.preco}
             />
           )}
-
-
-
 
           {beat.descricao && (
             <div className="mt-8">

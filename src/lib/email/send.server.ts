@@ -137,6 +137,7 @@ export async function sendAppEmail(
     status: "pending",
   });
 
+  const archiveEmail = await getArchiveEmail();
   const { error: enqErr } = await supabaseAdmin.rpc("enqueue_email", {
     queue_name: "transactional_emails",
     payload: {
@@ -152,6 +153,7 @@ export async function sendAppEmail(
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
+      ...(archiveEmail ? { bcc: archiveEmail } : {}),
     },
   });
 
@@ -192,4 +194,16 @@ export async function getAdminNotificationEmail(): Promise<string | null> {
     .maybeSingle();
   const v = (data?.value ?? "").trim();
   return v.length > 0 ? v : null;
+}
+
+/** Archive/BCC copy email (loja@...) from app_settings. Returns null if unset. */
+async function getArchiveEmail(): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("app_settings")
+    .select("value")
+    .eq("key", "archive_email")
+    .maybeSingle();
+  const v = (data?.value ?? "").trim();
+  return v.length > 0 ? v.toLowerCase() : null;
 }

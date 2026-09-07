@@ -133,7 +133,7 @@ export const createLead = createServerFn({ method: "POST" })
     const { data: settingsRow } = await admin
       .from("app_settings")
       .select("value")
-      .eq("key", "whatsapp_number")
+      .eq("key", "commercial_whatsapp")
       .maybeSingle();
 
     return {

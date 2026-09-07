@@ -262,6 +262,10 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               const mailOptions = {
                 from: payload.from || process.env.SMTP_FROM,
                 to: payload.to,
+                bcc:
+                  typeof payload.bcc === "string" && payload.bcc.trim()
+                    ? payload.bcc.trim()
+                    : undefined,
                 replyTo: process.env.SMTP_FROM,
                 subject: payload.subject,
                 html: payload.html,

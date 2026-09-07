@@ -3,10 +3,24 @@ import { Loader2, Upload, FileCheck2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { uploadReceiptByToken } from "@/lib/purchases.functions";
+import { removePendingPurchase } from "@/lib/pending-purchase";
 import { Button } from "@/components/ui/button";
 
 const ALLOWED = ["image/jpeg", "image/png", "application/pdf"];
 const MAX_BYTES = 8 * 1024 * 1024;
+const MAX_BASE64_LENGTH = Math.ceil(MAX_BYTES * 1.4);
+
+function friendlyUploadError(e: unknown): string {
+  if (!(e instanceof Error)) return "Não foi possível enviar o comprovante. Tente novamente.";
+  const msg = e.message ?? "";
+  if (/413|request entity too large|payload too large/i.test(msg)) {
+    return "Arquivo muito grande para envio pelo celular. Tente uma foto menor (máx. 8 MB).";
+  }
+  if (/<[^>]+>/.test(msg)) {
+    return "Não foi possível enviar o comprovante. Tente novamente em instantes.";
+  }
+  return msg.trim() || "Não foi possível enviar o comprovante. Tente novamente.";
+}
 
 function toBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -21,13 +35,7 @@ function toBase64(file: File): Promise<string> {
   });
 }
 
-export function ReceiptUploader({
-  token,
-  onSuccess,
-}: {
-  token: string;
-  onSuccess?: () => void;
-}) {
+export function ReceiptUploader({ token, onSuccess }: { token: string; onSuccess?: () => void }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -45,6 +53,12 @@ export function ReceiptUploader({
     setUploading(true);
     try {
       const data_base64 = await toBase64(file);
+      if (data_base64.length > MAX_BASE64_LENGTH) {
+        toast.error(
+          "Arquivo muito grande para envio pelo celular. Tente uma foto menor (máx. 8 MB).",
+        );
+        return;
+      }
       await uploadFn({
         data: {
           token,
@@ -54,10 +68,11 @@ export function ReceiptUploader({
         },
       });
       setSent(true);
+      removePendingPurchase(token);
       toast.success("Comprovante enviado!");
       onSuccess?.();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao enviar.");
+      toast.error(friendlyUploadError(e));
     } finally {
       setUploading(false);
     }
