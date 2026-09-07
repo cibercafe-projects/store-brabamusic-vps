@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { adminBootstrapNeeded, bootstrapFirstAdmin } from "@/lib/admin.functions";
+import { translateAuthError } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,9 +44,11 @@ function AdminLoginPage() {
         redirectTo: `${window.location.origin}/admin/reset-password`,
       });
       if (error) throw error;
-      toast.success("Enviamos um link de recuperação para seu e-mail.");
+      toast.success(
+        "Enviamos um link de redefinição para seu e-mail. Clique no link (começa com Redefinição de senha) para definir sua nova senha.",
+      );
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Não foi possível enviar o e-mail.");
+      toast.error(translateAuthError(err));
     } finally {
       setRecovering(false);
     }
@@ -72,7 +75,7 @@ function AdminLoginPage() {
       }
       navigate({ to: "/admin/dashboard", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha no login");
+      toast.error(translateAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -117,14 +120,21 @@ function AdminLoginPage() {
               {loading ? "Aguarde..." : needsBootstrap ? "Criar admin" : "Entrar"}
             </Button>
             {!needsBootstrap && (
-              <button
-                type="button"
-                onClick={handleForgotPassword}
-                disabled={recovering}
-                className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 w-full text-center"
-              >
-                {recovering ? "Enviando..." : "Esqueci minha senha"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={recovering}
+                  className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 w-full text-center"
+                >
+                  {recovering ? "Enviando..." : "Esqueci minha senha"}
+                </button>
+                <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+                  Ao pedir a recuperação, <strong>clique no link do e-mail</strong> para definir uma
+                  nova senha. O código numérico do e-mail serve apenas de verificação e{" "}
+                  <strong>não é uma senha</strong>.
+                </p>
+              </>
             )}
           </form>
         </CardContent>

@@ -29,6 +29,108 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ---
 
+## [2026-09-07] — Autenticação admin: desbloqueio de login + e-mails pt-BR
+
+Rodada focada em destravar o login administrativo após a recriação dos admins
+(sem senha) e em traduzir para pt-BR as mensagens de erro e os e-mails de
+recuperação gerados pelo GoTrue.
+
+### Added
+- **`src/lib/auth-errors.ts`**: helper `translateAuthError` que mapeia as
+  mensagens de erro do Supabase/GoTrue (login, recovery, rate limit, SMTP,
+  rede) para mensagens em pt-BR. Aplicado em `/admin/login` e
+  `/admin/reset-password` (antes o toast mostrava o texto em inglês do GoTrue,
+  ex.: "Invalid login credentials").
+- **Templates de e-mail de auth em pt-BR**: `recovery.html`, `recovery.txt`,
+  `confirmation.html`, `confirmation.txt`, `invite.html`, `invite.txt` nas
+  configurações da stack GoTrue. Os e-mails agora têm botão "Redefinir minha
+  senha"/"Confirmar meu e-mail", link direto e instrução explícita de que o
+  **código numérico não é a senha** (evita a confusão relatada no teste).
+
+### Changed
+- **Subjects de e-mail do GoTrue em pt-BR** (variáveis `MAILER_SUBJECTS_*` da
+  stack): "Confirme seu e-mail", "Convite para BRABA Music", "Redefinição de
+  senha", "Confirme seu novo e-mail", "Seu link de acesso", "Confirme que é
+  você".
+- **`login.tsx`**: ao pedir recuperação de senha, o toast agora instrui a
+  clicar no link do e-mail; adicionada dica visual na página explicando que o
+  código numérico serve apenas de verificação e não é senha.
+- **`reset-password.tsx`**: tela de "validando o link" agora instrui a abrir
+  a página pelo link do e-mail (assunto "Redefinição de senha").
+
+### Infra
+- **nginx** (`loja.brabamusic.com.br`): nova `location /mailer/` servindo os
+  templates estáticos de e-mail em `/var/www/braba-mailer/templates/` (HTML
+  e TXT). Templates acessíveis em `https://loja.brabamusic.com.br/mailer/...`.
+- **Stack GoTrue**: variáveis `MAILER_SUBJECTS_*` e `MAILER_TEMPLATES_*`
+  mapeadas no `docker-compose.yml`; `GOTRUE_MAILER_EXTERNAL_HOSTS` adicionado
+  (silencia o aviso de X-Forwarded-Host nos logs). Container `supabase-auth`
+  recriado e saudável.
+- **Operacional**: senha de teste definida via Admin API GoTrue para
+  `giseletavares@gmail.com` (não armazenada/versionada). Login validado
+  (HTTP 200 + token). A senha de teste deve ser trocada pelo usuário após os
+  testes.
+
+### Validado
+- Build de produção (`NITRO_PRESET=node bun run build`) + PM2 recriado —
+  home e `/admin/login` respondem 200.
+- `tsc --noEmit` e `eslint` sem erros nos arquivos alterados.
+- Login via `POST /token` com a nova senha: HTTP 200 e token emitido.
+- Geração de link de recovery via Admin API: 200, com
+  `redirect_to=https://loja.brabamusic.com.br/admin/reset-password` e e-mail
+  enviado (template customizado carregado sem erro).
+
+### Operacional (fora do repo)
+- Backups: `.env.before-ptbr-mailer-*` e `docker-compose.yml.before-ptbr-mailer-*`
+  na pasta da stack; templates em `/var/www/braba-mailer/templates/`.
+
+---
+
+## [2026-09-07] — Correção do loop de validação do acesso do admin
+
+Após a rodada de e-mails pt-BR, o admin conseguia redefinir a senha (via link),
+mas o dashboard caía em loop com "Não foi possível validar o acesso". Causa
+raiz nos logs do GoTrue e no PostgREST: a `SUPABASE_PUBLISHABLE_KEY` usada
+no servidor (`.env`) era uma **JWT legada do `supabase-demo`** (iss `supabase-demo`,
+2022) que o GoTrue rejeita com 401. O middleware `requireSupabaseAuth`
+(`src/integrations/supabase/auth-middleware.ts`) valida o token via
+`getClaims/getUser` com essa chave → 401 → `checkAdminRole` falha →
+`_protected/route.tsx` exibe o erro e o `useQuery` (retry 2 + refetch) recarrega.
+
+### Fixed
+- **Chave ANON do servidor**: `SUPABASE_PUBLISHABLE_KEY` do `.env` agora é a
+  mesma chave ANON real do app (`VITE_SUPABASE_PUBLISHABLE_KEY`, iss
+  `supabase`). Resolve a pendência antiga de "JWT legado" e destrava todas as
+  server functions protegidas (`checkAdminRole`, compras, beats, etc.).
+  Validação: `getClaims` com a chave nova → `OK`; com a legada → `401`.
+- **Loop de validação**: com a chave correta, o middleware valida o token e o
+  role query do admin passa.
+
+### Added
+- **`reset-password.tsx`**: alternativa ao link do e-mail — campos
+  "E-mail da conta" + "Código de verificação" (6 dígitos) que chamam
+  `supabase.auth.verifyOtp({ type: "recovery", token })`. O código enviado no
+  e-mail agora é utilizável, sem depender de abrir o link.
+- **`auth-errors.ts`**: nova tradução para erros de OTP/expirados ("Código
+  inválido ou expirado. Peça um novo link de redefinição.").
+
+### Changed
+- **Templates `recovery.html`/`recovery.txt`**: o código de verificação agora
+  é apresentado como alternativa ao link (campo "Código de verificação" na
+  página), reforçando que o código não é a senha.
+
+### Validado
+- `tsc --noEmit`, `eslint` e `prettier` sem erros.
+- Build de produção OK; `pm2 restart --update-env`; home, `/admin/login` e
+  `/admin/reset-password` respondem 200.
+- Validação automatizada (usuário descartável, criado e removido após o teste):
+  login OK, `getClaims` com a chave nova retorna `sub`, com a legada → 401.
+
+### Operacional (fora do repo)
+- Backup do `.env`: `.env.before-pubkey-fix-20260907-121145`.
+
+---
+
 ## [2026-09-06] — Estabilização pós-migração: produção, e-mail e login admin
 
 Rodada final de estabilização do self-host (Supabase em Docker). Corrigiu o
@@ -106,8 +208,9 @@ gateway Supabase em domínio público com TLS. Detalhes completos no relatório
 ### Pendências conhecidas
 - `GOTRUE_MAILER_EXTERNAL_HOSTS` não configurado (apenas suprime aviso no
   log do GoTrue; links já usam os domínios corretos).
-- `SUPABASE_PUBLISHABLE_KEY` do app (server) segue como JWT legado ≠ `ANON_KEY`
-  da stack — revisão recomendada.
+- `SUPABASE_PUBLISHABLE_KEY` do app (server) era um JWT legado ≠ `ANON_KEY` da
+  stack — **corrigido em 2026-09-07** (alinhada à chave ANON real; ver seção
+  "Correção do loop de validação do acesso do admin").
 - Backup diário do Postgres (`pg_dump`) ainda não confirmado.
 
 ---

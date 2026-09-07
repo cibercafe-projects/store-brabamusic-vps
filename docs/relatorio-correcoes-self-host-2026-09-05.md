@@ -169,10 +169,102 @@ Senhas não foram exportadas: cada admin deve definir a própria senha pelo link
 - Logs de `supabase-auth`: `user_signedup` nas 3 criações e `user_recovery_requested` nos 3 recoveries, todos 200, sem erros SMTP.
 
 ### Pendências conhecidas
-- **`GOTRUE_MAILER_EXTERNAL_HOSTS`** não configurado — apenas suprime um aviso no GoTrue (os links já usam `API_EXTERNAL_URL`/`SITE_URL` corretos); pode ser adicionado como `https://api.loja.brabamusic.com.br` para silenciar o log.
+- **`GOTRUE_MAILER_EXTERNAL_HOSTS`** configurado em 2026-09-07
+  (`loja.brabamusic.com.br,api.loja.brabamusic.com.br`) — aviso de
+  X-Forwarded-Host eliminado dos logs do GoTrue.
 - **`SUPABASE_PUBLISHABLE_KEY`** do app (server-side) segue sendo um JWT legado ≠ `ANON_KEY` da stack; apontado no relatório original como revisão recomendada (fora do escopo desta rodada).
 - **Backup de segredos/ambiente** agora é coberto por `scripts/backup-secrets.sh` (snapshots manuais em `/opt/backups/secrets/`, rotação de 30 versões) — ver seção `[2026-09-07]` do `docs/CHANGELOG.md`. O backup automático do Postgres (`pg_dump` diário) continua como item de operação contínua ainda não confirmado.
 
 ---
 
-*Relatório original gerado em 2026-09-05; adendo registrado em 2026-09-06 ao final da rodada de estabilização (player, compras, e-mail e login admin).*
+## Adendo — 2026-09-07: autenticação admin (login + recuperação de senha)
+
+### Contexto
+Após a recriação dos admins em `auth.users` **sem senha** (adendo 2026-09-06),
+o admin super (`giseletavares@gmail.com`) não conseguia logar: a senha antiga
+não existia no novo registro, o e-mail de recuperação chegava **em inglês**
+("Reset your password") e o usuário confundia o **código numérico de 6 dígitos**
+(OTP do GoTrue) com a senha — digitá-lo no login gerava "invalid login
+credentials" (em inglês).
+
+### Causas raiz
+| Sintoma | Causa |
+|---|---|
+| Login rejeitado com a senha antiga | Admin recriado sem senha; senha antiga não foi preservada |
+| "invalid login credentials" em inglês no toast | Mensagem do GoTrue exibida sem tradução (`login.tsx` mostrava `err.message`) |
+| E-mail "Reset your password" em inglês | GoTrue usa templates padrão (EN); nenhum subject/template pt-BR configurado |
+| Confusão do código de 6 dígitos | Template default não diferenciava código OTP de senha |
+
+### Correções aplicadas
+1. **Desbloqueio**: senha de teste definida via Admin API GoTrue
+   (`PUT /admin/users/{id}` com `SERVICE_ROLE_KEY`); login validado
+   (HTTP 200, token emitido, `last_sign_in_at` preenchido).
+2. **E-mails de auth pt-BR**: criados templates `recovery`/`confirmation`/
+   `invite` (HTML+TXT) em `/var/www/braba-mailer/templates/`, servidos por
+   nginx em `https://loja.brabamusic.com.br/mailer/`; subjects
+   (`MAILER_SUBJECTS_*`) e templates (`MAILER_TEMPLATES_*`) mapeados no
+   `docker-compose.yml`; `GOTRUE_MAILER_EXTERNAL_HOSTS` adicionado
+   (aviso de X-Forwarded-Host eliminado). Container `supabase-auth` recriado.
+3. **Tradução de erros**: novo `src/lib/auth-errors.ts` (`translateAuthError`)
+   aplicado em `/admin/login` e `/admin/reset-password` — cobre "invalid login
+   credentials", e-mail não confirmado, rate limit, SMTP, rede etc.
+4. **UX do reset**: instruções na tela de login e de reset deixando claro que
+   o código numérico não é a senha e que é preciso clicar no link do e-mail.
+
+### Validações
+- `POST /token` com a nova senha → HTTP 200 + token (público).
+- `generate_link` (recovery) → HTTP 200, `redirect_to=/admin/reset-password`,
+  envio sem erro de template.
+- Build `NITRO_PRESET=node` + PM2 recriado; home e `/admin/login` 200.
+- `tsc --noEmit` e `eslint` sem erros nos arquivos alterados.
+
+### Pendências/avisos
+- A senha de teste NÃO deve ser versionada e deve ser trocada pelo usuário
+  (via recovery ou painel) após concluir os testes.
+- `SUPABASE_PUBLISHABLE_KEY` do app foi alinhada em 2026-09-07 (ver adendo
+  abaixo): agora é a mesma chave ANON real (`iss supabase`) da stack —
+  pendência de JWT legado encerrada.
+
+---
+
+## Adendo — 2026-09-07 (à tarde): loop de validação do acesso do admin
+
+### Sintoma
+Após redefinir a senha (fluxo que passou a funcionar de manhã), o dashboard do
+admin caía em "Não foi possível validar o acesso" e ficava em loop de recarga.
+
+### Causa raiz
+A `SUPABASE_PUBLISHABLE_KEY` do servidor (`.env` da aplicação) era uma **JWT
+legada do `supabase-demo`** (`iss: supabase-demo`, emitida em 2022) — não é o
+segredo desta stack. O middleware `requireSupabaseAuth`
+(`src/integrations/supabase/auth-middleware.ts`) valida o token do usuário com
+essa chave (`getClaims` → fallback `getUser`); o GoTrue rejeita a `apikey`
+desconhecida com 401 → middleware lança "Unauthorized: Invalid token" →
+`checkAdminRole` falha → `_protected/route.tsx` mostra o erro e o `useQuery`
+(retry 2 + refetch) recarrega → loop.
+
+Evidência: query no PostgREST com a chave legada = **HTTP 401**; com a chave
+ANON real (`VITE_SUPABASE_PUBLISHABLE_KEY`) = **HTTP 200**. Validação manual
+automatizada (usuário descartável): `getClaims` com a chave nova → `OK`
+(`sub` retornado); com a legada → `401` "Unauthorized".
+
+### Correções
+1. **`.env`**: `SUPABASE_PUBLISHABLE_KEY` = chave ANON real da stack (mesma da
+   `VITE_SUPABASE_PUBLISHABLE_KEY`). Backup: `.env.before-pubkey-fix-20260907-121145`.
+   `pm2 restart --update-env` (sem rebuild).
+2. **`reset-password.tsx`**: alternativa ao link — campos "E-mail da conta" +
+   "Código de verificação" (6 dígitos) usando `verifyOtp({ type: "recovery",
+   token })`. O código do e-mail agora é utilizável, não só o link.
+3. **`auth-errors.ts`**: tradução para erro de OTP inválido/expirado.
+4. **Templates `recovery.html`/`recovery.txt`**: código apresentado como
+   alternativa ao link.
+
+### Validações
+- `tsc --noEmit`, `eslint`, `prettier` OK; build de produção OK.
+- Home, `/admin/login` e `/admin/reset-password` → 200 após restart.
+- Teste com usuário descartável (criado e removido): login OK; `getClaims`
+  com a chave nova → `OK`; com a legada → `401`.
+
+---
+
+*Relatório original gerado em 2026-09-05; adendos registrados em 2026-09-06 (estabilização pós-migração) e 2026-09-07 (autenticação admin — manhã e tarde).*
