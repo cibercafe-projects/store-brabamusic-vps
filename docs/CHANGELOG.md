@@ -5,6 +5,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ---
 
+## [2026-09-07] — Backup manual de segredos/ambiente + PATCH login admin
+
+### Added
+- **`scripts/backup-secrets.sh`**: snapshot manual dos arquivos de segredos e
+  ambiente do VPS (`.env` da aplicação, `.env` da stack Supabase, `.env` de
+  migração e `~/.git-credentials`) em `/opt/backups/secrets/<AAAAMMDD-HHMMSS>/`,
+  com `MANIFEST.txt` (sha256) e verificação de integridade. Rotação mantém as
+  30 versões mais recentes. Uso: `bash scripts/backup-secrets.sh` (sem cron).
+
+### Changed
+- **Segurança**: `/opt/apps/braba-music/.env` teve a permissão corrigida de
+  `644` para `600` (antes legível por qualquer usuário do sistema).
+
+### Infra
+- Criada pasta central `/opt/backups/secrets` (`700`, root-only), fora de
+  repositórios git.
+
+### Docs
+- Todos os ajustes da estabilização pós-migração registrados na seção
+  `[2026-09-06]` acima; esta rodada documenta o fluxo de backup/restauração.
+
+---
+
 ## [2026-09-06] — Estabilização pós-migração: produção, e-mail e login admin
 
 Rodada final de estabilização do self-host (Supabase em Docker). Corrigiu o

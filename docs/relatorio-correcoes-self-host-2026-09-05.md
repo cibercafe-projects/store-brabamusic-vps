@@ -171,7 +171,7 @@ Senhas não foram exportadas: cada admin deve definir a própria senha pelo link
 ### Pendências conhecidas
 - **`GOTRUE_MAILER_EXTERNAL_HOSTS`** não configurado — apenas suprime um aviso no GoTrue (os links já usam `API_EXTERNAL_URL`/`SITE_URL` corretos); pode ser adicionado como `https://api.loja.brabamusic.com.br` para silenciar o log.
 - **`SUPABASE_PUBLISHABLE_KEY`** do app (server-side) segue sendo um JWT legado ≠ `ANON_KEY` da stack; apontado no relatório original como revisão recomendada (fora do escopo desta rodada).
-- Backup automático do Postgres (`pg_dump` diário) ainda não confirmado rodando (item da operação contínua).
+- **Backup de segredos/ambiente** agora é coberto por `scripts/backup-secrets.sh` (snapshots manuais em `/opt/backups/secrets/`, rotação de 30 versões) — ver seção `[2026-09-07]` do `docs/CHANGELOG.md`. O backup automático do Postgres (`pg_dump` diário) continua como item de operação contínua ainda não confirmado.
 
 ---
 
