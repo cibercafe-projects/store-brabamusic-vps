@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Copy,
   MessageCircle,
+  BadgePercent,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -246,12 +247,25 @@ function BeatDetail() {
             {beat.tipo_nome} · {beat.inclui_stems ? "WAV + Stems" : "WAV"}
           </div>
 
+          {beat.emPromocao && (
+            <div className="mt-3 flex w-fit items-center gap-2 rounded-full border border-green-600/50 bg-green-600/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-green-400">
+              <BadgePercent /> Promoção por tempo limitado
+            </div>
+          )}
+
           <dl className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             {[
               ["BPM", beat.bpm ?? "—"],
               ["Tom", beat.tom ?? "—"],
               ["Mood", beat.mood ?? "—"],
-              ["Preço", beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : "—"],
+              [
+                "Preço",
+                beat.emPromocao && beat.precoCheio != null
+                  ? `de R$ ${beat.precoCheio.toFixed(2).replace(".", ",")} por R$ ${beat.preco != null ? beat.preco.toFixed(2).replace(".", ",") : "—"}`
+                  : beat.preco != null
+                    ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}`
+                    : "—",
+              ],
             ].map(([k, v]) => (
               <div key={k as string} className="glass rounded-xl p-3">
                 <dt className="text-[10px] uppercase tracking-widest text-muted-foreground">{k}</dt>

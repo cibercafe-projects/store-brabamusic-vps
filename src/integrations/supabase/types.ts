@@ -42,6 +42,11 @@ export type Database = {
           link_pagamento: string
           nome: string
           ordem: number
+          promo_ativa: boolean
+          promo_expira_em: string | null
+          promo_inicio_em: string | null
+          promo_link_pagamento: string
+          promo_valor: number | null
           slug: string
           updated_at: string
           valor_padrao: number
@@ -55,6 +60,11 @@ export type Database = {
           link_pagamento?: string
           nome: string
           ordem?: number
+          promo_ativa?: boolean
+          promo_expira_em?: string | null
+          promo_inicio_em?: string | null
+          promo_link_pagamento?: string
+          promo_valor?: number | null
           slug: string
           updated_at?: string
           valor_padrao?: number
@@ -68,11 +78,57 @@ export type Database = {
           link_pagamento?: string
           nome?: string
           ordem?: number
+          promo_ativa?: boolean
+          promo_expira_em?: string | null
+          promo_inicio_em?: string | null
+          promo_link_pagamento?: string
+          promo_valor?: number | null
           slug?: string
           updated_at?: string
           valor_padrao?: number
         }
         Relationships: []
+      }
+      beat_type_promo_history: {
+        Row: {
+          beat_type_id: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          promo_ativa: boolean
+          promo_expira_em: string | null
+          promo_inicio_em: string | null
+          promo_valor: number | null
+        }
+        Insert: {
+          beat_type_id: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          promo_ativa: boolean
+          promo_expira_em?: string | null
+          promo_inicio_em?: string | null
+          promo_valor?: number | null
+        }
+        Update: {
+          beat_type_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          promo_ativa?: boolean
+          promo_expira_em?: string | null
+          promo_inicio_em?: string | null
+          promo_valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beat_type_promo_history_beat_type_id_fkey"
+            columns: ["beat_type_id"]
+            isOneToOne: false
+            referencedRelation: "beat_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       beats: {
         Row: {

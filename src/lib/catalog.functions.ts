@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { resolvePrecoEfetivo, type PromoInfo } from "@/lib/promo";
 
 const COVER_BUCKET = "beat-covers";
 const PREVIEW_BUCKET = "beat-previews";
@@ -22,7 +23,12 @@ async function sign(
   return data.signedUrl;
 }
 
-type BeatTypeInfo = { nome: string; inclui_stems: boolean };
+type BeatTypeInfo = {
+  nome: string;
+  inclui_stems: boolean;
+  valor_padrao: number | null;
+  promo: PromoInfo;
+};
 async function getBeatTypesMap(
   admin: Awaited<ReturnType<typeof getAdmin>>,
   ids: (string | null | undefined)[],
@@ -32,9 +38,24 @@ async function getBeatTypesMap(
   if (!clean.length) return map;
   const { data } = await admin
     .from("beat_types")
-    .select("id, nome, inclui_stems")
+    .select(
+      "id, nome, inclui_stems, valor_padrao, promo_ativa, promo_valor, promo_link_pagamento, promo_inicio_em, promo_expira_em",
+    )
     .in("id", clean);
-  data?.forEach((t) => map.set(t.id, { nome: t.nome, inclui_stems: !!t.inclui_stems }));
+  data?.forEach((t) =>
+    map.set(t.id, {
+      nome: t.nome,
+      inclui_stems: !!t.inclui_stems,
+      valor_padrao: t.valor_padrao != null ? Number(t.valor_padrao) : null,
+      promo: {
+        promo_ativa: !!t.promo_ativa,
+        promo_valor: t.promo_valor != null ? Number(t.promo_valor) : null,
+        promo_link_pagamento: t.promo_link_pagamento ?? "",
+        promo_inicio_em: t.promo_inicio_em,
+        promo_expira_em: t.promo_expira_em,
+      },
+    }),
+  );
   return map;
 }
 
@@ -46,6 +67,30 @@ function deriveTipoNome(
   return {
     tipo_nome: legacy === "aberto" ? "Beat Aberto" : "Beat Fechado",
     inclui_stems: legacy === "aberto",
+  };
+}
+
+type EnrichPrice = {
+  preco: number | null;
+  precoCheio: number | null;
+  emPromocao: boolean;
+};
+function resolvePrice(
+  beatPreco: number | null | undefined,
+  bt: BeatTypeInfo | undefined,
+  legacy: "aberto" | "fechado",
+): EnrichPrice {
+  const cheio = beatPreco != null ? Number(beatPreco) : (bt?.valor_padrao ?? null);
+  if (cheio == null) return { preco: null, precoCheio: null, emPromocao: false };
+  const resolved = resolvePrecoEfetivo({
+    precoCheio: cheio,
+    promo: bt?.promo ?? null,
+    linkPadrao: "",
+  });
+  return {
+    preco: resolved.precoEfetivo,
+    precoCheio: resolved.precoCheio,
+    emPromocao: resolved.emPromocao,
   };
 }
 
@@ -114,7 +159,10 @@ export const listPublicBeats = createServerFn({ method: "POST" })
     }
 
     const { data: rows, error, count } = await q;
-    if (error) { console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.'); }
+    if (error) {
+      console.error("catalog error", error);
+      throw new Error("Não foi possível carregar o conteúdo. Tente novamente em instantes.");
+    }
 
     const ids = Array.from(new Set((rows ?? []).map((r) => r.produtora_id)));
     const prodMap = new Map<string, { nome_artistico: string; slug: string }>();
@@ -126,15 +174,17 @@ export const listPublicBeats = createServerFn({ method: "POST" })
       ps?.forEach((p) => prodMap.set(p.id, { nome_artistico: p.nome_artistico, slug: p.slug }));
     }
 
-    const typesMap = await getBeatTypesMap(admin, (rows ?? []).map((r) => r.beat_type_id));
+    const typesMap = await getBeatTypesMap(
+      admin,
+      (rows ?? []).map((r) => r.beat_type_id),
+    );
 
     const enriched = await Promise.all(
       (rows ?? []).map(async (r) => {
         const legacy = (r.tipo ?? "fechado") as "fechado" | "aberto";
-        const { tipo_nome, inclui_stems } = deriveTipoNome(
-          r.beat_type_id ? typesMap.get(r.beat_type_id) : undefined,
-          legacy,
-        );
+        const bt = r.beat_type_id ? typesMap.get(r.beat_type_id) : undefined;
+        const { tipo_nome, inclui_stems } = deriveTipoNome(bt, legacy);
+        const price = resolvePrice(r.preco, bt, legacy);
         return {
           id: r.id,
           slug: r.slug,
@@ -143,7 +193,9 @@ export const listPublicBeats = createServerFn({ method: "POST" })
           bpm: r.bpm,
           tom: r.tom,
           mood: r.mood,
-          preco: r.preco != null ? Number(r.preco) : null,
+          preco: price.preco,
+          precoCheio: price.precoCheio,
+          emPromocao: price.emPromocao,
           tipo: legacy,
           tipo_nome,
           inclui_stems,
@@ -177,10 +229,12 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
       .eq("slug", data.slug)
       .in("status", ["ativo", "reservado", "vendido"])
       .maybeSingle();
-    if (error) { console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.'); }
+    if (error) {
+      console.error("catalog error", error);
+      throw new Error("Não foi possível carregar o conteúdo. Tente novamente em instantes.");
+    }
     if (!row) return null;
     const available = row.status === "ativo";
-
 
     const { data: prod } = await admin
       .from("producers")
@@ -189,15 +243,13 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
       .maybeSingle();
     const typesMap = await getBeatTypesMap(admin, [row.beat_type_id]);
     const legacyTipo = (row.tipo ?? "fechado") as "fechado" | "aberto";
-    const { tipo_nome, inclui_stems } = deriveTipoNome(
-      row.beat_type_id ? typesMap.get(row.beat_type_id) : undefined,
-      legacyTipo,
-    );
+    const bt = row.beat_type_id ? typesMap.get(row.beat_type_id) : undefined;
+    const { tipo_nome, inclui_stems } = deriveTipoNome(bt, legacyTipo);
+    const price = resolvePrice(row.preco, bt, legacyTipo);
 
     return {
       available,
       beat: {
-
         id: row.id,
         slug: row.slug,
         nome: row.nome,
@@ -205,7 +257,9 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
         bpm: row.bpm,
         tom: row.tom,
         mood: row.mood,
-        preco: row.preco != null ? Number(row.preco) : null,
+        preco: price.preco,
+        precoCheio: price.precoCheio,
+        emPromocao: price.emPromocao,
         tipo: legacyTipo,
         tipo_nome,
         inclui_stems,
@@ -244,11 +298,11 @@ export const listPublicProducers = createServerFn({ method: "POST" }).handler(as
     .select("id, slug, nome_artistico, cidade, bio, instagram, spotify, foto_perfil_path")
     .eq("status", "ativa")
     .order("nome_artistico", { ascending: true });
-  if (error) { console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.'); }
-  const { data: beatRows } = await admin
-    .from("beats")
-    .select("produtora_id")
-    .eq("status", "ativo");
+  if (error) {
+    console.error("catalog error", error);
+    throw new Error("Não foi possível carregar o conteúdo. Tente novamente em instantes.");
+  }
+  const { data: beatRows } = await admin.from("beats").select("produtora_id").eq("status", "ativo");
   const counts = new Map<string, number>();
   beatRows?.forEach((b) => counts.set(b.produtora_id, (counts.get(b.produtora_id) ?? 0) + 1));
   return await Promise.all(
@@ -277,7 +331,10 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
       .select("id, slug, nome_artistico, cidade, bio, instagram, spotify, foto_perfil_path, status")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (error) { console.error('catalog error', error); throw new Error('Não foi possível carregar o conteúdo. Tente novamente em instantes.'); }
+    if (error) {
+      console.error("catalog error", error);
+      throw new Error("Não foi possível carregar o conteúdo. Tente novamente em instantes.");
+    }
     if (!prod || prod.status !== "ativa") return null;
 
     const { data: beats } = await admin
@@ -289,15 +346,17 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
       .eq("status", "ativo")
       .order("created_at", { ascending: false });
 
-    const typesMap = await getBeatTypesMap(admin, (beats ?? []).map((r) => r.beat_type_id));
+    const typesMap = await getBeatTypesMap(
+      admin,
+      (beats ?? []).map((r) => r.beat_type_id),
+    );
 
     const enrichedBeats = await Promise.all(
       (beats ?? []).map(async (r) => {
         const legacy = (r.tipo ?? "fechado") as "fechado" | "aberto";
-        const { tipo_nome, inclui_stems } = deriveTipoNome(
-          r.beat_type_id ? typesMap.get(r.beat_type_id) : undefined,
-          legacy,
-        );
+        const bt = r.beat_type_id ? typesMap.get(r.beat_type_id) : undefined;
+        const { tipo_nome, inclui_stems } = deriveTipoNome(bt, legacy);
+        const price = resolvePrice(r.preco, bt, legacy);
         return {
           id: r.id,
           slug: r.slug,
@@ -306,7 +365,9 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
           bpm: r.bpm,
           tom: r.tom,
           mood: r.mood,
-          preco: r.preco != null ? Number(r.preco) : null,
+          preco: price.preco,
+          precoCheio: price.precoCheio,
+          emPromocao: price.emPromocao,
           tipo: legacy,
           tipo_nome,
           inclui_stems,
@@ -370,9 +431,7 @@ export const listPublicFilters = createServerFn({ method: "POST" }).handler(asyn
 });
 
 export const incrementBeatPlays = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ beatId: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ beatId: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
     const admin = await getAdmin();
     const { data: count, error } = await admin.rpc("increment_beat_plays", {

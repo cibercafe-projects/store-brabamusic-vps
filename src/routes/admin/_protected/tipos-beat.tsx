@@ -312,6 +312,11 @@ function BeatTypeDialog({
           inclui_stems: v.inclui_stems,
           ativo: v.ativo,
           ordem: Number(v.ordem || "0"),
+          promo_ativa: initial?.promo_ativa ?? false,
+          promo_valor: initial?.promo_valor ?? null,
+          promo_link_pagamento: initial?.promo_link_pagamento ?? "",
+          promo_inicio_em: initial?.promo_inicio_em ?? null,
+          promo_expira_em: initial?.promo_expira_em ?? null,
         },
       }),
     onSuccess: () => {

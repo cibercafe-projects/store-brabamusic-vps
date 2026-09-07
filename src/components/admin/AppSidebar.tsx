@@ -12,6 +12,7 @@ import {
   Tags,
   FileText,
   MessageSquare,
+  BadgePercent,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -40,6 +41,7 @@ const items = [
   { title: "Compras", url: "/admin/compras", icon: ShoppingCart },
   { title: "Ajuda e Feedback", url: "/admin/feedback", icon: MessageSquare },
   { title: "Tipos de Beat", url: "/admin/tipos-beat", icon: Tags },
+  { title: "Promoções", url: "/admin/promocoes", icon: BadgePercent },
   { title: "Configurações", url: "/admin/configuracoes", icon: Settings },
   { title: "Textos Jurídicos", url: "/admin/textos-juridicos", icon: FileText },
 ] as const;
@@ -95,7 +97,10 @@ export function AppSidebar() {
                 let badge: number | null = null;
                 if (item.url === "/admin/lancamentos" && (newReleasesQuery.data?.count ?? 0) > 0) {
                   badge = newReleasesQuery.data!.count;
-                } else if (item.url === "/admin/feedback" && (feedbackStatsQuery.data?.novos ?? 0) > 0) {
+                } else if (
+                  item.url === "/admin/feedback" &&
+                  (feedbackStatsQuery.data?.novos ?? 0) > 0
+                ) {
                   badge = feedbackStatsQuery.data!.novos;
                 }
                 return (

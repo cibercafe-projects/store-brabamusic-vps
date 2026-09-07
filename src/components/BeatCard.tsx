@@ -57,6 +57,11 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
           <span className="rounded-full bg-accent/80 backdrop-blur px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent-foreground font-semibold">
             {beat.tipo_nome}
           </span>
+          {beat.emPromocao && (
+            <span className="rounded-full bg-green-600/90 backdrop-blur px-2 py-0.5 text-[10px] uppercase tracking-wider text-white font-bold">
+              Promoção
+            </span>
+          )}
         </div>
         <span
           title={`${beat.plays_count} reproduções`}
@@ -85,7 +90,20 @@ export function BeatCard({ beat }: { beat: PublicBeat }) {
         )}
         <div className="mt-3 space-y-2">
           <div className="text-lg font-bold text-accent">
-            {beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : "—"}
+            {beat.emPromocao && beat.precoCheio != null ? (
+              <span className="flex flex-wrap items-baseline gap-1.5">
+                <span className="text-sm font-normal text-muted-foreground line-through">
+                  R$ {beat.precoCheio.toFixed(2).replace(".", ",")}
+                </span>
+                <span>
+                  {beat.preco != null ? `R$ ${beat.preco.toFixed(2).replace(".", ",")}` : "—"}
+                </span>
+              </span>
+            ) : beat.preco != null ? (
+              `R$ ${beat.preco.toFixed(2).replace(".", ",")}`
+            ) : (
+              "—"
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Link

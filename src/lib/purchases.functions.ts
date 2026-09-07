@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sendAppEmailSafe, getAdminNotificationEmail } from "@/lib/email/send.server";
 import { CURRENT_LICENSE_VERSION } from "@/lib/licenses.constants";
 import { getPublicSiteUrl } from "@/lib/site-url";
+import { resolvePrecoEfetivo } from "@/lib/promo";
 
 const PUBLIC_SITE_URL = getPublicSiteUrl();
 
@@ -53,25 +54,53 @@ async function resolveBeatPayment(admin: any, beatId: string): Promise<ResolvedB
   const { data: beat } = await admin
     .from("beats")
     .select(
-      "preco, tipo, beat_type:beat_types(nome, valor_padrao, link_pagamento, inclui_stems)",
+      "preco, tipo, beat_type:beat_types(nome, valor_padrao, link_pagamento, inclui_stems, promo_ativa, promo_valor, promo_link_pagamento, promo_inicio_em, promo_expira_em)",
     )
     .eq("id", beatId)
     .maybeSingle();
 
   const bt = (beat as { beat_type?: unknown } | null)?.beat_type as
-    | { nome: string; valor_padrao: number | string; link_pagamento: string; inclui_stems: boolean }
+    | {
+        nome: string;
+        valor_padrao: number | string;
+        link_pagamento: string;
+        inclui_stems: boolean;
+        promo_ativa: boolean;
+        promo_valor: number | string | null;
+        promo_link_pagamento: string;
+        promo_inicio_em: string | null;
+        promo_expira_em: string | null;
+      }
     | null;
 
   const paymentLink = bt?.link_pagamento?.trim() ?? "";
 
   const preco = beat?.preco != null ? Number(beat.preco) : null;
-  const valor =
-    preco ?? (bt?.valor_padrao != null ? Number(bt.valor_padrao) : null);
+  const precoCheio = preco ?? (bt?.valor_padrao != null ? Number(bt.valor_padrao) : null);
+  const resolved =
+    precoCheio != null
+      ? resolvePrecoEfetivo({
+          precoCheio,
+          promo: bt
+            ? {
+                promo_ativa: bt.promo_ativa,
+                promo_valor: bt.promo_valor != null ? Number(bt.promo_valor) : null,
+                promo_link_pagamento: bt.promo_link_pagamento ?? "",
+                promo_inicio_em: bt.promo_inicio_em,
+                promo_expira_em: bt.promo_expira_em,
+              }
+            : null,
+          linkPadrao: paymentLink,
+        })
+      : null;
+
+  const valor = resolved?.precoEfetivo ?? null;
+  const paymentLinkResolved = resolved?.paymentLink ?? paymentLink;
 
   const incluiStems = bt ? !!bt.inclui_stems : beat?.tipo === "aberto";
   const tipoNome = bt?.nome ?? (beat?.tipo === "aberto" ? "Beat Aberto" : beat?.tipo === "fechado" ? "Beat Fechado" : null);
 
-  return { valor, paymentLink, tipoNome, incluiStems };
+  return { valor, paymentLink: paymentLinkResolved, tipoNome, incluiStems };
 }
 
 // ===== Public: settings =====
@@ -276,6 +305,9 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
       captured_at: new Date().toISOString(),
     };
 
+    const [resolved] = await Promise.all([resolveBeatPayment(supabaseAdmin, data.beat_id)]);
+    const valorEfetivo = resolved.valor ?? null;
+
     const { data: inserted, error } = await supabaseAdmin
       .from("purchase_requests")
       .insert({
@@ -287,7 +319,7 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
         instagram: data.instagram,
         forma_pagamento: data.forma_pagamento,
         termos_aceitos: data.termos_aceitos,
-        valor: beat.preco,
+        valor: valorEfetivo,
         status: "aguardando_pagamento",
         license_accepted: true,
         license_accepted_at: new Date().toISOString(),
@@ -346,7 +378,7 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
           nome: data.nome_cliente,
           nomeArtistico: data.nome_artistico ?? "",
           beatNome: beat.nome,
-          valor: beat.preco,
+          valor: valorEfetivo,
           formaPagamento: data.forma_pagamento,
           pixKey,
           paymentLink: resolved.paymentLink,
@@ -366,7 +398,7 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
             email: data.email,
             whatsapp: data.whatsapp,
             beatNome: beat.nome,
-            valor: beat.preco,
+            valor: valorEfetivo,
             formaPagamento: data.forma_pagamento,
             adminUrl: `${PUBLIC_SITE_URL}/admin/compras/${inserted.id}`,
           },

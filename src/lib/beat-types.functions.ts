@@ -37,6 +37,11 @@ const upsertInput = z.object({
   inclui_stems: z.boolean().default(false),
   ativo: z.boolean().default(true),
   ordem: z.number().int().min(0).max(9999).default(0),
+  promo_ativa: z.boolean().default(false),
+  promo_valor: z.number().min(0).max(99999.99).nullable().default(null),
+  promo_link_pagamento: urlOpt,
+  promo_inicio_em: z.string().trim().max(40).nullable().default(null),
+  promo_expira_em: z.string().trim().max(40).nullable().default(null),
 });
 
 export type BeatTypeRow = {
@@ -49,6 +54,11 @@ export type BeatTypeRow = {
   inclui_stems: boolean;
   ativo: boolean;
   ordem: number;
+  promo_ativa: boolean;
+  promo_valor: number | null;
+  promo_link_pagamento: string;
+  promo_inicio_em: string | null;
+  promo_expira_em: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -69,6 +79,7 @@ export const listBeatTypes = createServerFn({ method: "GET" })
     return (data ?? []).map((r) => ({
       ...r,
       valor_padrao: Number(r.valor_padrao ?? 0),
+      promo_valor: r.promo_valor != null ? Number(r.promo_valor) : null,
     })) as BeatTypeRow[];
   });
 
@@ -86,7 +97,24 @@ export const upsertBeatType = createServerFn({ method: "POST" })
       inclui_stems: data.inclui_stems,
       ativo: data.ativo,
       ordem: data.ordem,
+      promo_ativa: data.promo_ativa,
+      promo_valor: data.promo_valor,
+      promo_link_pagamento: data.promo_link_pagamento ?? "",
+      promo_inicio_em: data.promo_inicio_em,
+      promo_expira_em: data.promo_expira_em,
     };
+
+    async function recordHistory(id: string) {
+      await admin.from("beat_type_promo_history").insert({
+        beat_type_id: id,
+        promo_ativa: data.promo_ativa,
+        promo_valor: data.promo_valor,
+        promo_inicio_em: data.promo_inicio_em,
+        promo_expira_em: data.promo_expira_em,
+        changed_by: context.userId,
+      });
+    }
+
     if (data.id) {
       const { error } = await admin.from("beat_types").update(row).eq("id", data.id);
       if (error) {
@@ -95,6 +123,7 @@ export const upsertBeatType = createServerFn({ method: "POST" })
           error.code === "23505" ? "Já existe um tipo com esse slug." : "Erro ao salvar tipo.",
         );
       }
+      await recordHistory(data.id);
       return { ok: true, id: data.id };
     }
     const { data: inserted, error } = await admin
@@ -108,6 +137,7 @@ export const upsertBeatType = createServerFn({ method: "POST" })
         error.code === "23505" ? "Já existe um tipo com esse slug." : "Erro ao criar tipo.",
       );
     }
+    await recordHistory(inserted.id);
     return { ok: true, id: inserted.id };
   });
 
@@ -126,4 +156,76 @@ export const deleteBeatType = createServerFn({ method: "POST" })
       );
     }
     return { ok: true };
+  });
+
+const toggleInput = z.object({
+  id: z.string().uuid(),
+  promo_ativa: z.boolean(),
+});
+
+export const toggleBeatTypePromo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => toggleInput.parse(input))
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { data: existing, error: getErr } = await admin
+      .from("beat_types")
+      .select("promo_ativa, promo_valor, promo_link_pagamento, promo_inicio_em, promo_expira_em")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (getErr) {
+      console.error("[beat-types.toggle.get]", getErr);
+      throw new Error("Erro ao carregar tipo.");
+    }
+    if (!existing) throw new Error("Tipo não encontrado.");
+    const { error } = await admin
+      .from("beat_types")
+      .update({ promo_ativa: data.promo_ativa })
+      .eq("id", data.id);
+    if (error) {
+      console.error("[beat-types.toggle]", error);
+      throw new Error("Erro ao atualizar promoção.");
+    }
+    await admin.from("beat_type_promo_history").insert({
+      beat_type_id: data.id,
+      promo_ativa: data.promo_ativa,
+      promo_valor: existing.promo_valor as number | null,
+      promo_inicio_em: existing.promo_inicio_em,
+      promo_expira_em: existing.promo_expira_em,
+      changed_by: context.userId,
+    });
+    return { ok: true };
+  });
+
+export type BeatTypePromoHistoryRow = {
+  id: string;
+  promo_ativa: boolean;
+  promo_valor: number | null;
+  promo_inicio_em: string | null;
+  promo_expira_em: string | null;
+  changed_at: string;
+  changed_by: string | null;
+};
+
+export const listBeatTypePromoHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    const admin = await assertAdmin(context.userId);
+    const { data: rows, error } = await admin
+      .from("beat_type_promo_history")
+      .select(
+        "id, promo_ativa, promo_valor, promo_inicio_em, promo_expira_em, changed_at, changed_by",
+      )
+      .eq("beat_type_id", data.id)
+      .order("changed_at", { ascending: false })
+      .limit(50);
+    if (error) {
+      console.error("[beat-types.history]", error);
+      throw new Error("Erro ao carregar histórico.");
+    }
+    return (rows ?? []).map((r) => ({
+      ...r,
+      promo_valor: r.promo_valor != null ? Number(r.promo_valor) : null,
+    })) as BeatTypePromoHistoryRow[];
   });

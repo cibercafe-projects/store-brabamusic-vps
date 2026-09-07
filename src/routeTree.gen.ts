@@ -37,6 +37,7 @@ import { Route as AdminProtectedConfiguracoesRouteImport } from './routes/admin/
 import { Route as AdminProtectedDashboardRouteImport } from './routes/admin/_protected/dashboard'
 import { Route as AdminProtectedLeadsRouteImport } from './routes/admin/_protected/leads'
 import { Route as AdminProtectedProdutorasRouteImport } from './routes/admin/_protected/produtoras'
+import { Route as AdminProtectedPromocoesRouteImport } from './routes/admin/_protected/promocoes'
 import { Route as AdminProtectedTextosJuridicosRouteImport } from './routes/admin/_protected/textos-juridicos'
 import { Route as AdminProtectedTiposBeatRouteImport } from './routes/admin/_protected/tipos-beat'
 import { Route as AdminProtectedUsuariosRouteImport } from './routes/admin/_protected/usuarios'
@@ -193,6 +194,11 @@ const AdminProtectedProdutorasRoute =
     path: '/produtoras',
     getParentRoute: () => AdminProtectedRouteRoute,
   } as any)
+const AdminProtectedPromocoesRoute = AdminProtectedPromocoesRouteImport.update({
+  id: '/promocoes',
+  path: '/promocoes',
+  getParentRoute: () => AdminProtectedRouteRoute,
+} as any)
 const AdminProtectedTextosJuridicosRoute =
   AdminProtectedTextosJuridicosRouteImport.update({
     id: '/textos-juridicos',
@@ -302,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/promocoes': typeof AdminProtectedPromocoesRoute
   '/admin/textos-juridicos': typeof AdminProtectedTextosJuridicosRoute
   '/admin/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
@@ -344,6 +351,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/leads': typeof AdminProtectedLeadsRoute
   '/admin/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/promocoes': typeof AdminProtectedPromocoesRoute
   '/admin/textos-juridicos': typeof AdminProtectedTextosJuridicosRoute
   '/admin/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/usuarios': typeof AdminProtectedUsuariosRoute
@@ -389,6 +397,7 @@ export interface FileRoutesById {
   '/admin/_protected/dashboard': typeof AdminProtectedDashboardRoute
   '/admin/_protected/leads': typeof AdminProtectedLeadsRoute
   '/admin/_protected/produtoras': typeof AdminProtectedProdutorasRoute
+  '/admin/_protected/promocoes': typeof AdminProtectedPromocoesRoute
   '/admin/_protected/textos-juridicos': typeof AdminProtectedTextosJuridicosRoute
   '/admin/_protected/tipos-beat': typeof AdminProtectedTiposBeatRoute
   '/admin/_protected/usuarios': typeof AdminProtectedUsuariosRoute
@@ -434,6 +443,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/promocoes'
     | '/admin/textos-juridicos'
     | '/admin/tipos-beat'
     | '/admin/usuarios'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/leads'
     | '/admin/produtoras'
+    | '/admin/promocoes'
     | '/admin/textos-juridicos'
     | '/admin/tipos-beat'
     | '/admin/usuarios'
@@ -520,6 +531,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/dashboard'
     | '/admin/_protected/leads'
     | '/admin/_protected/produtoras'
+    | '/admin/_protected/promocoes'
     | '/admin/_protected/textos-juridicos'
     | '/admin/_protected/tipos-beat'
     | '/admin/_protected/usuarios'
@@ -760,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedProdutorasRouteImport
       parentRoute: typeof AdminProtectedRouteRoute
     }
+    '/admin/_protected/promocoes': {
+      id: '/admin/_protected/promocoes'
+      path: '/promocoes'
+      fullPath: '/admin/promocoes'
+      preLoaderRoute: typeof AdminProtectedPromocoesRouteImport
+      parentRoute: typeof AdminProtectedRouteRoute
+    }
     '/admin/_protected/textos-juridicos': {
       id: '/admin/_protected/textos-juridicos'
       path: '/textos-juridicos'
@@ -881,6 +900,7 @@ interface AdminProtectedRouteRouteChildren {
   AdminProtectedDashboardRoute: typeof AdminProtectedDashboardRoute
   AdminProtectedLeadsRoute: typeof AdminProtectedLeadsRoute
   AdminProtectedProdutorasRoute: typeof AdminProtectedProdutorasRoute
+  AdminProtectedPromocoesRoute: typeof AdminProtectedPromocoesRoute
   AdminProtectedTextosJuridicosRoute: typeof AdminProtectedTextosJuridicosRoute
   AdminProtectedTiposBeatRoute: typeof AdminProtectedTiposBeatRoute
   AdminProtectedUsuariosRoute: typeof AdminProtectedUsuariosRoute
@@ -898,6 +918,7 @@ const AdminProtectedRouteRouteChildren: AdminProtectedRouteRouteChildren = {
   AdminProtectedDashboardRoute: AdminProtectedDashboardRoute,
   AdminProtectedLeadsRoute: AdminProtectedLeadsRoute,
   AdminProtectedProdutorasRoute: AdminProtectedProdutorasRoute,
+  AdminProtectedPromocoesRoute: AdminProtectedPromocoesRoute,
   AdminProtectedTextosJuridicosRoute: AdminProtectedTextosJuridicosRoute,
   AdminProtectedTiposBeatRoute: AdminProtectedTiposBeatRoute,
   AdminProtectedUsuariosRoute: AdminProtectedUsuariosRoute,

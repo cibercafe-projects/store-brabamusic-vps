@@ -7,6 +7,8 @@ export type PublicBeat = {
   tom: string | null;
   mood: string | null;
   preco: number | null;
+  precoCheio: number | null;
+  emPromocao: boolean;
   tipo: "fechado" | "aberto";
   tipo_nome: string;
   inclui_stems: boolean;

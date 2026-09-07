@@ -478,3 +478,50 @@ Marco operacional: plataforma pronta para a operação oficial da Fase 1
 - Notificações ao cliente seguem **manuais** (WhatsApp/E-mail disparados pelo
   admin). Apenas o fluxo de lançamentos possui notificações automáticas
   (recebimento, novo lançamento para admin, mudança de status).
+
+---
+
+## Promoções por Tipo de Beat (`2026-09-07`)
+
+### Added
+- Nova página **/admin/promocoes**: toggle liga/desliga por tipo de beat,
+  formulário de promoção (`promo_valor`, `promo_link_pagamento`, início e
+  expiração) e histórico completo de alterações.
+- Colunas de promoção em `beat_types`
+  (`promo_ativa`, `promo_valor`, `promo_link_pagamento`, `promo_inicio_em`,
+  `promo_expira_em`) + tabela `beat_type_promo_history` (registra cada
+  alteração com autor e horário).
+- Exibição pública da promoção: card do beat e página do beat mostram selo
+  **"Promoção por tempo limitado"** e preço **"de X por Y"** (cheio riscado).
+- Compra respeita a promoção: `PurchaseDialog`, pedido gravado e e-mails
+  (cliente/admin) usam o **preço efetivo** e o **link de pagamento promocional**.
+
+### Changed
+- Preço/link efetivos resolvidos por `src/lib/promo.ts`
+  (`resolvePrecoEfetivo`): a promoção vale apenas quando
+  `promo_valor < preço cheio` e o beat está dentro do intervalo
+  `[promo_inicio_em, promo_expira_em]`. Fora disso ou com tipo parado, o valor
+  original é mantido.
+- Edição de tipo em **/admin/tipos-beat** preserva os campos de promoção atuais
+  (não zera mais a promoção ao editar o tipo).
+
+### Database
+- `supabase/migrations/20260907180000_beat_types_promo.sql`:
+  - `ALTER TABLE beat_types ADD COLUMN ...` (5 colunas de promoção).
+  - `CREATE TABLE beat_type_promo_history` (id, beat_type_id, valores,
+    changed_at, changed_by).
+  - Índice por `beat_type_id`/`changed_at`.
+  - RLS: admins podem inserir/selecionar no histórico.
+
+---
+
+## Melhorias futuras
+
+- **Compactar comprovantes antes de enviar ao banco** (2026-09-07): as fotos de
+  comprovante de pagamento (`purchase-receipts`, `storage.objects`) são enviadas
+  em base64 cru e, com beats vendidos e imagens grandes, ocupam bastante espaço
+  no banco e no storage. Ideia: redimensionar/recomprimir (ex.: JPEG/WebP de no
+  máximo ~1000px, qualidade ~70) no cliente antes do upload, mantendo legibilidade
+  do comprovante e reduzindo drasticamente o tamanho armazenado. Endpoints de
+  upload já limitam a ~8 MB via base64; a compactação reduziria o custo de
+  armazenamento e aceleraria o upload no celular.
