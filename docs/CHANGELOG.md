@@ -5,9 +5,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ---
 
-## [2026-09-07] — Backup manual de segredos/ambiente + PATCH login admin
+## [2026-09-07] — Runbook operacional + backup manual de segredos
 
 ### Added
+- **`docs/PROCESSO-PRODUCAO.md`**: runbook de operação — quando reiniciar o
+  servidor (PM2/Docker apenas; reinício do VPS só em emergência), fluxo ideal
+  de deploy de nova versão estável (build → PM2 → validar → CHANGELOG → git →
+  sincronizar clone), rollback, quando/como atualizar o backup de secrets e
+  restauração, além de checklist pós-deploy.
 - **`scripts/backup-secrets.sh`**: snapshot manual dos arquivos de segredos e
   ambiente do VPS (`.env` da aplicação, `.env` da stack Supabase, `.env` de
   migração e `~/.git-credentials`) em `/opt/backups/secrets/<AAAAMMDD-HHMMSS>/`,
@@ -21,10 +26,6 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ### Infra
 - Criada pasta central `/opt/backups/secrets` (`700`, root-only), fora de
   repositórios git.
-
-### Docs
-- Todos os ajustes da estabilização pós-migração registrados na seção
-  `[2026-09-06]` acima; esta rodada documenta o fluxo de backup/restauração.
 
 ---
 
