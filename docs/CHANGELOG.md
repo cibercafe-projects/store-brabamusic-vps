@@ -572,6 +572,51 @@ Marco operacional: plataforma pronta para a operação oficial da Fase 1
 
 ---
 
+## Limpeza da base de testes + Lançamento oficial (`2026-09-08`)
+
+### Changed
+- Apagada a base de testes da produtora Malana (2 beats de teste,
+  2 compras de teste, 1 avatar, 7 mídias de beats, 2 comprovantes de
+  pagamento, 36 e-mails de `giseletavares@gmail.com`).
+- Limpeza via DB com checagem de FK + remoção de storage via REST API
+  (`DELETE /storage/v1/object/{bucket}/{path}`), já que o Supabase
+  bloqueia DELETE direto em `storage.objects`.
+- Único beat em estado `vendido` que restou: `Boombap Sad - 80BPM`
+  (da Anonima Beats), preservado por ser registro real.
+
+### Added
+- **E-mail de orientações para administradoras** (`admin-orientacoes`):
+  novo template React Email enviado às 3 admins ativas
+  (`andressaversa@brabamusic.com`, `braba.ent@gmail.com`,
+  `giseletavares@gmail.com`) com tom motivacional, contendo:
+  1) como entrar de novo no painel (`/admin/login` + reset de senha),
+  2) a promoção ativa em destaque (Beat Aberto R$ 200 → R$ 100),
+  3) regras básicas do fluxo da plataforma (Beats, Tipos, Compras,
+  Lançamentos) + fluxo de venda em 5 passos.
+- Remetente padrão `BRABA Beats <loja@brabamusic.com.br>` (autorizado
+  no SMTP Hostinger).
+- Script one-shot `scripts/send-admin-orientacoes.ts` (Node/Bun) com
+  modo `--dry-run` para listar destinatários e idempotência mensal
+  (chaves determinísticas `admin-orientacoes-<adminId>-<YYYY-MM>`).
+- Migration `20260908130000_list_admin_emails.sql`: RPC
+  `public.list_admin_emails()` (SECURITY DEFINER) para o script ler
+  emails de admins ativos (PostgREST só expõe o schema `public`).
+- Cron `process-email-queue` reativado (a cada 5 minutos) para
+  consumir a fila `transactional_emails` via
+  `/lovable/email/queue/process`.
+
+### Notas
+- A promoção do Beat Aberto continua ativa (sem data de término) e a
+  página `/admin/promocoes` agora permite editar a expiração quando
+  a usuária souber até quando a campanha vai rodar.
+- Os e-mails de orientações foram processados pelo worker
+  (`processed:3`); `email_send_log` mostra os `message_id` com status
+  `sent`. Como o worker insere uma linha `sent` por tentativa, há
+  registros duplicados (uma row por tentativa de envio) — todas
+  relativas à mesma campanha.
+
+---
+
 ## Melhorias futuras
 
 - **Compactar comprovantes antes de enviar ao banco** (2026-09-07): as fotos de

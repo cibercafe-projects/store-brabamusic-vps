@@ -1,6 +1,7 @@
 # Plano — Promoções por Tipo de Beat (Melhorias)
 
 Data: 2026-09-08
+Status: ✅ executado (commit `3e40c70`, depois ajustes pós-deploy)
 Status: em execução
 Build: a partir do commit `8609fbc`
 
