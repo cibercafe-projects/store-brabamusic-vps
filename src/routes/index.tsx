@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { z } from "zod";
 import heroBg from "@/assets/hero-bg.jpg";
 import { BeatCard } from "@/components/BeatCard";
+import { PromoBanner } from "@/components/PromoBanner";
 import { listPublicBeats, listPublicFilters } from "@/lib/catalog.functions";
 
 const searchSchema = z.object({
@@ -119,6 +120,12 @@ function Index() {
           </div>
         </div>
       </section>
+
+      <PromoBanner
+        items={data.rows
+          .filter((b) => b.emPromocao && b.promoDescricao)
+          .map((b) => ({ promoDescricao: b.promoDescricao, beatSlug: b.slug }))}
+      />
 
       {/* Filtros */}
       <section className="mx-auto max-w-7xl px-4 py-8">

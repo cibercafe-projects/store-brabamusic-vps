@@ -43,9 +43,11 @@ export type Database = {
           nome: string
           ordem: number
           promo_ativa: boolean
+          promo_descricao: string | null
           promo_expira_em: string | null
           promo_inicio_em: string | null
           promo_link_pagamento: string
+          promo_reminder_sent_at: string | null
           promo_valor: number | null
           slug: string
           updated_at: string
@@ -61,9 +63,11 @@ export type Database = {
           nome: string
           ordem?: number
           promo_ativa?: boolean
+          promo_descricao?: string | null
           promo_expira_em?: string | null
           promo_inicio_em?: string | null
           promo_link_pagamento?: string
+          promo_reminder_sent_at?: string | null
           promo_valor?: number | null
           slug: string
           updated_at?: string
@@ -79,9 +83,11 @@ export type Database = {
           nome?: string
           ordem?: number
           promo_ativa?: boolean
+          promo_descricao?: string | null
           promo_expira_em?: string | null
           promo_inicio_em?: string | null
           promo_link_pagamento?: string
+          promo_reminder_sent_at?: string | null
           promo_valor?: number | null
           slug?: string
           updated_at?: string

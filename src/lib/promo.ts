@@ -2,6 +2,7 @@ export type PromoInfo = {
   promo_ativa: boolean;
   promo_valor: number | null;
   promo_link_pagamento: string;
+  promo_descricao: string | null;
   promo_inicio_em: string | null;
   promo_expira_em: string | null;
 };

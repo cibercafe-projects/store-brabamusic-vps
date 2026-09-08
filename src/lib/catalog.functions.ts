@@ -39,7 +39,7 @@ async function getBeatTypesMap(
   const { data } = await admin
     .from("beat_types")
     .select(
-      "id, nome, inclui_stems, valor_padrao, promo_ativa, promo_valor, promo_link_pagamento, promo_inicio_em, promo_expira_em",
+      "id, nome, inclui_stems, valor_padrao, promo_ativa, promo_valor, promo_link_pagamento, promo_descricao, promo_inicio_em, promo_expira_em",
     )
     .in("id", clean);
   data?.forEach((t) =>
@@ -51,6 +51,7 @@ async function getBeatTypesMap(
         promo_ativa: !!t.promo_ativa,
         promo_valor: t.promo_valor != null ? Number(t.promo_valor) : null,
         promo_link_pagamento: t.promo_link_pagamento ?? "",
+        promo_descricao: t.promo_descricao ?? null,
         promo_inicio_em: t.promo_inicio_em,
         promo_expira_em: t.promo_expira_em,
       },
@@ -196,6 +197,7 @@ export const listPublicBeats = createServerFn({ method: "POST" })
           preco: price.preco,
           precoCheio: price.precoCheio,
           emPromocao: price.emPromocao,
+          promoDescricao: bt?.promo?.promo_descricao ?? null,
           tipo: legacy,
           tipo_nome,
           inclui_stems,
@@ -260,6 +262,7 @@ export const getPublicBeatBySlug = createServerFn({ method: "POST" })
         preco: price.preco,
         precoCheio: price.precoCheio,
         emPromocao: price.emPromocao,
+        promoDescricao: bt?.promo?.promo_descricao ?? null,
         tipo: legacyTipo,
         tipo_nome,
         inclui_stems,
@@ -368,6 +371,7 @@ export const getPublicProducerBySlug = createServerFn({ method: "POST" })
           preco: price.preco,
           precoCheio: price.precoCheio,
           emPromocao: price.emPromocao,
+          promoDescricao: bt?.promo?.promo_descricao ?? null,
           tipo: legacy,
           tipo_nome,
           inclui_stems,

@@ -1,7 +1,10 @@
 import "./lib/error-capture";
+import { ensurePromoReminderJob } from "./lib/promo-reminders.server";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+
+ensurePromoReminderJob();
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;

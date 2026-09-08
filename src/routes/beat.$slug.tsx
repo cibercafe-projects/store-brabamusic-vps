@@ -19,6 +19,7 @@ import { getPublicBeatBySlug } from "@/lib/catalog.functions";
 import { usePlayer } from "@/components/PlayerStore";
 import { BeatCoverFallback } from "@/components/admin/beats/BeatCoverFallback";
 import { PurchaseDialog } from "@/components/purchase/PurchaseDialog";
+import { PromoBanner } from "@/components/PromoBanner";
 import { getPublicSiteUrl } from "@/lib/site-url";
 import { getPendingPurchaseBySlug, removePendingPurchase } from "@/lib/pending-purchase";
 import {
@@ -182,6 +183,9 @@ function BeatDetail() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10">
+      {beat.emPromocao && beat.promoDescricao && (
+        <PromoBanner items={[{ promoDescricao: beat.promoDescricao, beatSlug: beat.slug }]} />
+      )}
       <div className="mb-6 flex items-center justify-between gap-3">
         <button
           onClick={handleBack}

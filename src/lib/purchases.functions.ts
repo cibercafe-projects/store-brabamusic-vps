@@ -54,7 +54,7 @@ async function resolveBeatPayment(admin: any, beatId: string): Promise<ResolvedB
   const { data: beat } = await admin
     .from("beats")
     .select(
-      "preco, tipo, beat_type:beat_types(nome, valor_padrao, link_pagamento, inclui_stems, promo_ativa, promo_valor, promo_link_pagamento, promo_inicio_em, promo_expira_em)",
+      "preco, tipo, beat_type:beat_types(nome, valor_padrao, link_pagamento, inclui_stems, promo_ativa, promo_valor, promo_link_pagamento, promo_descricao, promo_inicio_em, promo_expira_em)",
     )
     .eq("id", beatId)
     .maybeSingle();
@@ -68,6 +68,7 @@ async function resolveBeatPayment(admin: any, beatId: string): Promise<ResolvedB
         promo_ativa: boolean;
         promo_valor: number | string | null;
         promo_link_pagamento: string;
+        promo_descricao: string | null;
         promo_inicio_em: string | null;
         promo_expira_em: string | null;
       }
@@ -86,6 +87,7 @@ async function resolveBeatPayment(admin: any, beatId: string): Promise<ResolvedB
                 promo_ativa: bt.promo_ativa,
                 promo_valor: bt.promo_valor != null ? Number(bt.promo_valor) : null,
                 promo_link_pagamento: bt.promo_link_pagamento ?? "",
+                promo_descricao: bt.promo_descricao ?? null,
                 promo_inicio_em: bt.promo_inicio_em,
                 promo_expira_em: bt.promo_expira_em,
               }

@@ -7,6 +7,8 @@ import { template as releaseStatusChanged } from './release-status-changed'
 import { template as adminNewPurchase } from './admin-new-purchase'
 import { template as adminNewReceipt } from './admin-new-receipt'
 import { template as adminNewRelease } from './admin-new-release'
+import { template as adminPromoCreated } from './admin-promo-created'
+import { template as adminPromoReminder } from './admin-promo-reminder'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -26,4 +28,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'admin-new-purchase': adminNewPurchase,
   'admin-new-receipt': adminNewReceipt,
   'admin-new-release': adminNewRelease,
+  'admin-promo-created': adminPromoCreated,
+  'admin-promo-reminder': adminPromoReminder,
 }

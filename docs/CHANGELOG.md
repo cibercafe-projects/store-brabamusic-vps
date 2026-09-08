@@ -515,6 +515,63 @@ Marco operacional: plataforma pronta para a operação oficial da Fase 1
 
 ---
 
+## Promoções por Tipo de Beat — Melhorias (`2026-09-08`)
+
+### Added
+- Botão **Cadastrar promoção** no topo de `/admin/promocoes`. Dialog único
+  para criar e editar promoções (sem dois fluxos separados).
+- Novos campos no cadastro:
+  - **Link de pagamento da promoção** (obrigatório): URL/pix específico do
+    valor temporário, enviado no checkout e nos e-mails enquanto a promoção
+    estiver ativa.
+  - **`promo_inicio_em`** (datetime-local com hora e minutos): obrigatório.
+  - **`promo_expira_em`** (datetime-local com hora e minutos): opcional
+    (pode ficar vazio e ser editado depois).
+  - **Descrição da promoção** (texto curto, até 280 caracteres): exibida
+    no banner público.
+- Banner público animado (marquee) na **home** e na **página do beat**
+  quando há promoção ativa. Mostra a descrição cadastrada.
+- E-mail ao admin da loja (`admin-promo-created`) sempre que uma promoção é
+  cadastrada ou editada, com tipo, valor cheio → valor promo, link de
+  pagamento, início, expiração e descrição.
+- Lembrete por e-mail (`admin-promo-reminder`) enviado automaticamente ao
+  admin **1h antes do início** de cada promoção. Job roda a cada 5 minutos
+  dentro do processo Nitro; cada lembrete é marcado em
+  `promo_reminder_sent_at` e não reenvia.
+
+### Changed
+- Tipo de beat com qualquer linha em `beat_type_promo_history` **não pode
+  ser excluído pela UI** (`canDeleteBeatType` / `deleteBeatType`):
+  tentativa retorna erro e instrui a remoção pelo banco. Mantém a
+  integridade do histórico.
+- Lifecycle de promoções agora tem **validação no server fn**:
+  - Promo encerrada (`promo_expira_em ≤ now`) → **read-only**, não pode ser
+    editada nem religada.
+  - Promo vigente ou desligada (ainda na janela) → permite editar apenas
+    `promo_expira_em` e `promo_ativa`. Demais campos bloqueados.
+  - Promo **futura não iniciada** → todos os campos editáveis; pode ser
+    **excluída** (limpa os 5 campos promo do `beat_types` e deleta o
+    histórico).
+  - Promo **iniciada** → não pode ser excluída; apenas **Desligar** ou
+    **Terminar** (força `promo_expira_em = now`, vai pra Encerrada).
+- `toggleBeatTypePromo` (toggle on/off) bloqueia religar promo já
+  encerrada.
+- Removida a duplicidade entre dialog de edição e `BeatTypeDialog` para
+  promoções; tudo flui pelo dialog unificado.
+
+### Database
+- `supabase/migrations/20260908120000_beat_types_promo_descricao.sql`:
+  - `ALTER TABLE beat_types ADD COLUMN promo_descricao text`.
+  - `ALTER TABLE beat_types ADD COLUMN promo_reminder_sent_at timestamptz`.
+
+### Notas
+- O scheduler (`promo-reminders.server.ts`) roda como side-effect ao
+  carregar o SSR entry; após o primeiro request, dispara uma execução
+  inicial 30s depois e depois a cada 5 minutos.
+- "Promoção encerrada" não pode ser **religada** — decisão da rodada.
+
+---
+
 ## Melhorias futuras
 
 - **Compactar comprovantes antes de enviar ao banco** (2026-09-07): as fotos de
