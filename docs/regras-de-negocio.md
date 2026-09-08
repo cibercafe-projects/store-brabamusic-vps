@@ -204,8 +204,14 @@ A cada entrega o sistema grava em `purchase_deliveries`:
    - Administração recebe "admin-new-release" com link direto para o painel.
 5. Painel admin exibe Faixa Foco, data sugerida, links do Drive e todos os
    metadados — todos editáveis.
-6. Status é alterado manualmente pelo admin; cada mudança dispara e-mail ao
-   artista.
+6. Status é alterado manualmente pelo admin. O template do e-mail enviado ao
+   artista é roteado por status:
+   - `aprovado` → template `release-approved` (tom curto, informa que vai
+     iniciar a distribuição).
+   - `distribuido` → template `release-distributed` (tom curto, informa que
+     está nas plataformas).
+   - Demais transições (ex.: `em_analise`) → template genérico
+     `release-status-changed` (fallback).
 
 ---
 
@@ -221,7 +227,11 @@ A cada entrega o sistema grava em `purchase_deliveries`:
 **Automáticas (disparadas pelo sistema):**
 - Confirmação ao artista de recebimento de lançamento.
 - Notificação ao admin sobre novo lançamento.
-- E-mail ao artista quando admin altera status do lançamento.
+- E-mail ao artista quando admin altera status do lançamento. O template é
+  escolhido pelo status de destino:
+  - `aprovado` → `release-approved`
+  - `distribuido` → `release-distributed`
+  - qualquer outro status → `release-status-changed` (fallback genérico)
 
 **Manuais (admin dispara via UI):**
 - Toda comunicação relativa a compras (confirmação, entrega de arquivos,

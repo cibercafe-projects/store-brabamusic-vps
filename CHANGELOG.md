@@ -13,6 +13,38 @@ Formato inspirado em [Keep a Changelog](https://keepachangelog.com/). Versioname
 
 ---
 
+## Sprint 16 — Emails dedicados por status de lançamento
+
+### Added
+
+- **Templates `release-approved`** e **`release-distributed`** em
+  `src/lib/email-templates/`, registrados em `registry.ts`. Mensagens
+  curtas e diretas, no padrão visual dos demais templates
+  transacionais (`release-received`, `release-status-changed`).
+
+### Changed
+
+- **`updateReleaseStatus`** (`src/lib/releases.functions.ts`) agora
+  roteia o `templateName` pelo status de destino:
+  - `aprovado` → `release-approved`
+  - `distribuido` → `release-distributed`
+  - demais status (ex.: `em_analise`) → `release-status-changed`
+    (mantido como fallback, sem regressão).
+
+  A `idempotencyKey` (`release-status-{id}-{status}`) já era única por
+  (lançamento, status), portanto a troca de template não causa
+  duplicidade nem conflita com envios anteriores.
+
+### Docs
+
+- `docs/fluxos-do-sistema.md` (seções 3 e 4) — diagrama do Fluxo de
+  Lançamento e tabela de notificações automáticas refletem os 3
+  templates.
+- `docs/regras-de-negocio.md` (seções 4.6 e 5.2) — passo 6 da seção 4
+  e item de "Notificações automáticas" detalhados por status.
+
+---
+
 ## Sprint 15 — Reserva Automática de Beats Exclusivos
 
 ### Added

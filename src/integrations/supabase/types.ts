@@ -102,8 +102,10 @@ export type Database = {
           changed_by: string | null
           id: string
           promo_ativa: boolean
+          promo_descricao: string | null
           promo_expira_em: string | null
           promo_inicio_em: string | null
+          promo_link_pagamento: string
           promo_valor: number | null
         }
         Insert: {
@@ -112,8 +114,10 @@ export type Database = {
           changed_by?: string | null
           id?: string
           promo_ativa: boolean
+          promo_descricao?: string | null
           promo_expira_em?: string | null
           promo_inicio_em?: string | null
+          promo_link_pagamento?: string
           promo_valor?: number | null
         }
         Update: {
@@ -122,8 +126,10 @@ export type Database = {
           changed_by?: string | null
           id?: string
           promo_ativa?: boolean
+          promo_descricao?: string | null
           promo_expira_em?: string | null
           promo_inicio_em?: string | null
+          promo_link_pagamento?: string
           promo_valor?: number | null
         }
         Relationships: [

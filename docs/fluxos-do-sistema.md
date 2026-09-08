@@ -120,12 +120,18 @@ Bloqueios:
                        │  /admin/lancamentos/:id │
                        └────────┬────────────────┘
                                 ▼
-                       ┌─────────────────────────┐
-                       │  Admin muda status      │
-                       │  → e-mail automático    │
-                       │     "release-status-    │
-                       │      changed" p/ artista│
-                       └─────────────────────────┘
+                        ┌─────────────────────────┐
+                        │  Admin muda status      │
+                        │  → e-mail automático    │
+                        │     (rota por status):  │
+                        │     • aprovado    →     │
+                        │       release-approved  │
+                        │     • distribuido →     │
+                        │       release-distributed│
+                        │     • demais      →     │
+                        │       release-status-   │
+                        │       changed (fallback)│
+                        └─────────────────────────┘
 ```
 
 ---
@@ -135,9 +141,11 @@ Bloqueios:
 ```text
 AUTOMÁTICAS (sistema dispara sozinho)
 ─────────────────────────────────────
-  • Lançamento recebido          → artista
-  • Novo lançamento              → admin
-  • Mudança de status do release → artista
+  • Lançamento recebido                 → artista
+  • Novo lançamento                     → admin
+  • Status `aprovado`                   → artista (release-approved)
+  • Status `distribuido`                → artista (release-distributed)
+  • Qualquer outra mudança de status     → artista (release-status-changed)
 
 MANUAIS (admin clica para disparar)
 ─────────────────────────────────────

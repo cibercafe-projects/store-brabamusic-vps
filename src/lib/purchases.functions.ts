@@ -44,6 +44,8 @@ async function assertAdmin(userId: string) {
 // app_settings.payment_link foi aposentado como fonte de leitura.
 export type ResolvedBeatPayment = {
   valor: number | null;
+  precoCheio: number | null;
+  emPromocao: boolean;
   paymentLink: string;
   tipoNome: string | null;
   incluiStems: boolean;
@@ -102,7 +104,14 @@ async function resolveBeatPayment(admin: any, beatId: string): Promise<ResolvedB
   const incluiStems = bt ? !!bt.inclui_stems : beat?.tipo === "aberto";
   const tipoNome = bt?.nome ?? (beat?.tipo === "aberto" ? "Beat Aberto" : beat?.tipo === "fechado" ? "Beat Fechado" : null);
 
-  return { valor, paymentLink: paymentLinkResolved, tipoNome, incluiStems };
+  return {
+    valor,
+    precoCheio: precoCheio,
+    emPromocao: !!resolved?.emPromocao,
+    paymentLink: paymentLinkResolved,
+    tipoNome,
+    incluiStems,
+  };
 }
 
 // ===== Public: settings =====
@@ -126,14 +135,20 @@ export const getPurchaseSettings = createServerFn({ method: "GET" })
     });
 
     let paymentLink = "";
+    let emPromocao = false;
+    let precoCheio: number | null = null;
     if (data?.beat_id) {
       const resolved = await resolveBeatPayment(supabaseAdmin, data.beat_id);
       paymentLink = resolved.paymentLink;
+      emPromocao = resolved.emPromocao;
+      precoCheio = resolved.precoCheio;
     }
 
     return {
       pix_key: map.pix_key ?? "",
       payment_link: paymentLink,
+      em_promocao: emPromocao,
+      preco_cheio: precoCheio,
       commercial_whatsapp: map.commercial_whatsapp ?? "+5511913401000",
     };
   });
@@ -385,6 +400,8 @@ export const createPurchaseRequest = createServerFn({ method: "POST" })
           pixKey,
           paymentLink: resolved.paymentLink,
           receiptUrl,
+          emPromocao: resolved.emPromocao,
+          precoCheio: resolved.precoCheio,
         },
       });
 

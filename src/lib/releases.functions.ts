@@ -19,6 +19,11 @@ const PHOTOS_BUCKET = "release-photos";
 
 const MIN_SUBMIT_SECONDS = 4; // anti-bot
 
+const RELEASE_STATUS_EMAIL: Partial<Record<ReleaseStatus, string>> = {
+  aprovado: "release-approved",
+  distribuido: "release-distributed",
+};
+
 async function getAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
@@ -324,8 +329,9 @@ export const updateReleaseStatus = createServerFn({ method: "POST" })
 
     if (existing && existing.status !== data.status && existing.email) {
       try {
+        const templateName = RELEASE_STATUS_EMAIL[data.status] ?? "release-status-changed";
         await sendAppEmailSafe({
-          templateName: "release-status-changed",
+          templateName,
           recipientEmail: existing.email,
           idempotencyKey: `release-status-${data.id}-${data.status}`,
           templateData: {

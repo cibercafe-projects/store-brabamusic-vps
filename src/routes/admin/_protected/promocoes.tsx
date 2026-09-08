@@ -164,10 +164,21 @@ function PromocoesPage() {
   const promos = query.data ?? [];
   const allTypes = allQuery.data ?? [];
 
-  const availableForCreate = useMemo(() => {
-    const taken = new Set(promos.map((p) => p.id));
-    return allTypes.filter((t) => !taken.has(t.id));
-  }, [allTypes, promos]);
+  // Tipos que ainda nao podem receber uma nova promocao: aqueles com qualquer
+  // campanha (vigente, desligada dentro da janela ou futura). Tipos cujas
+  // campanhas estao todas encerradas podem receber um novo ciclo.
+  const blockedForCreate = useMemo(() => {
+    const blocked = new Set<string>();
+    for (const p of promos) {
+      if (p.status !== "encerrada") blocked.add(p.id);
+    }
+    return blocked;
+  }, [promos]);
+
+  const availableForCreate = useMemo(
+    () => allTypes.filter((t) => !blockedForCreate.has(t.id)),
+    [allTypes, blockedForCreate],
+  );
 
   return (
     <div className="space-y-6">
@@ -176,14 +187,19 @@ function PromocoesPage() {
           <h1 className="font-display text-3xl">Promoções</h1>
           <p className="text-sm text-muted-foreground max-w-2xl">
             Coloque um tipo de beat inteiro em promoção. A promoção só vale enquanto o valor
-            promocional for menor que o preço cheio e dentro do período agendado. Desligar ou
-            expirar volta ao preço original sem alterar o cadastro de cada beat.
+            promocional for menor que o preço cheio e dentro do período agendado. Cada
+            campanha encerrada permanece no histórico (visível abaixo, em modo leitura).
+            Não é permitido cadastrar uma nova campanha cujo intervalo coincida com outra
+            ativa ou agendada para o mesmo tipo de beat.
           </p>
         </div>
         <Button
           onClick={() => {
             if (!availableForCreate.length) {
-              toast.info("Todos os tipos já possuem promoção cadastrada.");
+              toast.info(
+                "Todos os tipos disponíveis já possuem promoção vigente, desligada ou futura. " +
+                  "Encerre a campanha atual ou aguarde o término para cadastrar uma nova.",
+              );
               return;
             }
             setDialogState({ mode: "create", type: availableForCreate[0] });
@@ -198,8 +214,10 @@ function PromocoesPage() {
         <CardHeader>
           <CardTitle className="text-base">Promoções cadastradas</CardTitle>
           <CardDescription>
-            Apenas tipos de beat com promoção registrada aparecem aqui. Promoções encerradas ficam
-            em modo leitura.
+            Cada linha representa uma campanha de promoção. Campanhas antigas (encerradas)
+            continuam listadas como histórico, em modo leitura. Apenas a campanha atual
+            (mais recente) pode ser editada, ligada/desligada ou encerrada — e origina
+            um novo ciclo através do botão "Nova promoção" quando termina.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -229,6 +247,8 @@ function PromocoesPage() {
                     <PromoRow
                       key={it.id}
                       item={it}
+                      allTypes={allTypes}
+                      onCreateNew={(t) => setDialogState({ mode: "create", type: t })}
                       onEdit={(p) => setDialogState({ mode: "edit", type: p })}
                       onConfirmDelete={(p) =>
                         setConfirm({ kind: "delete", id: p.id, nome: p.nome })
@@ -252,7 +272,7 @@ function PromocoesPage() {
         <PromoDialog
           state={dialogState}
           allTypes={allTypes}
-          takenIds={new Set(promos.map((p) => p.id))}
+          takenIds={blockedForCreate}
           onClose={() => setDialogState(null)}
           onSaved={() => {
             refresh();
@@ -275,12 +295,16 @@ function PromocoesPage() {
 
 function PromoRow({
   item,
+  allTypes,
+  onCreateNew,
   onEdit,
   onConfirmDelete,
   onConfirmTerm,
   onToggle,
 }: {
   item: BeatTypePromoRow;
+  allTypes: BeatTypeRow[];
+  onCreateNew: (t: BeatTypeRow) => void;
   onEdit: (t: BeatTypePromoRow) => void;
   onConfirmDelete: (t: BeatTypePromoRow) => void;
   onConfirmTerm: (t: BeatTypePromoRow) => void;
@@ -295,8 +319,15 @@ function PromoRow({
   const futura = item.status === "futura";
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">{item.nome}</TableCell>
+    <TableRow className={item.is_current ? "" : "opacity-70"}>
+      <TableCell className="font-medium">
+        {item.nome}
+        {!item.is_current && (
+          <span className="ml-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+            campanha anterior
+          </span>
+        )}
+      </TableCell>
       <TableCell>R$ {Number(item.valor_padrao).toFixed(2).replace(".", ",")}</TableCell>
       <TableCell className="text-accent font-semibold">
         {item.promo_valor != null
@@ -309,49 +340,70 @@ function PromoRow({
       </TableCell>
       <TableCell className="text-right">
         <div className="inline-flex flex-wrap gap-1 justify-end">
-          {!encerrada && (
+          {item.is_current && encerrada ? (
             <Button
               size="sm"
-              variant="ghost"
-              onClick={() => onEdit(item)}
-              aria-label="Editar"
-              title="Editar"
+              variant="outline"
+              onClick={() => {
+                const t = allTypes.find((x) => x.id === item.id);
+                if (t) onCreateNew(t);
+              }}
+              aria-label="Cadastrar nova promoção"
+              title="Cadastrar nova promoção"
             >
-              <Pencil className="h-4 w-4" />
+              <Plus className="h-4 w-4 mr-1" /> Nova promoção
             </Button>
-          )}
-          {!encerrada && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onToggle(item, !item.promo_ativa)}
-              aria-label={item.promo_ativa ? "Desligar" : "Religar"}
-              title={item.promo_ativa ? "Desligar" : "Religar"}
-            >
-              {item.promo_ativa ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-            </Button>
-          )}
-          {!encerrada && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onConfirmTerm(item)}
-              aria-label="Terminar agora"
-              title="Terminar agora"
-            >
-              <StopCircle className="h-4 w-4" />
-            </Button>
-          )}
-          {futura && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onConfirmDelete(item)}
-              aria-label="Excluir promoção"
-              title="Excluir promoção"
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+          ) : null}
+          {item.is_current && !encerrada ? (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onEdit(item)}
+                aria-label="Editar"
+                title="Editar"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onToggle(item, !item.promo_ativa)}
+                aria-label={item.promo_ativa ? "Desligar" : "Religar"}
+                title={item.promo_ativa ? "Desligar" : "Religar"}
+              >
+                {item.promo_ativa ? (
+                  <PowerOff className="h-4 w-4" />
+                ) : (
+                  <Power className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onConfirmTerm(item)}
+                aria-label="Terminar agora"
+                title="Terminar agora"
+              >
+                <StopCircle className="h-4 w-4" />
+              </Button>
+              {futura && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onConfirmDelete(item)}
+                  aria-label="Excluir promoção"
+                  title="Excluir promoção"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              )}
+            </>
+          ) : null}
+          {!item.is_current && (
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              read-only
+            </span>
           )}
         </div>
       </TableCell>

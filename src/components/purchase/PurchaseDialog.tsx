@@ -11,6 +11,7 @@ import {
   CreditCard,
   Upload,
   FileText,
+  BadgePercent,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -110,10 +111,18 @@ export function PurchaseDialog({
 
   const pixKey = settings.data?.pix_key ?? "";
   const paymentLink = settings.data?.payment_link ?? "";
+  const emPromocao = !!settings.data?.em_promocao;
+  const precoCheio = settings.data?.preco_cheio ?? null;
 
   const valorFmt = useMemo(
     () => (preco != null ? `R$ ${preco.toFixed(2).replace(".", ",")}` : "—"),
     [preco],
+  );
+
+  const precoCheioFmt = useMemo(
+    () =>
+      precoCheio != null ? `R$ ${precoCheio.toFixed(2).replace(".", ",")}` : null,
+    [precoCheio],
   );
 
   const canSubmit =
@@ -201,7 +210,27 @@ export function PurchaseDialog({
                 </p>
                 <p className="font-display text-lg mt-1">{beatName}</p>
                 {produtora && <p className="text-xs text-muted-foreground">prod. {produtora}</p>}
-                <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
+                {emPromocao && (
+                  <p className="mt-2 inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-green-300">
+                    <BadgePercent className="h-3 w-3" /> Em promoção por tempo limitado
+                  </p>
+                )}
+                <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+                  <p className="text-2xl font-bold text-accent">{valorFmt}</p>
+                  {emPromocao && precoCheioFmt && (
+                    <p className="text-sm text-muted-foreground line-through">
+                      de {precoCheioFmt}
+                    </p>
+                  )}
+                </div>
+                {emPromocao && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Este beat está com preço promocional temporário
+                    {precoCheioFmt ? ` (valor cheio ${precoCheioFmt})` : ""}. Você será
+                    cobrado o valor promocional <strong className="text-accent">{valorFmt}</strong>{" "}
+                    durante esta janela.
+                  </p>
+                )}
               </div>
 
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
@@ -291,21 +320,30 @@ export function PurchaseDialog({
                   </div>
                 ) : method === "pix" ? (
                   pixKey ? (
-                    <div className="rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3 flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                          Chave PIX
-                        </p>
-                        <p className="text-sm font-mono truncate">{pixKey}</p>
+                    <div className="space-y-2">
+                      <div className="rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3 flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                            Chave PIX
+                          </p>
+                          <p className="text-sm font-mono truncate">{pixKey}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copy(pixKey, "Chave PIX")}
+                        >
+                          <Copy className="h-3 w-3" /> Copiar
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => copy(pixKey, "Chave PIX")}
-                      >
-                        <Copy className="h-3 w-3" /> Copiar
-                      </Button>
+                      {emPromocao && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Pagando via PIX, o valor promocional{" "}
+                          <strong className="text-accent">{valorFmt}</strong> já é aplicado
+                          automaticamente no pedido.
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <p className="text-xs text-muted-foreground">
@@ -313,14 +351,42 @@ export function PurchaseDialog({
                     </p>
                   )
                 ) : paymentLink ? (
-                  <a
-                    href={paymentLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
-                  >
-                    <ExternalLink className="h-3 w-3" /> Abrir link de pagamento
-                  </a>
+                  <div className="space-y-2">
+                    <div className="rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {emPromocao ? "Link de pagamento da promoção" : "Link de pagamento"}
+                        </p>
+                        <p className="text-xs font-mono truncate">{paymentLink}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copy(paymentLink, "Link de pagamento")}
+                        >
+                          <Copy className="h-3 w-3" /> Copiar
+                        </Button>
+                        <Button asChild type="button" size="sm">
+                          <a
+                            href={paymentLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1"
+                          >
+                            <ExternalLink className="h-3 w-3" /> Abrir
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                    {emPromocao && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Este é o link da promoção ({valorFmt}). Ele também será enviado no e-mail
+                        de confirmação da compra.
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-xs text-muted-foreground">
                     O link será enviado pelo time Braba após o registro.
@@ -455,8 +521,8 @@ export function PurchaseDialog({
             const origin = typeof window !== "undefined" ? window.location.origin : "";
             const receiptUrl = `${origin}/enviar-comprovante/${token}`;
             const paymentLineForMsg = paymentLink || "Será enviado pelo time Braba";
-            const copyText = `Beat: ${beatName}
-Valor: ${valorFmt}
+            const copyText = `Beat: ${beatName}${emPromocao ? "\nEm promoção por tempo limitado" : ""}
+Valor: ${valorFmt}${emPromocao && precoCheioFmt ? ` (de ${precoCheioFmt})` : ""}
 Link para pagamento: ${paymentLineForMsg}
 Link para envio do comprovante: ${receiptUrl}`;
             return (
@@ -477,7 +543,19 @@ Link para envio do comprovante: ${receiptUrl}`;
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                     <p className="text-xs uppercase tracking-widest text-muted-foreground">Beat</p>
                     <p className="font-display text-lg mt-1">{beatName}</p>
-                    <p className="mt-2 text-2xl font-bold text-accent">{valorFmt}</p>
+                    {emPromocao && (
+                      <p className="mt-2 inline-flex items-center gap-1 rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-green-300">
+                        <BadgePercent className="h-3 w-3" /> Em promoção por tempo limitado
+                      </p>
+                    )}
+                    <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+                      <p className="text-2xl font-bold text-accent">{valorFmt}</p>
+                      {emPromocao && precoCheioFmt && (
+                        <p className="text-sm text-muted-foreground line-through">
+                          de {precoCheioFmt}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="rounded-xl border border-white/10 bg-white/5 p-4">

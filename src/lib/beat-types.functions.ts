@@ -169,7 +169,14 @@ const promoUpsertInput = z.object({
 export type PromoStatus = "vigente" | "futura" | "desligada" | "encerrada";
 
 export type BeatTypePromoRow = {
+  /** id do beat_type (chave estável para as ações do admin). */
   id: string;
+  /** id da linha do histórico que originou esta campanha. */
+  campaign_id: string;
+  /** Início da campanha (chave de agrupamento). */
+  campaign_inicio_em: string;
+  /** true quando esta campanha é a que está atualmente gravada em beat_types. */
+  is_current: boolean;
   nome: string;
   slug: string;
   valor_padrao: number;
@@ -216,41 +223,121 @@ function formatBRL(value: number | string | null | undefined): string {
   return `R$ ${n.toFixed(2).replace(".", ",")}`;
 }
 
-/** Lista apenas tipos com promoção cadastrada (existem em `beat_type_promo_history`). */
+/** Lista todas as campanhas de promoção por tipo de beat.
+ *  Retorna uma linha por campanha (agrupada por `promo_inicio_em` no histórico),
+ *  incluindo as encerradas, para preservar a memória visual do que já rolou.
+ *  A campanha atual (refletida em `beat_types`) recebe `is_current = true`.
+ */
 export const listBeatTypesWithPromo = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<BeatTypePromoRow[]> => {
     const admin = await assertAdmin(context.userId);
-    const { data, error } = await admin
+
+    const { data: types, error: typesErr } = await admin
       .from("beat_types")
       .select(
         "id, nome, slug, valor_padrao, promo_ativa, promo_valor, promo_link_pagamento, promo_descricao, promo_inicio_em, promo_expira_em",
       )
       .order("nome", { ascending: true });
-    if (error) {
-      console.error("[promo.list]", error);
+    if (typesErr) {
+      console.error("[promo.list.types]", typesErr);
       throw new Error("Erro ao carregar promoções.");
     }
-    const all = (data ?? []) as BeatTypePromoRow[];
-    if (!all.length) return [];
-    const ids = all.map((r) => r.id);
-    const { data: histCount, error: histErr } = await admin
+    const allTypes = types ?? [];
+    if (!allTypes.length) return [];
+
+    const ids = allTypes.map((r) => r.id);
+    const { data: historyRows, error: histErr } = await admin
       .from("beat_type_promo_history")
-      .select("beat_type_id")
-      .in("beat_type_id", ids);
+      .select(
+        "id, beat_type_id, promo_ativa, promo_valor, promo_link_pagamento, promo_descricao, promo_inicio_em, promo_expira_em, changed_at",
+      )
+      .in("beat_type_id", ids)
+      .order("changed_at", { ascending: false });
     if (histErr) {
       console.error("[promo.list.history]", histErr);
       throw new Error("Erro ao carregar promoções.");
     }
-    const has = new Set((histCount ?? []).map((h) => h.beat_type_id as string));
-    return all
-      .filter((r) => has.has(r.id))
-      .map((r) => ({
-        ...r,
-        valor_padrao: Number(r.valor_padrao),
-        promo_valor: r.promo_valor != null ? Number(r.promo_valor) : null,
-        status: calcularStatus(r),
-      }));
+
+    // Agrupa o histórico por (beat_type_id, promo_inicio_em) e guarda apenas
+    // a entrada mais recente de cada campanha.
+    type Campaign = {
+      historyId: string;
+      ativa: boolean;
+      valor: number | null;
+      link: string;
+      descricao: string | null;
+      inicio: string;
+      expira: string | null;
+    };
+    const campaignsByType = new Map<string, Map<string, Campaign>>();
+    for (const h of historyRows ?? []) {
+      if (!h.promo_inicio_em) continue;
+      let perType = campaignsByType.get(h.beat_type_id);
+      if (!perType) {
+        perType = new Map();
+        campaignsByType.set(h.beat_type_id, perType);
+      }
+      if (perType.has(h.promo_inicio_em)) continue; // já temos a mais recente
+      perType.set(h.promo_inicio_em, {
+        historyId: h.id,
+        ativa: !!h.promo_ativa,
+        valor: h.promo_valor != null ? Number(h.promo_valor) : null,
+        link: h.promo_link_pagamento ?? "",
+        descricao: h.promo_descricao ?? null,
+        inicio: h.promo_inicio_em,
+        expira: h.promo_expira_em ?? null,
+      });
+    }
+
+    const rows: BeatTypePromoRow[] = [];
+    for (const t of allTypes) {
+      const campaigns = campaignsByType.get(t.id);
+      if (!campaigns || campaigns.size === 0) continue;
+
+      const sortedCampaigns = Array.from(campaigns.entries()).sort(([a], [b]) =>
+        b.localeCompare(a),
+      );
+
+      for (const [inicio, c] of sortedCampaigns) {
+        const isCurrent = t.promo_inicio_em === inicio;
+        const promo_ativa = isCurrent ? !!t.promo_ativa : c.ativa;
+        const promo_valor =
+          isCurrent
+            ? t.promo_valor != null
+              ? Number(t.promo_valor)
+              : null
+            : c.valor;
+        const promo_link_pagamento = isCurrent
+          ? t.promo_link_pagamento ?? ""
+          : c.link;
+        const promo_descricao = isCurrent ? (t.promo_descricao ?? null) : c.descricao;
+        const promo_inicio_em = inicio;
+        const promo_expira_em = isCurrent ? (t.promo_expira_em ?? null) : c.expira;
+        const status = calcularStatus({
+          promo_ativa,
+          promo_inicio_em,
+          promo_expira_em,
+        });
+        rows.push({
+          id: t.id,
+          campaign_id: c.historyId,
+          campaign_inicio_em: inicio,
+          is_current: isCurrent,
+          nome: t.nome,
+          slug: t.slug,
+          valor_padrao: Number(t.valor_padrao),
+          promo_ativa,
+          promo_valor,
+          promo_link_pagamento,
+          promo_descricao,
+          promo_inicio_em,
+          promo_expira_em,
+          status,
+        });
+      }
+    }
+    return rows;
   });
 
 /** Cadastra ou edita a promoção de um tipo. Aplica regras de lifecycle. */
@@ -290,15 +377,17 @@ export const upsertBeatTypePromo = createServerFn({ method: "POST" })
     const inicioAtual = bt.promo_inicio_em ? new Date(bt.promo_inicio_em) : null;
     const encerrada = expiraAtual && expiraAtual.getTime() <= now.getTime();
 
-    // Regra: pós-término → imutável.
-    if (encerrada) {
-      throw new Error("Promoção encerrada; não pode ser editada.");
-    }
-
-    // Regra: pós-início → só é permitido alterar `promo_expira_em` e `promo_ativa`.
+    // Detecta se este upsert representa um NOVO ciclo (inicio muda) ou edicao
+    // do ciclo atual. Se for novo ciclo, valida sobreposicao com outras
+    // campanhas ativas/futuras para o mesmo tipo de beat.
     const isCreating = !bt.promo_inicio_em && !bt.promo_valor;
-    if (inicioAtual && inicioAtual.getTime() <= now.getTime() && !isCreating) {
-      // Edição pós-início: garantir que apenas expira/ativa mudaram.
+    const isNewCampaign =
+      isCreating ||
+      !bt.promo_inicio_em ||
+      new Date(bt.promo_inicio_em).getTime() !== inicio.getTime();
+
+    if (!encerrada && inicioAtual && inicioAtual.getTime() <= now.getTime() && !isCreating) {
+      // Editando ciclo que ja iniciou: so expira/ativa podem mudar.
       const mesmaBase =
         Number(bt.promo_valor) === data.promo_valor &&
         (bt.promo_link_pagamento ?? "") === data.promo_link_pagamento &&
@@ -308,6 +397,73 @@ export const upsertBeatTypePromo = createServerFn({ method: "POST" })
         throw new Error(
           "Promoção já iniciou; só é possível editar a data final e ativar/desativar.",
         );
+      }
+    }
+
+    if (isNewCampaign) {
+      // Busca todas as campanhas anteriores (historico + estado atual em beat_types)
+      // e bloqueia se a nova sobrepoe alguma que esteja ativa ou agendada.
+      const { data: historyRows, error: histErr } = await admin
+        .from("beat_type_promo_history")
+        .select("promo_ativa, promo_inicio_em, promo_expira_em, changed_at")
+        .eq("beat_type_id", data.id)
+        .order("changed_at", { ascending: false });
+      if (histErr) {
+        console.error("[promo.upsert.history]", histErr);
+        throw new Error("Erro ao verificar histórico de promoções.");
+      }
+
+      // Agrupa por promo_inicio_em, mantendo a entrada mais recente por campanha.
+      const latestByCampaign = new Map<
+        string,
+        { ativa: boolean; inicio: string; expira: string | null }
+      >();
+      for (const h of historyRows ?? []) {
+        if (!h.promo_inicio_em) continue;
+        if (latestByCampaign.has(h.promo_inicio_em)) continue;
+        latestByCampaign.set(h.promo_inicio_em, {
+          ativa: !!h.promo_ativa,
+          inicio: h.promo_inicio_em,
+          expira: h.promo_expira_em ?? null,
+        });
+      }
+
+      // Garante que o estado atual de beat_types tambem conta (caso tenha sido
+      // resetado manualmente, ou se a unica fonte for a propria tabela).
+      if (bt.promo_inicio_em && !latestByCampaign.has(bt.promo_inicio_em)) {
+        latestByCampaign.set(bt.promo_inicio_em, {
+          ativa: !!bt.promo_ativa,
+          inicio: bt.promo_inicio_em,
+          expira: bt.promo_expira_em ?? null,
+        });
+      }
+
+      const newInicioMs = inicio.getTime();
+      const newExpiraMs = data.promo_expira_em
+        ? new Date(data.promo_expira_em).getTime()
+        : Number.POSITIVE_INFINITY;
+
+      for (const [, c] of latestByCampaign) {
+        // Ignora o proprio inicio novo (mesma campanha re-editada dentro do
+        // mesmo fluxo).
+        if (new Date(c.inicio).getTime() === newInicioMs) continue;
+
+        // Bloqueia apenas campanhas que ainda estao ativas/por vir.
+        if (!c.ativa) continue;
+        const cExpiraMs = c.expira
+          ? new Date(c.expira).getTime()
+          : Number.POSITIVE_INFINITY;
+        if (cExpiraMs <= now.getTime()) continue; // ja encerrada por tempo
+
+        const cInicioMs = new Date(c.inicio).getTime();
+        const overlap = cInicioMs < newExpiraMs && newInicioMs < cExpiraMs;
+        if (overlap) {
+          throw new Error(
+            `Já existe uma promoção ativa ou agendada para este tipo de beat no período ` +
+              `${formatDateBR(c.inicio)} → ${c.expira ? formatDateBR(c.expira) : "sem término"}. ` +
+              `Encerre-a antes de cadastrar uma nova no mesmo intervalo.`,
+          );
+        }
       }
     }
 
@@ -332,6 +488,8 @@ export const upsertBeatTypePromo = createServerFn({ method: "POST" })
       beat_type_id: data.id,
       promo_ativa: data.promo_ativa,
       promo_valor: data.promo_valor,
+      promo_link_pagamento: data.promo_link_pagamento,
+      promo_descricao: data.promo_descricao ?? null,
       promo_inicio_em: inicio.toISOString(),
       promo_expira_em: data.promo_expira_em ? new Date(data.promo_expira_em).toISOString() : null,
       changed_by: context.userId,
@@ -373,7 +531,7 @@ export const toggleBeatTypePromo = createServerFn({ method: "POST" })
     const admin = await assertAdmin(context.userId);
     const { data: existing, error: getErr } = await admin
       .from("beat_types")
-      .select("promo_ativa, promo_valor, promo_inicio_em, promo_expira_em")
+      .select("promo_ativa, promo_valor, promo_link_pagamento, promo_descricao, promo_inicio_em, promo_expira_em")
       .eq("id", data.id)
       .maybeSingle();
     if (getErr) {
@@ -398,6 +556,8 @@ export const toggleBeatTypePromo = createServerFn({ method: "POST" })
       beat_type_id: data.id,
       promo_ativa: data.promo_ativa,
       promo_valor: existing.promo_valor as number | null,
+      promo_link_pagamento: existing.promo_link_pagamento ?? "",
+      promo_descricao: existing.promo_descricao ?? null,
       promo_inicio_em: existing.promo_inicio_em,
       promo_expira_em: existing.promo_expira_em,
       changed_by: context.userId,
@@ -413,7 +573,7 @@ export const termBeatTypePromo = createServerFn({ method: "POST" })
     const admin = await assertAdmin(context.userId);
     const { data: existing, error: getErr } = await admin
       .from("beat_types")
-      .select("promo_valor, promo_inicio_em, promo_expira_em")
+      .select("promo_valor, promo_link_pagamento, promo_descricao, promo_inicio_em, promo_expira_em")
       .eq("id", data.id)
       .maybeSingle();
     if (getErr) {
@@ -434,6 +594,8 @@ export const termBeatTypePromo = createServerFn({ method: "POST" })
       beat_type_id: data.id,
       promo_ativa: false,
       promo_valor: existing.promo_valor as number | null,
+      promo_link_pagamento: existing.promo_link_pagamento ?? "",
+      promo_descricao: existing.promo_descricao ?? null,
       promo_inicio_em: existing.promo_inicio_em,
       promo_expira_em: nowIso,
       changed_by: context.userId,
