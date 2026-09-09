@@ -3,6 +3,9 @@
 Todas as mudanças relevantes da plataforma são registradas neste arquivo.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+Itens ainda não entregues e melhorias pendentes ficam em
+[`docs/BACKLOG.md`](./BACKLOG.md).
+
 ---
 
 ## [2026-09-07] — Compartilhamento de beat, pedido pendente e upload de comprovante
@@ -41,8 +44,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   `charset=utf-8` + `encoding=base64` no `process.ts`, o e-mail inteiro saiu
   corrompido (mojibake geral). Mudança **revertida** — o envio voltou ao
   formato anterior (strings simples) e foi validado com uma compra real de
-  produção (e-mail legível). **O mojibake isolado dos emojis (🔥 ✅) no e-mail
-  permanece em aberto**; emojis seguem funcionando no WhatsApp/celular.
+  produção (e-mail legível). Pendência aberta relacionada movida para
+  `docs/BACKLOG.md` (item "Mojibake de emoji nos e-mails"); emojis seguem
+  funcionando no WhatsApp/celular.
 
 ### Infra
 - Limpeza dos dados de teste da produtora **Malana**: removidas as 2 compras
@@ -326,14 +330,6 @@ gateway Supabase em domínio público com TLS. Detalhes completos no relatório
   tabela de correções C/D/E/F, admins recriados, arquivos alterados, validações
   e pendências.
 
-### Pendências conhecidas
-- `GOTRUE_MAILER_EXTERNAL_HOSTS` não configurado (apenas suprime aviso no
-  log do GoTrue; links já usam os domínios corretos).
-- `SUPABASE_PUBLISHABLE_KEY` do app (server) era um JWT legado ≠ `ANON_KEY` da
-  stack — **corrigido em 2026-09-07** (alinhada à chave ANON real; ver seção
-  "Correção do loop de validação do acesso do admin").
-- Backup diário do Postgres (`pg_dump`) ainda não confirmado.
-
 ---
 
 ## [Semana 2026-06-19] — Lançamentos + Segurança
@@ -615,15 +611,3 @@ Marco operacional: plataforma pronta para a operação oficial da Fase 1
   registros duplicados (uma row por tentativa de envio) — todas
   relativas à mesma campanha.
 
----
-
-## Melhorias futuras
-
-- **Compactar comprovantes antes de enviar ao banco** (2026-09-07): as fotos de
-  comprovante de pagamento (`purchase-receipts`, `storage.objects`) são enviadas
-  em base64 cru e, com beats vendidos e imagens grandes, ocupam bastante espaço
-  no banco e no storage. Ideia: redimensionar/recomprimir (ex.: JPEG/WebP de no
-  máximo ~1000px, qualidade ~70) no cliente antes do upload, mantendo legibilidade
-  do comprovante e reduzindo drasticamente o tamanho armazenado. Endpoints de
-  upload já limitam a ~8 MB via base64; a compactação reduziria o custo de
-  armazenamento e aceleraria o upload no celular.
