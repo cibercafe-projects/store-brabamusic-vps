@@ -503,21 +503,26 @@ Nenhum rollback do staging deve exigir a alteração das credenciais ou do banco
 
 ## 15. Pendências atuais
 
-- [ ] Criar o registro DNS A para `staging.loja.brabamusic.com.br`.
-- [ ] Escolher e confirmar a porta local da aplicação de staging.
-- [ ] Criar a instância Supabase separada.
-- [ ] Criar banco, chaves e credenciais de teste.
-- [ ] Criar a cópia da aplicação.
-- [ ] Criar o `.env` de staging.
-- [ ] Configurar o PM2 de staging.
-- [ ] Configurar o vhost Nginx.
-- [ ] Emitir o SSL.
-- [ ] Configurar SMTP da Hostinger.
-- [ ] Implementar bloqueio de destinatários reais.
-- [ ] Criar dados iniciais de teste.
-- [ ] Executar testes end-to-end.
-- [ ] Revisar exposição pública das portas `5432`, `6543` e `8000`.
-- [ ] Documentar o procedimento de atualização do staging.
+> Status verificado em **2026-09-09**, após a configuração inicial do
+> staging. Itens resolvidos marcados com ✅. Para o detalhamento
+> operacional ver
+> [`/opt/apps/braba-music-staging/docs/STAGING-WORKFLOW.md`](../braba-music-staging/docs/STAGING-WORKFLOW.md).
+
+- [x] Criar o registro DNS A para `staging.loja.brabamusic.com.br`.
+- [x] Escolher e confirmar a porta local da aplicação de staging (3001).
+- [x] Criar a instância Supabase separada (`/opt/supabase-staging`, portas 5433/6544/8001).
+- [x] Criar banco, chaves e credenciais de teste.
+- [x] Criar a cópia da aplicação (`/opt/apps/braba-music-staging`, clonada de `v1.0.0`).
+- [x] Criar o `.env` de staging.
+- [x] Configurar o PM2 de staging (`braba-music-staging`).
+- [x] Configurar o vhost Nginx (com proxy route-based: `/auth|/storage|/rest|/realtime|/functions|/pg/` → Kong 8001; resto → app 3001).
+- [x] Emitir o SSL (Certbot, expira 2026-12-08).
+- [x] Configurar SMTP da Hostinger (mesmo `SMTP_PASS` da produção, com prefixo `[STAGING]` no subject via `EMAIL_ENV_PREFIX`).
+- [ ] Implementar bloqueio de destinatários reais — **parcial** (prefixo no subject evita confusão; whitelist explícita não foi implementada).
+- [x] Criar dados iniciais de teste (admin `staging-admin@brabamusic.local`, `is_super=true`).
+- [x] Executar testes end-to-end (smoke + login via HTTPS público OK em 2026-09-09; validação manual contínua conforme uso).
+- [ ] Revisar exposição pública das portas `5432`, `6543` e `8000` — **pendente** (escopo do `docs/BACKLOG.md`, item "Revisar histórico público do Git por credenciais antigas e revogar/rotacionar" cobre parte disso; firewall do VPS ainda não restrito por porta).
+- [x] Documentar o procedimento de atualização do staging (em `STAGING-WORKFLOW.md` no clone staging).
 
 ---
 
